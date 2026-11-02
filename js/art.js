@@ -51,7 +51,10 @@ const Art = (() => {
     L.bg = { name, x: (W - dw) / 2, y: H - dh, w: dw, h: dh, scale };
     const X = (fx) => L.bg.x + fx * dw, Y = (fy) => L.bg.y + fy * dh;
     L.counterTop = Math.round(Y(m.counter));
-    L.mw = 0; L.ax0 = W * 0.03; L.aw = W * 0.94;
+    L.counterMid = Y(m.counter + (m.counterFront - m.counter) * 0.55); // линия, на которой стоят предметы
+    // На широких экранах слева на стойке стоит кофемашина, гости встают правее неё
+    L.mw = W >= 560 ? Math.round(clamp(W * 0.16, 100, 150)) : 0;
+    L.ax0 = W * 0.03 + L.mw; L.aw = W * 0.94 - L.mw;
     const wn = m.win || { x0: 0.05, y0: 0.1, x1: 0.6, y1: 0.7 };
     L.win = { x: Math.round(X(wn.x0)), y: Math.round(Y(wn.y0)), w: Math.round((wn.x1 - wn.x0) * dw), h: Math.round((wn.y1 - wn.y0) * dh) };
     L.board = { x: X(m.board.x0), y: Y(m.board.y0), w: (m.board.x1 - m.board.x0) * dw, h: (m.board.y1 - m.board.y0) * dh };
@@ -591,7 +594,7 @@ const Art = (() => {
   function drawCandle(dark) {
     if (dark < 0.08) return;
     const s = clamp(H / 420, 0.6, 1.1);
-    const x = L.mw ? L.mw + 26 * s : W * 0.5 + 40 * s, y = L.counterTop - 8;
+    const x = L.mw ? L.mw + 26 * s : W * 0.5 + 40 * s, y = L.counterMid;
     const k = clamp((dark - 0.08) / 0.3, 0, 1);
     const fl = 1 + Math.sin(time * 11) * 0.12 + Math.sin(time * 23) * 0.06;
     ctx.save(); ctx.globalCompositeOperation = 'lighter';
@@ -599,12 +602,7 @@ const Art = (() => {
     gr.addColorStop(0, `rgba(255,200,120,${0.35 * k * fl})`); gr.addColorStop(1, 'rgba(255,200,120,0)');
     ctx.fillStyle = gr; ctx.fillRect(x - 60 * s, y - 74 * s, 120 * s, 120 * s);
     ctx.restore();
-    ctx.fillStyle = 'rgba(230,245,250,.55)'; ctx.strokeStyle = INKC; ctx.lineWidth = 1.4;
-    ctx.beginPath(); ctx.moveTo(x - 6 * s, y - 11 * s); ctx.lineTo(x + 6 * s, y - 11 * s); ctx.lineTo(x + 5 * s, y); ctx.lineTo(x - 5 * s, y); ctx.closePath(); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = '#fff3d6'; ctx.fillRect(x - 3.5 * s, y - 9 * s, 7 * s, 8 * s);
-    ctx.strokeStyle = INKC; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, y - 9 * s); ctx.lineTo(x, y - 12 * s); ctx.stroke();
-    ctx.fillStyle = `rgba(255,170,60,${k})`; ctx.beginPath(); ctx.ellipse(x, y - 15 * s * fl, 2.2 * s, 4 * s * fl, 0, 0, 7); ctx.fill();
-    ctx.fillStyle = `rgba(255,240,180,${k})`; ctx.beginPath(); ctx.ellipse(x, y - 14 * s * fl, 1.1 * s, 2 * s, 0, 0, 7); ctx.fill();
+    ctx.save(); ctx.globalAlpha = k; drawSprite('candle', x, L.counterMid, 22 * s, 'center'); ctx.restore();
   }
 
   // Бумажная зернистость поверх всей сцены — чтобы заливки не выглядели пластиковыми
@@ -1137,7 +1135,35 @@ const Art = (() => {
   }
 
   // ---------- предметы на стойке и кот ----------
-  function drawCounterItems() {} // стойка нарисована художником; покупки пока не отображаются
+  // Нарисованные предметы на стойке: кофемашина, витрина, касса, банка для чаевых
+  function drawSprite(name, x, bottom, h, anchor = 'left') {
+    const im = Sprites.get(name);
+    if (!Sprites.ready(name)) return 0;
+    const w = h * im.naturalWidth / im.naturalHeight;
+    const left = anchor === 'right' ? x - w : anchor === 'center' ? x - w / 2 : x;
+    ctx.drawImage(im, left, bottom - h, w, h);
+    return w;
+  }
+  function drawCounterItems(busy) {
+    const base = L.counterMid;
+    const s = clamp(H / 420, 0.6, 1.1);
+    const wide = W >= 480;
+    let right = W - 8;
+    if (upLevel('tipjar') > 0) right -= drawSprite('tipjar', right, base, 40 * s, 'right') + 8;
+    if (wide) right -= drawSprite('register', right, base, 50 * s, 'right') + 10;
+    if (upLevel('pastry') > 0) {
+      if (wide) right -= drawSprite('pastry', right, base, 50 * s, 'right') + 8;
+      else drawSprite('pastry', 6, base, 44 * s);
+    }
+    if (L.mw && Sprites.ready('machine')) {
+      const im = Sprites.get('machine');
+      const mw = L.mw - 6, mh = mw * im.naturalHeight / im.naturalWidth, mx = 8, top = base - mh;
+      ctx.drawImage(im, mx, top, mw, mh);
+      // пар: из чашек сверху, когда варится эспрессо; из трубки справа, когда взбивается молоко
+      if (busy.espresso > 0 && Math.random() < 0.2) particles.push({ x: mx + mw * rand(0.25, 0.55), y: top + mh * 0.05, vx: rand(-6, 6), vy: -25, life: 1.3, kind: 'steam', size: 4 * s, rot: 0, vr: 0 });
+      if (busy.frother > 0 && Math.random() < 0.5) particles.push({ x: mx + mw * 0.73, y: top + mh * 0.62, vx: rand(-14, 14), vy: rand(-50, -30), life: 1.1, kind: 'steam', size: rand(4, 7) * s, rot: 0, vr: 0 });
+    }
+  }
 
   // Полосатый кот: идёт по стойке, садится, машет хвостом, жмурится, когда гладят
   // Нарисованный кот: идёт по стойке, садится, мурчит, когда гладят
@@ -1345,6 +1371,7 @@ const Art = (() => {
     // стойка поверх гостей — нижняя полоса той же картинки
     const ct = L.counterTop, sy = (ct - L.bg.y) / L.bg.scale;
     ctx.drawImage(im, 0, sy, im.naturalWidth, im.naturalHeight - sy, L.bg.x, ct, L.bg.w, L.bg.h - (ct - L.bg.y));
+    drawCounterItems(state.busy || {});
     drawCandle(dark);
     drawCat(state.cat);
     drawDaylight(state.sky, dark);
