@@ -2,6 +2,8 @@
 
 (function () {
   loadSave();
+  if (!S.settings.lang) S.settings.lang = detectLang();
+  setLang(S.settings.lang);
   Sound.setMusic(S.settings.music);
   Sound.setSfx(S.settings.sfx);
   UI.init();
@@ -33,6 +35,7 @@
       cap: Stats.capacity(),
       cat: inShift ? Shift.cat : null,
       pointer: inShift ? Shift.pointer : null,
+      busy: inShift ? { espresso: Shift.jobs.espresso.length, frother: Shift.jobs.frother.length } : {},
     });
     UI.tick();
     requestAnimationFrame(frame);
@@ -48,7 +51,7 @@
   document.addEventListener('pointerdown', () => Sound.init(), { once: true });
 
   // Клавиатура (по физическим клавишам — работает и в русской раскладке)
-  const ING_CODES = ['KeyQ', 'KeyW', 'KeyE', 'KeyR', 'KeyT', 'KeyY', 'KeyU', 'KeyI', 'KeyO', 'KeyP', 'KeyA', 'KeyS', 'KeyD'];
+  const ING_CODES = ['KeyQ', 'KeyW', 'KeyE', 'KeyR', 'KeyT', 'KeyY', 'KeyU', 'KeyI', 'KeyO', 'KeyP', 'KeyA', 'KeyS', 'KeyD', 'KeyF', 'KeyG', 'KeyH'];
   const CUP_CODES = ['KeyZ', 'KeyX', 'KeyC'];
   document.addEventListener('keydown', (e) => {
     if (e.repeat) return;

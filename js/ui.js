@@ -1,9 +1,9 @@
-// Интерфейс: рабочая станция, HUD, меню, магазин, гости, задания, итоги смены, всплывашки.
+// Интерфейс: рабочее место бариста, HUD, меню, магазин, гости, задания, итоги смены, всплывашки.
 
 const UI = (() => {
   const $ = (s, r = document) => r.querySelector(s);
   const el = {};
-  const ING_KEYS = ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', 'A', 'S', 'D'];
+  const ING_KEYS = ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', 'A', 'S', 'D', 'F', 'G', 'H'];
   const CUP_KEYS = ['Z', 'X', 'C'];
   let shopTab = 'up';
   let hintState = { text: undefined, sel: null, timer: null };
@@ -32,6 +32,11 @@ const UI = (() => {
       const b = e.target.closest('[data-ing]');
       if (b) { e.preventDefault(); Shift.addIngredient(b.dataset.ing); }
     });
+    applyLang();
+  }
+
+  function applyLang() {
+    el.trash.setAttribute('aria-label', t('pourOut'));
   }
 
   function setMode(mode) {
@@ -40,18 +45,22 @@ const UI = (() => {
     el.station.classList.toggle('hidden', mode !== 'shift');
   }
 
-  // ---------- станция ----------
+  // ---------- рабочее место ----------
   function buildStation() {
     el.cups.innerHTML = Shift.cups.map((_, i) => `
-      <button class="cup-slot" data-cup="${i}" aria-label="Чашка ${i + 1}">
+      <button class="cup-slot" data-cup="${i}" aria-label="${t('cup', i + 1)}">
         <div class="cup"><div class="cup-handle"></div><div class="cup-body"><div class="fill"></div></div></div>
         <div class="cup-label"></div>${Shift.cups.length > 1 ? `<span class="key">${CUP_KEYS[i]}</span>` : ''}
       </button>`).join('');
-    el.ings.innerHTML = availableIngredients().map((id, k) => {
-      const ing = INGREDIENTS[id];
-      const slots = ing.machine === 'espresso' ? Stats.groups() : ing.machine === 'frother' ? Stats.pitchers() : 0;
+    let k = 0;
+    el.ings.innerHTML = availableTools().map((tl) => {
+      const slots = tl.machine ? Stats.slots(tl.machine) : 0;
       const dots = slots ? `<span class="slots">${'<i class="dot"></i>'.repeat(slots)}</span>` : '';
-      return `<button class="ing" data-ing="${id}">${iconSvg(id)}<span class="ing-name">${ing.name}</span><span class="key">${ING_KEYS[k] || ''}</span>${dots}</button>`;
+      const btns = tl.ings.map((id) => `<button class="ing" data-ing="${id}">${iconSvg(id)}<span class="ing-name">${T(INGREDIENTS[id].name)}</span><span class="key">${ING_KEYS[k++] || ''}</span></button>`).join('');
+      return `<div class="tool tool-${tl.id}"${tl.machine ? ` data-machine="${tl.machine}"` : ''}>
+        <div class="tool-head">${iconSvg(tl.icon)}<span>${T(tl.name)}</span>${dots}</div>
+        <div class="tool-btns">${btns}</div>
+      </div>`;
     }).join('');
     renderCups();
   }
@@ -70,28 +79,24 @@ const UI = (() => {
       return `<div class="layer k-${ing.kind || 'liquid'}${l.job ? ' pending' : ''}" data-h="${h}" style="height:${h * p}%;--c:${ing.color}"></div>`;
     }).join('');
     const label = slot.querySelector('.cup-label');
-    const items = Shift.cupItems(cup);
-    const rec = recipeFor(items);
+    const rec = recipeFor(Shift.cupItems(cup));
     label.classList.remove('match');
-    if (!cup.layers.length) label.textContent = Shift.cups.length > 1 && i === Shift.sel ? 'выбрана' : '';
-    else if (!Shift.cupReady(cup)) label.textContent = 'готовится…';
-    else if (rec && S.recipes.includes(rec.id)) { label.textContent = rec.name + ' ✓'; label.classList.add('match'); }
-    else label.textContent = 'что-то своё';
+    if (!cup.layers.length) label.textContent = Shift.cups.length > 1 && i === Shift.sel ? t('selected') : '';
+    else if (!Shift.cupReady(cup)) label.textContent = t('brewing');
+    else if (rec && S.recipes.includes(rec.id)) { label.textContent = T(rec.name) + ' ✓'; label.classList.add('match'); }
+    else label.textContent = t('custom');
   }
 
   function tick() {
     if (!Shift.active) return;
-    // кольца загрузки оборудования
-    for (const key of ['espresso', 'frother']) {
+    // индикаторы загрузки оборудования
+    el.ings.querySelectorAll('.tool[data-machine]').forEach((tool) => {
+      const key = tool.dataset.machine;
       const jobs = Shift.jobs[key];
-      const slots = key === 'espresso' ? Stats.groups() : Stats.pitchers();
-      el.ings.querySelectorAll(`.ing`).forEach((b) => {
-        const ing = INGREDIENTS[b.dataset.ing];
-        if (ing.machine !== key) return;
-        b.querySelectorAll('.dot').forEach((d, k) => d.style.setProperty('--p', jobs[k] ? clamp(jobs[k].t / jobs[k].dur, 0, 1) : 0));
-        b.classList.toggle('busy', jobs.length >= slots);
-      });
-    }
+      tool.querySelectorAll('.dot').forEach((d, k) => d.style.setProperty('--p', jobs[k] ? clamp(jobs[k].t / jobs[k].dur, 0, 1) : 0));
+      tool.classList.toggle('busy', jobs.length >= Stats.slots(key));
+      tool.classList.toggle('working', jobs.length > 0);
+    });
     // растущие слои в чашках
     Shift.cups.forEach((cup, i) => {
       const fill = el.cups.children[i] && el.cups.children[i].querySelector('.fill');
@@ -103,7 +108,7 @@ const UI = (() => {
       });
     });
     const left = Math.max(0, Math.ceil(Shift.len - Shift.t));
-    el.timeVal.textContent = Shift.closing ? 'закрыто' : `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`;
+    el.timeVal.textContent = Shift.closing ? t('closed') : `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`;
     el.time.classList.toggle('warn', !Shift.closing && left <= 20);
   }
 
@@ -137,20 +142,20 @@ const UI = (() => {
     el.hint.textContent = text;
     el.hint.classList.remove('hidden');
     restartAnim(el.hint, 'pop');
-    if (sel) { const t = $(sel); if (t) t.classList.add('pulse'); }
+    if (sel) { const tg = $(sel); if (tg) tg.classList.add('pulse'); }
     if (autoHide) hintState.timer = setTimeout(() => hint(null), autoHide);
   }
 
   function toast(html, kind = '') {
-    for (const t of el.toasts.children) if (t.dataset.msg === html) return;
+    for (const tt of el.toasts.children) if (tt.dataset.msg === html) return;
     while (el.toasts.children.length >= 3) el.toasts.firstChild.remove();
-    const t = document.createElement('div');
-    t.className = 'toast ' + kind;
-    t.dataset.msg = html;
-    t.innerHTML = html;
-    el.toasts.appendChild(t);
-    setTimeout(() => t.classList.add('out'), kind === 'long' ? 4200 : 2400);
-    setTimeout(() => t.remove(), kind === 'long' ? 4600 : 2800);
+    const d = document.createElement('div');
+    d.className = 'toast ' + kind;
+    d.dataset.msg = html;
+    d.innerHTML = html;
+    el.toasts.appendChild(d);
+    setTimeout(() => d.classList.add('out'), kind === 'long' ? 4200 : 2400);
+    setTimeout(() => d.remove(), kind === 'long' ? 4600 : 2800);
   }
 
   function banner(text, kind = '') {
@@ -173,10 +178,16 @@ const UI = (() => {
 
   function nextGoal() {
     const opts = [];
-    for (const r of RECIPES) if (!S.recipes.includes(r.id)) opts.push({ name: r.name, cost: r.cost });
-    for (const u of UPGRADES) if (!upMaxed(u.id)) opts.push({ name: u.name, cost: upCost(u.id) });
+    for (const r of RECIPES) if (!S.recipes.includes(r.id)) opts.push({ name: T(r.name), cost: r.cost });
+    for (const u of UPGRADES) if (!upMaxed(u.id)) opts.push({ name: T(u.name), cost: upCost(u.id) });
     opts.sort((a, b) => a.cost - b.cost);
     return opts[0] || null;
+  }
+
+  function settingsButtons() {
+    return `<button class="icon-btn ${S.settings.music ? '' : 'off'}" data-act="music" aria-label="${t('music')}">🎵</button>
+      <button class="icon-btn ${S.settings.sfx ? '' : 'off'}" data-act="sfx" aria-label="${t('sounds')}">🔊</button>
+      <button class="icon-btn lang" data-act="lang" aria-label="${t('language')}">${LANG === 'ru' ? 'RU' : 'EN'}</button>`;
   }
 
   function showMenu() {
@@ -185,35 +196,34 @@ const UI = (() => {
     const goal = nextGoal();
     const goalHtml = goal
       ? (S.coins >= goal.cost
-        ? `<div class="teaser ready">Можно купить: <b>${goal.name}</b> 🎉</div>`
-        : `<div class="teaser">Скоро: <b>${goal.name}</b> — ещё ${coin(goal.cost - S.coins)}</div>`)
+        ? `<div class="teaser ready">${t('canBuy', goal.name)}</div>`
+        : `<div class="teaser">${t('soon', goal.name, coin(goal.cost - S.coins))}</div>`)
       : '';
     openPanel(`
       <div class="menu">
-        <div class="brand"><div class="brand-logo">${iconSvg('logo')}</div><div><h1>Пенка</h1><p>уютная кофейня</p></div></div>
+        <div class="brand"><div class="brand-logo">${iconSvg('logo')}</div><div><h1>${t('brand')}</h1><p>${t('tagline')}</p></div></div>
         <div class="chips">
-          <span class="chip">День ${S.day}</span>
+          <span class="chip">${t('day', S.day)}</span>
           <span class="chip">${coin(S.coins)}</span>
           <span class="chip">🔥 ${S.streak.count}</span>
         </div>
-        <div class="goal">Цель дня: ${coin(dayTarget(S.day))} — и три звезды твои</div>
-        <button class="btn primary big" data-act="start">Открыть смену</button>
+        <div class="goal">${t('goal', coin(dayTarget(S.day)))}</div>
+        <button class="btn primary big" data-act="start">${t('open')}</button>
         ${goalHtml}
         <div class="tiles">
-          <button class="btn tile" data-act="shop"><span class="tile-ico">🛠️</span>Улучшения${canAffordSomething() ? '<i class="badge">!</i>' : ''}</button>
-          <button class="btn tile" data-act="guests"><span class="tile-ico">💌</span>Гости</button>
-          <button class="btn tile" data-act="quests"><span class="tile-ico">📋</span>Задания${unclaimed ? `<i class="badge">${unclaimed}</i>` : ''}</button>
+          <button class="btn tile" data-act="shop"><span class="tile-ico">🛠️</span>${t('upgrades')}${canAffordSomething() ? '<i class="badge">!</i>' : ''}</button>
+          <button class="btn tile" data-act="guests"><span class="tile-ico">💌</span>${t('guests')}</button>
+          <button class="btn tile" data-act="quests"><span class="tile-ico">📋</span>${t('quests')}${unclaimed ? `<i class="badge">${unclaimed}</i>` : ''}</button>
         </div>
         <div class="menu-foot">
-          <button class="icon-btn ${S.settings.music ? '' : 'off'}" data-act="music" aria-label="Музыка">🎵</button>
-          <button class="icon-btn ${S.settings.sfx ? '' : 'off'}" data-act="sfx" aria-label="Звуки">🔊</button>
-          <span class="muted">${Stats.helperRate() ? `🦔 Ёжик Пых: ${Stats.helperRate()} в час` : 'Лучший результат: ' + coin(S.stats.bestShift)}</span>
+          ${settingsButtons()}
+          <span class="muted">${Stats.helperRate() ? t('hedgehog', Stats.helperRate()) : t('best', coin(S.stats.bestShift))}</span>
         </div>
       </div>`, 'sheet menu-sheet');
   }
 
   function sheetHead(title) {
-    return `<div class="sheet-head"><button class="btn small" data-act="menu">← Назад</button><h2>${title}</h2><span class="chip">${coin(S.coins)}</span></div>`;
+    return `<div class="sheet-head"><button class="btn small" data-act="menu">${t('back')}</button><h2>${title}</h2><span class="chip">${coin(S.coins)}</span></div>`;
   }
 
   function showShop(keepScroll) {
@@ -227,9 +237,9 @@ const UI = (() => {
         const pips = Array.from({ length: max }, (_, i) => `<i class="${i < lvl ? 'on' : ''}"></i>`).join('');
         return `<div class="card${afford ? ' can' : ''}">
           <div class="card-ico">${u.icon}</div>
-          <div class="card-body"><b>${u.name}</b><div class="pips">${pips}</div>
+          <div class="card-body"><b>${T(u.name)}</b><div class="pips">${pips}</div>
             <small>${maxed ? u.desc(cur) : `${u.desc(cur)}<br><span class="next">→ ${u.desc(u.values[lvl + 1])}</span>`}</small></div>
-          ${maxed ? '<span class="maxed">МАКС</span>' : `<button class="btn buy${afford ? ' green' : ''}" data-act="buy-up" data-id="${u.id}" ${afford ? '' : 'disabled'}>${coin(u.costs[lvl])}</button>`}
+          ${maxed ? `<span class="maxed">${t('max')}</span>` : `<button class="btn buy${afford ? ' green' : ''}" data-act="buy-up" data-id="${u.id}" ${afford ? '' : 'disabled'}>${coin(u.costs[lvl])}</button>`}
         </div>`;
       }).join('');
     } else {
@@ -239,16 +249,16 @@ const UI = (() => {
         const fan = REGULARS.find((g) => g.fav === r.id);
         return `<div class="card${afford ? ' can' : ''}${owned ? ' owned' : ''}">
           <div class="card-ico recipe-ico">${r.ings.map((i) => iconSvg(i)).join('')}</div>
-          <div class="card-body"><b>${r.name}</b>
-            <small>${r.ings.map((i) => INGREDIENTS[i].name.toLowerCase()).join(' + ')}<br>Цена: ${coin(Math.round(r.price * Stats.priceMult()))}${fan ? ` · любит ${fan.name}` : ''}</small></div>
-          ${owned ? '<span class="maxed">В меню</span>' : `<button class="btn buy${afford ? ' green' : ''}" data-act="buy-rec" data-id="${r.id}" ${afford ? '' : 'disabled'}>${coin(r.cost)}</button>`}
+          <div class="card-body"><b>${T(r.name)}</b>
+            <small>${r.ings.map((i) => T(INGREDIENTS[i].name).toLowerCase()).join(' + ')}<br>${t('price', coin(Math.round(r.price * Stats.priceMult())))}${fan ? ` · ${t('loves', T(fan.name))}` : ''}</small></div>
+          ${owned ? `<span class="maxed">${t('onMenu')}</span>` : `<button class="btn buy${afford ? ' green' : ''}" data-act="buy-rec" data-id="${r.id}" ${afford ? '' : 'disabled'}>${coin(r.cost)}</button>`}
         </div>`;
       }).join('');
     }
-    openPanel(`${sheetHead('Улучшения')}
+    openPanel(`${sheetHead(t('upgrades'))}
       <div class="tabs">
-        <button class="tab ${shopTab === 'up' ? 'on' : ''}" data-act="tab" data-tab="up">Оборудование</button>
-        <button class="tab ${shopTab === 'rec' ? 'on' : ''}" data-act="tab" data-tab="rec">Рецепты</button>
+        <button class="tab ${shopTab === 'up' ? 'on' : ''}" data-act="tab" data-tab="up">${t('equipment')}</button>
+        <button class="tab ${shopTab === 'rec' ? 'on' : ''}" data-act="tab" data-tab="rec">${t('recipes')}</button>
       </div>
       <div class="cards">${cards}</div>`, 'sheet tall', !keepScroll);
     if (keepScroll) el.panel.scrollTop = scroll;
@@ -260,32 +270,32 @@ const UI = (() => {
       const eligible = regularEligible(g);
       const met = st.visits > 0;
       let sub;
-      if (S.day < g.minDay) sub = `Заглянет с ${g.minDay}-го дня`;
-      else if (!S.recipes.includes(g.fav)) sub = `Придёт, когда в меню появится «${RECIPE[g.fav].name}»`;
-      else if (!met) sub = 'Скоро заглянет!';
-      else sub = `Любит: <b>${RECIPE[g.fav].name}</b>`;
+      if (S.day < g.minDay) sub = t('arrivesDay', g.minDay);
+      else if (!S.recipes.includes(g.fav)) sub = t('needsRecipe', T(RECIPE[g.fav].name));
+      else if (!met) sub = t('comingSoon');
+      else sub = t('favorite', T(RECIPE[g.fav].name));
       const hearts = Array.from({ length: MAX_HEARTS }, (_, i) => `<i class="${i < st.hearts ? 'on' : ''}">♥</i>`).join('');
       let stories = '';
       if (met) {
         let teaser = false;
-        g.story.forEach((text, i) => {
+        T(g.story).forEach((text, i) => {
           if (st.hearts >= STORY_HEARTS[i]) stories += `<p class="story">«${text}»</p>`;
-          else if (!teaser) { teaser = true; stories += `<p class="story locked">🔒 Следующая история при ♥${STORY_HEARTS[i]}</p>`; }
+          else if (!teaser) { teaser = true; stories += `<p class="story locked">${t('nextStory', STORY_HEARTS[i])}</p>`; }
         });
       }
       return `<div class="guest${met ? '' : ' locked'}">
         <canvas class="portrait" data-guest="${g.id}"></canvas>
         <div class="guest-body">
-          <b>${met || eligible ? g.name : '???'}</b>
+          <b>${met || eligible ? T(g.name) : '???'}</b>
           <div class="hearts">${hearts}</div>
           <small>${sub}</small>
           ${stories}
-          <div class="perk${st.hearts >= MAX_HEARTS ? ' on' : ''}">🎁 Подарок дружбы: ${st.hearts >= MAX_HEARTS ? g.perk.text : 'откроется на ♥' + MAX_HEARTS}</div>
+          <div class="perk${st.hearts >= MAX_HEARTS ? ' on' : ''}">${t('gift', st.hearts >= MAX_HEARTS ? T(g.perk.text) : t('giftAt', MAX_HEARTS))}</div>
         </div>
       </div>`;
     }).join('');
-    openPanel(`${sheetHead('Гости')}
-      <p class="muted center">Постоянные гости рассказывают истории и дарят подарки. Запоминай их заказы — за это чаевые ×2 и двойная дружба.</p>
+    openPanel(`${sheetHead(t('guests'))}
+      <p class="muted center">${t('guestsIntro')}</p>
       <div class="cards">${cards}</div>`, 'sheet tall');
     el.panel.querySelectorAll('canvas[data-guest]').forEach((c) => {
       const g = REGULAR[c.dataset.guest];
@@ -308,16 +318,16 @@ const UI = (() => {
       </div>`).join('');
     const allClaimed = list.every((q) => q.claimed);
     const bonus = `<div class="quest bonus${S.quests.bonusClaimed ? ' claimed' : ''}">
-      <div class="quest-body"><b>🎁 Все три задания</b><small>Сундучок за выполненный день</small></div>
+      <div class="quest-body"><b>${t('allQuests')}</b><small>${t('allQuestsHint')}</small></div>
       ${S.quests.bonusClaimed ? '<span class="maxed">✓</span>' : `<button class="btn buy${allClaimed ? ' green' : ''}" data-act="bonus" ${allClaimed ? '' : 'disabled'}>${coin(Progress.allBonus())}</button>`}
     </div>`;
     const got = ACHIEVEMENTS.filter((a) => S.ach[a.id]).length;
-    const ach = ACHIEVEMENTS.map((a) => `<div class="ach${S.ach[a.id] ? ' on' : ''}"><span>${S.ach[a.id] ? '🏆' : '🔒'}</span><b>${a.name}</b><small>${a.desc}</small><small class="rw">${coin(a.reward)}</small></div>`).join('');
-    openPanel(`${sheetHead('Задания')}
-      <div class="streak"><div><b>🔥 Серия: ${n} ${plural(n, 'день', 'дня', 'дней')}</b><small>Заходи каждый день — награда растёт</small></div><div class="week">${week}</div></div>
-      <div class="section-title"><h3>Сегодня</h3><small>новые через ${h} ч ${m} мин</small></div>
+    const ach = ACHIEVEMENTS.map((a) => `<div class="ach${S.ach[a.id] ? ' on' : ''}"><span>${S.ach[a.id] ? '🏆' : '🔒'}</span><b>${T(a.name)}</b><small>${T(a.desc)}</small><small class="rw">${coin(a.reward)}</small></div>`).join('');
+    openPanel(`${sheetHead(t('quests'))}
+      <div class="streak"><div><b>${t('streak', n)}</b><small>${t('streakHint')}</small></div><div class="week">${week}</div></div>
+      <div class="section-title"><h3>${t('today')}</h3><small>${t('newIn', h, m)}</small></div>
       <div class="cards">${qcards}${bonus}</div>
-      <div class="section-title"><h3>Достижения</h3><small>${got} из ${ACHIEVEMENTS.length}</small></div>
+      <div class="section-title"><h3>${t('achievements')}</h3><small>${t('ofTotal', got, ACHIEVEMENTS.length)}</small></div>
       <div class="ach-grid">${ach}</div>`, 'sheet tall');
   }
 
@@ -325,24 +335,24 @@ const UI = (() => {
     setMode('menu');
     const stories = r.stories.map((s) => {
       const g = REGULAR[s.id];
-      return `<div class="story-card"><canvas class="portrait" data-guest="${g.id}"></canvas><div><b>${g.name}</b><p>«${g.story[s.idx]}»</p></div></div>`;
+      return `<div class="story-card"><canvas class="portrait" data-guest="${g.id}"></canvas><div><b>${T(g.name)}</b><p>«${T(g.story)[s.idx]}»</p></div></div>`;
     }).join('');
     openPanel(`
       <div class="summary">
-        <p class="muted">День ${r.day}</p>
-        <h2>Смена окончена!</h2>
+        <p class="muted">${t('day', r.day)}</p>
+        <h2>${t('shiftOver')}</h2>
         <div class="stars">${[0, 1, 2].map((i) => `<span class="star" data-star="${i}">★</span>`).join('')}</div>
-        <div class="earn">${'<span class="coin"></span>'}<span id="earn-num">0</span></div>
-        <div class="target"><div class="tbar"><div class="tfill" id="tfill"></div><i style="left:40%"></i><i style="left:70%"></i></div><small>Цель дня: ${fmt(r.target)}</small></div>
-        ${r.record ? '<div class="record">Новый рекорд!</div>' : ''}
+        <div class="earn"><span class="coin"></span><span id="earn-num">0</span></div>
+        <div class="target"><div class="tbar"><div class="tfill" id="tfill"></div><i style="left:40%"></i><i style="left:70%"></i></div><small>${t('target', fmt(r.target))}</small></div>
+        ${r.record ? `<div class="record">${t('record')}</div>` : ''}
         <div class="stat-grid">
-          <div><b>${r.served}</b><span>${plural(r.served, 'гость', 'гостя', 'гостей')}</span></div>
-          <div><b>${r.maxCombo}</b><span>лучшее комбо</span></div>
-          <div><b>${r.missed}</b><span>ушли без кофе</span></div>
+          <div><b>${r.served}</b><span>${t('guestsN', r.served)}</span></div>
+          <div><b>${r.maxCombo}</b><span>${t('bestCombo')}</span></div>
+          <div><b>${r.missed}</b><span>${t('leftNoCoffee')}</span></div>
         </div>
-        ${r.bonus ? `<div class="bonus-line">Бонус за звёзды: +${coin(r.bonus)}</div>` : ''}
-        ${stories ? `<h3>Новые истории</h3>${stories}` : ''}
-        <button class="btn primary big" data-act="menu">Дальше</button>
+        ${r.bonus ? `<div class="bonus-line">${t('starBonus', coin(r.bonus))}</div>` : ''}
+        ${stories ? `<h3>${t('newStories')}</h3>${stories}` : ''}
+        <button class="btn primary big" data-act="menu">${t('next')}</button>
       </div>`, `sheet summary-sheet${stories ? ' tall' : ''}`);
     el.panel.querySelectorAll('canvas[data-guest]').forEach((c) => Art.drawPortrait(c, REGULAR[c.dataset.guest].look));
     // анимация подсчёта
@@ -358,8 +368,7 @@ const UI = (() => {
       fill.style.width = fr * 100 + '%';
       const thresholds = [0.4, 0.7, 1];
       while (lit < r.stars && fr >= thresholds[lit] - 1e-6) {
-        const s = el.panel.querySelector(`[data-star="${lit}"]`);
-        s.classList.add('on');
+        el.panel.querySelector(`[data-star="${lit}"]`).classList.add('on');
         Sound.play('star', lit);
         lit++;
       }
@@ -398,21 +407,18 @@ const UI = (() => {
       ${week}
       ${p.coins ? `<div class="pop-coins">+${coin(p.coins)}</div>` : ''}
       ${p.note ? `<small class="muted">${p.note}</small>` : ''}
-      <button class="btn primary big" data-act="popup-ok">${p.coins ? 'Забрать!' : 'Начнём!'}</button>`);
+      <button class="btn primary big" data-act="popup-ok">${p.coins ? t('collect') : t('letsGo')}</button>`);
   }
 
   function pause() {
     if (!Shift.active || Shift.paused) return;
     Shift.paused = true;
     openModal(`
-      <div class="pop-ico">☕</div><h2>Пауза</h2>
-      <p>Гости терпеливо ждут.</p>
-      <div class="row">
-        <button class="icon-btn ${S.settings.music ? '' : 'off'}" data-act="music">🎵</button>
-        <button class="icon-btn ${S.settings.sfx ? '' : 'off'}" data-act="sfx">🔊</button>
-      </div>
-      <button class="btn primary big" data-act="resume">Продолжить</button>
-      <button class="btn small ghost" data-act="quit">Закончить смену</button>`);
+      <div class="pop-ico">☕</div><h2>${t('pause')}</h2>
+      <p>${t('pauseHint')}</p>
+      <div class="row">${settingsButtons()}</div>
+      <button class="btn primary big" data-act="resume">${t('resume')}</button>
+      <button class="btn small ghost" data-act="quit">${t('endShift')}</button>`);
   }
 
   // ---------- действия ----------
@@ -424,7 +430,7 @@ const UI = (() => {
     setMode('shift');
     updateHUD();
     tick();
-    banner(`День ${S.day} · Открыто!`);
+    banner(t('opened', S.day));
     Sound.play('open');
   }
 
@@ -445,7 +451,7 @@ const UI = (() => {
         if (upMaxed(id) || S.coins < upCost(id)) return;
         S.coins -= upCost(id);
         S.upgrades[id] = upLevel(id) + 1;
-        afterBuy(`${UPGRADE[id].icon} ${UPGRADE[id].name} — уровень ${upLevel(id)}`);
+        afterBuy(`${UPGRADE[id].icon} ${T(UPGRADE[id].name)} — ${t('level', upLevel(id))}`);
         return;
       }
       case 'buy-rec': {
@@ -453,8 +459,8 @@ const UI = (() => {
         if (S.recipes.includes(r.id) || S.coins < r.cost) return;
         S.coins -= r.cost;
         S.recipes.push(r.id);
-        const newIngs = r.ings.filter((i) => !RECIPES.some((x) => x.id !== r.id && S.recipes.includes(x.id) && x.ings.includes(i)));
-        afterBuy(`Новый рецепт: ${r.name}!${newIngs.length ? ' Новый ингредиент: ' + newIngs.map((i) => INGREDIENTS[i].name.toLowerCase()).join(', ') : ''}`);
+        const newIngs = [...new Set(r.ings)].filter((i) => !RECIPES.some((x) => x.id !== r.id && S.recipes.includes(x.id) && x.ings.includes(i)));
+        afterBuy(t('newRecipe', T(r.name)) + (newIngs.length ? t('newIng', newIngs.map((i) => T(INGREDIENTS[i].name).toLowerCase()).join(', ')) : ''));
         return;
       }
       case 'claim': {
@@ -473,6 +479,12 @@ const UI = (() => {
       case 'sfx':
         S.settings.sfx = !S.settings.sfx; Sound.setSfx(S.settings.sfx); persist();
         b.classList.toggle('off', !S.settings.sfx); Sound.play('tap'); return;
+      case 'lang':
+        S.settings.lang = LANG === 'ru' ? 'en' : 'ru';
+        setLang(S.settings.lang); persist(); applyLang(); Art.invalidate(); Sound.play('tap');
+        if (Shift.active) { closeModal(); buildStation(); updateHUD(); Shift.paused = false; pause(); }
+        else showMenu();
+        return;
       case 'popup-ok': Sound.play('coin'); closeModal(); if (!el.overlay.classList.contains('hidden')) refreshMenu(); return;
       case 'resume': Shift.paused = false; Sound.play('ui'); closeModal(); return;
       case 'quit': closeModal(); Shift.quit(); return;

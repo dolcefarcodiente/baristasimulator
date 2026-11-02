@@ -67,6 +67,7 @@ const Sound = (() => {
     brewDone() { noise(0.35, { freq: 500, slide: 1500, vol: 0.18 }); tone(320, 0.12, { vol: 0.12, slide: 180, when: 0.2 }); },
     steam() { noise(0.65, { filter: 'bandpass', freq: 4200, q: 1.2, vol: 0.09, attack: 0.08 }); },
     steamDone() { tone(660, 0.1, { type: 'triangle', vol: 0.08 }); },
+    drip() { [0, 0.18, 0.4, 0.55].forEach((w) => tone(rand(700, 950), 0.09, { vol: 0.08, slide: 400, when: w })); noise(0.8, { freq: 600, vol: 0.05, attack: 0.1 }); },
     pour() { noise(0.22, { freq: 900, slide: 1800, vol: 0.14 }); tone(480, 0.1, { vol: 0.08, slide: 340, when: 0.08 }); },
     ice() { tone(2400, 0.07, { type: 'triangle', vol: 0.08 }); tone(3100, 0.06, { type: 'triangle', vol: 0.06, when: 0.06 }); },
     plop() { tone(380, 0.12, { vol: 0.15, slide: 200 }); },

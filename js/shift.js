@@ -8,7 +8,7 @@ const Shift = {
   customers: [],
   cups: [],
   sel: 0,
-  jobs: { espresso: [], frother: [] },
+  jobs: { espresso: [], frother: [], filter: [] },
   combo: 0, maxCombo: 0,
   earned: 0, served: 0, missed: 0, wrongs: 0,
   stories: [],
@@ -21,7 +21,7 @@ const Shift = {
   start() {
     Object.assign(this, {
       active: true, paused: false, t: 0, len: Stats.shiftLen(), closing: false, endT: 0,
-      customers: [], sel: 0, jobs: { espresso: [], frother: [] },
+      customers: [], sel: 0, jobs: { espresso: [], frother: [], filter: [] },
       combo: 0, maxCombo: 0, earned: 0, served: 0, missed: 0, wrongs: 0, stories: [],
       nextSpawn: 1.2, cat: null, pointer: null,
     });
@@ -35,7 +35,7 @@ const Shift = {
     if (this.tutorial) this.spawn(null, 'latte');
     if (this.cups.length > 1 && !S.tips.cups) {
       S.tips.cups = true;
-      setTimeout(() => UI.toast('Теперь чашек несколько — нажми на чашку, чтобы выбрать её', 'long'), 1500);
+      setTimeout(() => UI.toast(t('cupsTip'), 'long'), 1500);
     }
   },
 
@@ -68,7 +68,7 @@ const Shift = {
       hidden = regState(regId).visits > 0;
       if (hidden && !S.tips.regular) {
         S.tips.regular = true;
-        UI.toast('Постоянный гость! Вспомни его любимый напиток — чаевые ×2. Не помнишь? Нажми на облачко.', 'long');
+        UI.toast(t('regularTip'), 'long');
       }
     } else {
       orders = [forced || this.pickRecipe()];
@@ -101,18 +101,16 @@ const Shift = {
     const ing = INGREDIENTS[id];
     if (cup.layers.length >= CUP_CAPACITY) {
       UI.shakeIng(id); Sound.play('busy');
-      UI.toast('Чашка полная — вылей её 🗑');
+      UI.toast(t('cupFull'));
       return;
     }
     if (ing.machine) {
-      const slots = ing.machine === 'espresso' ? Stats.groups() : Stats.pitchers();
       const jobs = this.jobs[ing.machine];
-      if (jobs.length >= slots) { UI.shakeIng(id); Sound.play('busy'); return; }
-      const dur = ing.machine === 'espresso' ? Stats.brewTime() : Stats.frothTime();
-      const job = { ing: id, cup: this.sel, t: 0, dur };
+      if (jobs.length >= Stats.slots(ing.machine)) { UI.shakeIng(id); Sound.play('busy'); return; }
+      const job = { ing: id, cup: this.sel, t: 0, dur: Stats.duration(id) };
       jobs.push(job);
       cup.layers.push({ ing: id, job });
-      Sound.play(ing.machine === 'espresso' ? 'grind' : 'steam');
+      Sound.play({ espresso: 'grind', frother: 'steam', filter: 'drip' }[ing.machine]);
     } else {
       cup.layers.push({ ing: id, job: null });
       Sound.play(ing.sfx || 'plop');
@@ -135,7 +133,7 @@ const Shift = {
     if (!cup.layers.length) return;
     for (const l of cup.layers) {
       if (!l.job) continue;
-      for (const k of ['espresso', 'frother']) {
+      for (const k of Object.keys(this.jobs)) {
         const i = this.jobs[k].indexOf(l.job);
         if (i >= 0) this.jobs[k].splice(i, 1);
       }
@@ -187,10 +185,10 @@ const Shift = {
       if (!sel.layers.length) {
         if (cu.hidden && !cu.revealed) { this.reveal(cu); return; }
         cu.wiggleT = 1; Sound.play('busy');
-        UI.toast('Сначала приготовь напиток');
+        UI.toast(t('makeFirst'));
         return;
       }
-      if (!this.cupReady(sel)) { cu.wiggleT = 1; Sound.play('busy'); UI.toast('Напиток ещё готовится…'); return; }
+      if (!this.cupReady(sel)) { cu.wiggleT = 1; Sound.play('busy'); UI.toast(t('stillBrewing')); return; }
       this.wrongServe(cu, this.sel);
       return;
     }
@@ -218,8 +216,8 @@ const Shift = {
 
     const x = cu.dx, y = cu.hy;
     Art.floatText(x, y - cu.r * 2.2, '+' + pay, '#b8860b', 22);
-    if (memory) Art.floatText(x, y - cu.r * 3.4, 'Запомнил! ×2', '#e07a5f', 15);
-    else if (f > 0.75) Art.floatText(x, y - cu.r * 3.4, 'Быстро!', '#5f927a', 14);
+    if (memory) Art.floatText(x, y - cu.r * 3.4, t('remembered'), '#e07a5f', 15);
+    else if (f > 0.75) Art.floatText(x, y - cu.r * 3.4, t('speedy'), '#5f927a', 14);
     const tgt = UI.coinTarget();
     const n = Math.min(6, 1 + Math.floor(pay / 8));
     for (let i = 0; i < n; i++) {
@@ -230,7 +228,7 @@ const Shift = {
     vibrate(15);
 
     if (COMBO_STEPS.includes(this.combo)) {
-      UI.banner(`Комбо ×${comboMult(this.combo)}!`, 'combo');
+      UI.banner(t('combo', comboMult(this.combo)), 'combo');
       Sound.play('combo', COMBO_STEPS.indexOf(this.combo));
       Art.burst(Art.W / 2, Art.H * 0.35, 'confetti', 30);
       Art.addShake(0.5);
@@ -255,7 +253,7 @@ const Shift = {
       S.tips.basics = true;
       this.pointer = null;
       this.nextSpawn = 2;
-      UI.hint('Отлично! Быстрее — больше чаевых, без ошибок — комбо 🔥', null, 4500);
+      UI.hint(t('tutDone'), null, 4500);
       persist();
     }
     UI.updateHUD();
@@ -272,11 +270,11 @@ const Shift = {
     STORY_HEARTS.forEach((h, i) => {
       if (before < h && st.hearts >= h) {
         this.stories.push({ id: cu.reg, idx: i });
-        setTimeout(() => { UI.toast(`💌 Новая история: ${reg.name}`); Sound.play('story'); }, 400);
+        setTimeout(() => { UI.toast(t('storyToast', T(reg.name))); Sound.play('story'); }, 400);
       }
     });
     if (before < MAX_HEARTS && st.hearts >= MAX_HEARTS) {
-      setTimeout(() => UI.toast(`🎁 Подарок от ${reg.name}: ${reg.perk.text}`, 'long'), 1400);
+      setTimeout(() => UI.toast(t('giftToast', T(reg.name), T(reg.perk.text)), 'long'), 1400);
       Art.invalidate();
     }
   },
@@ -288,13 +286,13 @@ const Shift = {
     cu.pat -= cu.patMax * 0.25;
     cu.shakeT = 1;
     this.wrongs++;
-    Art.floatText(cu.dx, cu.hy - cu.r * 2.2, 'Это не то!', '#c4473a', 17);
+    Art.floatText(cu.dx, cu.hy - cu.r * 2.2, t('wrong'), '#c4473a', 17);
     Sound.play('wrong');
     vibrate([30, 40, 30]);
   },
 
   breakCombo() {
-    if (this.combo >= 3) Art.floatText(Art.W / 2, Art.H * 0.25, 'Комбо сброшено', '#8a6b5a', 15);
+    if (this.combo >= 3) Art.floatText(Art.W / 2, Art.H * 0.25, t('comboLost'), '#8a6b5a', 15);
     this.combo = 0;
     UI.updateHUD();
   },
@@ -310,7 +308,7 @@ const Shift = {
     S.coins += coins;
     this.earned += coins;
     S.stats.catPets++;
-    Art.floatText(cat.x, Art.counterTop - 70, `Мурр! +${coins}`, '#e07a5f', 17);
+    Art.floatText(cat.x, Art.counterTop - 70, t('purr', coins), '#e07a5f', 17);
     Progress.check();
     UI.updateHUD();
   },
@@ -333,13 +331,13 @@ const Shift = {
       if (this.t >= this.len) {
         this.t = this.len;
         this.closing = true;
-        UI.banner('Закрываемся!');
+        UI.banner(t('closing'));
         Sound.play('close');
       }
     }
 
     // оборудование
-    for (const key of ['espresso', 'frother']) {
+    for (const key of Object.keys(this.jobs)) {
       const jobs = this.jobs[key];
       for (let i = jobs.length - 1; i >= 0; i--) {
         const j = jobs[i];
@@ -348,7 +346,7 @@ const Shift = {
         jobs.splice(i, 1);
         const layer = this.cups[j.cup].layers.find((l) => l.job === j);
         if (layer) layer.job = null;
-        Sound.play(key === 'espresso' ? 'brewDone' : 'steamDone');
+        Sound.play({ espresso: 'brewDone', frother: 'steamDone', filter: 'brewDone' }[key]);
         UI.renderCup(j.cup);
       }
     }
@@ -374,7 +372,7 @@ const Shift = {
           this.missed++;
           this.breakCombo();
           Sound.play('leave');
-          Art.floatText(cu.dx || cu.x, (cu.hy || Art.H * 0.5) - 30, 'Ушёл без кофе…', '#8a6b5a', 14);
+          Art.floatText(cu.dx || cu.x, (cu.hy || Art.H * 0.5) - 30, t('leftGuest'), '#8a6b5a', 14);
         }
       }
       if (cu.state === 'leave' && cu.x >= W + 80) this.customers.splice(i, 1);
@@ -414,7 +412,7 @@ const Shift = {
   tutorialHint() {
     const cu = this.customers.find((c) => c.state === 'wait');
     this.pointer = null;
-    if (!cu) { UI.hint('Встречай первого гостя…'); return; }
+    if (!cu) { UI.hint(t('tutWait')); return; }
     const cup = this.cups[this.sel];
     const need = [...RECIPE.latte.ings];
     let extra = false;
@@ -423,10 +421,10 @@ const Shift = {
       if (k < 0) { extra = true; break; }
       need.splice(k, 1);
     }
-    if (extra) UI.hint('Ой, это не латте. Вылей чашку', '#btn-trash');
-    else if (need.length) UI.hint(`Латте = эспрессо + молоко. Нажми «${INGREDIENTS[need[0]].name}»`, `[data-ing="${need[0]}"]`);
-    else if (!this.cupReady(cup)) UI.hint('Готовится… секунду');
-    else { UI.hint('Готово! Нажми на гостя, чтобы отдать латте'); this.pointer = cu; }
+    if (extra) UI.hint(t('tutOops'), '#btn-trash');
+    else if (need.length) UI.hint(t('tutAdd', T(INGREDIENTS[need[0]].name)), `[data-ing="${need[0]}"]`);
+    else if (!this.cupReady(cup)) UI.hint(t('tutBrewing'));
+    else { UI.hint(t('tutServe')); this.pointer = cu; }
   },
 
   quit() {

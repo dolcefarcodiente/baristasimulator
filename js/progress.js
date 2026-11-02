@@ -9,14 +9,14 @@ const Progress = (() => {
   // ---------- задания ----------
   function questText(q) {
     switch (q.type) {
-      case 'serve': return `Обслужи ${q.target} ${plural(q.target, 'гостя', 'гостей', 'гостей')}`;
-      case 'drink': return `Приготовь ${RECIPE[q.drink].name.toLowerCase()} × ${q.target}`;
-      case 'combo': return `Набери комбо из ${q.target} заказов`;
-      case 'earn': return `Заработай ${fmt(q.target)} за одну смену`;
-      case 'regular': return `Угости постоянных гостей ${q.target} ${plural(q.target, 'раз', 'раза', 'раз')}`;
-      case 'memory': return `Вспомни заказ постоянного гостя ${q.target} ${plural(q.target, 'раз', 'раза', 'раз')}`;
-      case 'perfect': return 'Смена, в которой никто не ушёл без кофе';
-      case 'stars': return 'Получи 3 звезды за смену';
+      case 'serve': return t('qServe', q.target);
+      case 'drink': return t('qDrink', T(RECIPE[q.drink].name), q.target);
+      case 'combo': return t('qCombo', q.target);
+      case 'earn': return t('qEarn', fmt(q.target));
+      case 'regular': return t('qRegular', q.target);
+      case 'memory': return t('qMemory', q.target);
+      case 'perfect': return t('qPerfect');
+      case 'stars': return t('qStars');
     }
     return '';
   }
@@ -48,7 +48,7 @@ const Progress = (() => {
     if (q.progress >= q.target) {
       q.progress = q.target;
       q.done = true;
-      UI.toast(`✅ Задание выполнено: ${questText(q)}`);
+      UI.toast(t('questDone', questText(q)));
       Sound.play('buy');
     }
   }
@@ -116,7 +116,7 @@ const Progress = (() => {
       if (S.ach[a.id] || !a.check(S)) continue;
       S.ach[a.id] = Date.now();
       S.coins += a.reward;
-      UI.toast(`🏆 ${a.name} · +${a.reward}`, 'gold');
+      UI.toast(`🏆 ${T(a.name)} · +${a.reward}`, 'gold');
       Sound.play('buy');
     }
   }
@@ -131,25 +131,23 @@ const Progress = (() => {
       if (coins >= 1) {
         S.coins += coins;
         popups.push({
-          icon: '🦔', title: 'Пока тебя не было…',
-          body: `Ёжик Пых варил кофе ${hrs >= 1 ? Math.floor(hrs) + ' ' + plural(Math.floor(hrs), 'час', 'часа', 'часов') : 'немного'} и заработал`,
-          coins, note: hrs >= 8 ? 'Ёжик устаёт через 8 часов — заходи почаще!' : '',
+          icon: '🦔', title: t('awayTitle'), body: t('awayBody', Math.floor(hrs)),
+          coins, note: hrs >= 8 ? t('awayNote') : '',
         });
       }
     }
     const today = dateStr();
     if (S.streak.last === null) {
       S.streak = { last: today, count: 1 };
-      popups.push({ icon: '☕', title: 'Добро пожаловать в «Пенку»!', coins: 0,
-        body: 'Это твоя маленькая кофейня. Готовь напитки, знакомься с гостями и заходи каждый день — будут подарки.', note: '' });
+      popups.push({ icon: '☕', title: t('welcomeTitle'), coins: 0, body: t('welcomeBody'), note: '' });
     } else if (S.streak.last !== today) {
       S.streak.count = S.streak.last === yesterdayStr() ? S.streak.count + 1 : 1;
       S.streak.last = today;
       const n = S.streak.count;
       const reward = Math.round((20 + 15 * Math.min(n, 7)) * (1 + Math.min(S.day, 30) / 15) / 5) * 5;
       S.coins += reward;
-      popups.push({ icon: '🔥', title: n > 1 ? `Серия: ${n} ${plural(n, 'день', 'дня', 'дней')} подряд!` : 'С возвращением!', streak: n, coins: reward,
-        body: n > 1 ? 'Ты заходишь каждый день — награда растёт' : 'Заходи завтра — награда будет больше', note: '' });
+      popups.push({ icon: '🔥', title: n > 1 ? t('streakTitle', n) : t('backTitle'), streak: n, coins: reward,
+        body: n > 1 ? t('streakBody') : t('backBody'), note: '' });
     }
     quests();
     check();

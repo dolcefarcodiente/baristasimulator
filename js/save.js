@@ -21,7 +21,7 @@ function defaultSave() {
     ach: {},
     stats: { served: 0, drinks: {}, bestCombo: 0, bestShift: 0, threeStars: 0, catPets: 0, memory: 0, regularServes: 0, shifts: 0, stars: 0 },
     lastSeen: Date.now(),
-    settings: { music: true, sfx: true },
+    settings: { music: true, sfx: true, lang: null },
     tips: {},
   };
 }
@@ -76,6 +76,15 @@ const Stats = {
   groups: () => upValue('espresso_groups'),
   frothTime: () => upValue('frother_speed') * (1 - perk('frother')),
   pitchers: () => upValue('frother_slots'),
+  filterTime: () => upValue('filter_speed'),
+  // Сколько одновременных заказов тянет оборудование и сколько длится приготовление
+  slots: (machine) => (machine === 'espresso' ? Stats.groups() : machine === 'frother' ? Stats.pitchers() : 1),
+  duration: (ing) => {
+    const m = INGREDIENTS[ing];
+    if (m.machine === 'espresso') return Stats.brewTime() * (m.brew || 1);
+    if (m.machine === 'frother') return Stats.frothTime();
+    return Stats.filterTime();
+  },
   cups: () => upValue('cups'),
   capacity: () => upValue('counter'),
   patienceMult: () => 1 + upValue('patience') + perk('patience'),
@@ -91,6 +100,12 @@ function availableIngredients() {
   const set = new Set();
   for (const id of S.recipes) for (const ing of RECIPE[id].ings) set.add(ing);
   return INGREDIENT_ORDER.filter((i) => set.has(i));
+}
+
+// Инструменты с доступными на них действиями
+function availableTools() {
+  const ings = new Set(availableIngredients());
+  return TOOLS.map((tl) => ({ ...tl, ings: tl.ings.filter((i) => ings.has(i)) })).filter((tl) => tl.ings.length);
 }
 
 function regularEligible(r) {

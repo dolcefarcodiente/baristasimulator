@@ -155,7 +155,22 @@ button { font-family: inherit; color: inherit; }
 .trash svg { width: 36px; height: 36px; }
 .trash:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); }
 
-#ingredients { display: grid; grid-template-columns: repeat(auto-fill, minmax(68px, 1fr)); gap: 8px; }
+/* инструменты бариста: каждая группа — своё оборудование */
+#ingredients { display: flex; flex-wrap: wrap; gap: 8px; }
+.tool {
+  flex: 1 1 auto; background: rgba(255, 240, 220, .07); border: 2px solid rgba(0, 0, 0, .28);
+  border-radius: 16px; padding: 5px 6px 8px; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06);
+}
+.tool-head {
+  display: flex; align-items: center; gap: 5px; margin: 0 2px 6px;
+  color: #f3dfc8; font-weight: 800; font-size: 11.5px; white-space: nowrap;
+}
+.tool-head svg { width: 22px; height: 22px; flex: none; }
+.tool-head .slots { position: static; margin-left: auto; padding-left: 6px; }
+.tool.working .tool-head svg { animation: wobble .25s linear infinite; }
+.tool.busy .ing { background: #efe2d0; }
+.tool-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+.tool-btns .ing { flex: 1 0 62px; max-width: 96px; }
 .ing {
   position: relative; height: 72px; cursor: pointer; padding: 4px 2px;
   background: var(--cream); border: 3px solid var(--ink); border-radius: 16px; box-shadow: 0 4px 0 var(--ink);
@@ -211,6 +226,7 @@ button { font-family: inherit; color: inherit; }
   font-size: 20px; cursor: pointer; box-shadow: 0 3px 0 var(--ink);
 }
 .icon-btn.off { background: #ddd; filter: grayscale(1); opacity: .6; }
+.icon-btn.lang { font-size: 13px; font-weight: 900; background: #fff; }
 .chip {
   display: inline-flex; align-items: center; background: #fff; border: 2.5px solid var(--ink); border-radius: 999px;
   padding: 3px 10px; font-weight: 900; font-size: 14px; white-space: nowrap;
@@ -355,11 +371,22 @@ button { font-family: inherit; color: inherit; }
 @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
 
 /* ---------- компактные экраны ---------- */
-@media (max-width: 380px) {
-  .ing { height: 64px; font-size: 10.5px; }
-  .ing svg { width: 30px; height: 30px; }
-  #ingredients { grid-template-columns: repeat(auto-fill, minmax(58px, 1fr)); gap: 6px; }
-  .cup-slot, .trash { height: 92px; }
+@keyframes wobble { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
+
+@media (max-width: 430px) {
+  #station { padding: 8px 7px calc(8px + var(--bottom)); }
+  #cups-row { margin-bottom: 7px; gap: 6px; }
+  #cups { gap: 6px; }
+  #ingredients { gap: 5px; }
+  .tool { padding: 3px 4px 5px; border-radius: 13px; }
+  .tool-head { font-size: 10px; margin-bottom: 3px; gap: 3px; }
+  .tool-head svg { width: 16px; height: 16px; }
+  .tool-btns { gap: 4px; }
+  .tool-btns .ing { flex-basis: 47px; height: 52px; font-size: 9.5px; border-radius: 12px; box-shadow: 0 3px 0 var(--ink); }
+  .ing svg { width: 26px; height: 26px; }
+  .cup-slot, .trash { height: 80px; }
+  .trash { flex-basis: 54px; }
+  .cup { width: 44px; height: 50px; }
 }
 @media (max-height: 560px) and (orientation: landscape) {
   #app.in-shift { flex-direction: row; }
