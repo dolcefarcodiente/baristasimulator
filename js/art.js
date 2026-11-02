@@ -52,7 +52,9 @@ const Art = (() => {
     L.win = { x: Math.round(W * 0.04), y: wyTop, w: ww, h: Math.round(Math.min(wainscot - 26 - wyTop, ww * 1.2)) };
     const bw = Math.round(narrow ? W * 0.3 : Math.min(W * 0.26, 220));
     L.board = { w: bw, h: Math.round(Math.min(H * 0.25, bw * 0.8)) };
-    L.board.x = Math.round(W * 0.96 - L.board.w); L.board.y = Math.round(H * 0.1);
+    L.board.x = Math.round(W * 0.96 - L.board.w);
+    // На телефоне вывеска висит над доской, поэтому под чёлкой доска опускается ниже панели со счётом
+    L.board.y = Math.round(Math.max(H * 0.1, narrow && safeTop ? safeTop + 56 + bw / 4.4 + 10 : 0));
     invalidate();
   }
   function invalidate() { bg = null; counter = null; grain = null; }
@@ -513,7 +515,8 @@ const Art = (() => {
     // Вывеска: на широком экране — в простенке между окном и доской, на телефоне — над доской
     const gap0 = b.x - (w.x + w.w);
     const signCX = gap0 > 130 ? (w.x + w.w + b.x) / 2 : b.x + b.w / 2;
-    const signW = gap0 > 130 ? Math.min(gap0 * 0.9, 200) : b.w, sx = signCX - signW / 2, sy = safeTop + H * 0.03 + (safeTop ? 44 : 0); // на телефоне вывеска ниже панели со счётом
+    const signW = gap0 > 130 ? Math.min(gap0 * 0.9, 200) : b.w, sx = signCX - signW / 2;
+    const sy = gap0 > 130 ? safeTop + H * 0.03 + (safeTop ? 44 : 0) : b.y - signW / 4.4 - 8; // на телефоне — прямо над доской
     if (upLevel('sign') > 0) {
       g.save();
       g.font = `900 ${signW / 4.2}px Nunito, ui-rounded, system-ui, sans-serif`;
@@ -1617,7 +1620,7 @@ const Art = (() => {
   }
 
   return {
-    resize, invalidate, render, updateFx, setSafeTop(v) { safeTop = v; invalidate(); }, burst, floatText, flyCoin, addShake, drawPortrait, drawPerson,
+    resize, invalidate, render, updateFx, setSafeTop(v) { safeTop = v; resize(); }, burst, floatText, flyCoin, addShake, drawPortrait, drawPerson,
     slotX, personR, get W() { return W; }, get H() { return H; }, get counterTop() { return L.counterTop; },
   };
 })();
