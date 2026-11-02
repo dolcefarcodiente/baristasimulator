@@ -504,10 +504,10 @@ const Art = (() => {
     for (let x = w.x + 8; x < w.x + w.w; x += 26) { ctx.beginPath(); ctx.arc(x + 11, ry0 + 10, 10, Math.PI, 0); ctx.stroke(); }
     // ближний берег: тёмные деревья и кусты с россыпью листьев
     const br = seeded(43);
-    const bushCol = mix('#5a6a3a', '#1f2a1e', dark), leafCol = mix('#d98a5a', '#4a3040', dark);
+    const bushCol = mix('#5a6a3a', '#1f2a1e', dark), bushDark = mix('#4a5830', '#17201a', dark), leafCol = mix('#d98a5a', '#4a3040', dark);
     for (let x = w.x - 10; x < w.x + w.w + 10; x += 22) {
       const bh = w.h * (0.12 + br() * 0.14);
-      ctx.fillStyle = br() < 0.5 ? bushCol : shade(bushCol, -0.18);
+      ctx.fillStyle = br() < 0.5 ? bushCol : bushDark;
       ctx.beginPath(); ctx.ellipse(x + 11, w.y + w.h - bh * 0.4, 18, bh, 0, 0, 7); ctx.fill();
       ctx.fillStyle = leafCol;
       for (let k = 0; k < 4; k++) if (br() < 0.7) ctx.fillRect(x + br() * 22, w.y + w.h - bh * 0.9 + br() * bh, 2.5, 2);
