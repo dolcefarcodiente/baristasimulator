@@ -667,9 +667,9 @@ const Art = (() => {
         ctx.fillStyle = gr; ctx.fillRect(x - H * 0.5, 0, H, H);
       }
       if (L.bulbs) for (const [bx, by] of L.bulbs) {
-        const gr = ctx.createRadialGradient(bx, by, 1, bx, by, 16);
-        gr.addColorStop(0, `rgba(255,220,150,${0.6 * dark})`); gr.addColorStop(1, 'rgba(255,220,150,0)');
-        ctx.fillStyle = gr; ctx.fillRect(bx - 16, by - 16, 32, 32);
+        const gr = ctx.createRadialGradient(bx, by, 1, bx, by, 11);
+        gr.addColorStop(0, `rgba(255,220,150,${0.42 * dark})`); gr.addColorStop(1, 'rgba(255,220,150,0)');
+        ctx.fillStyle = gr; ctx.fillRect(bx - 11, by - 11, 22, 22);
       }
       ctx.restore();
     }
