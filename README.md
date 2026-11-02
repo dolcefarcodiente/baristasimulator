@@ -24,8 +24,20 @@ python3 -m http.server 8137 --directory "Coffee Shop"
 
 ## На телефон и в App Store
 
-- **Как приложение с сайта:** выложи папку на любой хостинг (GitHub Pages, Netlify), открой ссылку на телефоне и выбери «На экран "Домой"».
-- **App Store / Google Play:** упаковать через Capacitor (`npx cap add ios`, сборка в Xcode). Нужен аккаунт Apple Developer.
+- **Как приложение с сайта:** открой ссылку на телефоне и выбери «На экран "Домой"».
+- **Приложение для iOS (Capacitor):** проект лежит в `ios/`. Нужны Xcode и Node.
+
+```bash
+npm install
+```
+
+```bash
+npm run ios
+```
+
+Команда собирает веб-часть в `dist/`, копирует её в iOS-проект и открывает его в Xcode. Дальше выбираешь симулятор или свой iPhone и нажимаешь ▶. Для публикации в App Store нужен аккаунт Apple Developer: в Xcode укажи свою команду в Signing & Capabilities, затем Product → Archive.
+
+После любых правок в игре повторяй `npm run ios`, чтобы приложение подхватило новые файлы.
 
 ## Файлы
 

@@ -1,0 +1,14 @@
+{
+  "appId": "com.dolcefarcodiente.salem",
+  "appName": "Sälem",
+  "webDir": "dist",
+  "backgroundColor": "#3b2a22",
+  "ios": {
+    "contentInset": "never",
+    "scrollEnabled": false,
+    "allowsLinkPreview": false
+  },
+  "plugins": {
+    "StatusBar": { "style": "LIGHT", "overlaysWebView": true }
+  }
+}

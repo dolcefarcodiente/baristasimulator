@@ -1,0 +1,17 @@
+{
+  "name": "salem-coffee",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sälem — the café on the corner. Cozy coffee shop game.",
+  "scripts": {
+    "build": "node scripts/build-www.js",
+    "ios": "npm run build && npx cap sync ios && npx cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/cli": "^8.6.0",
+    "@capacitor/core": "^8.6.0",
+    "@capacitor/haptics": "^8.0.2",
+    "@capacitor/ios": "^8.6.0",
+    "@capacitor/status-bar": "^8.0.4"
+  }
+}

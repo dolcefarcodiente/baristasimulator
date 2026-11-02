@@ -1,1 +1,7 @@
 .DS_Store
+node_modules/
+dist/
+ios/App/build/
+ios/App/DerivedData/
+ios/App/Pods/
+ios/App/App/public/

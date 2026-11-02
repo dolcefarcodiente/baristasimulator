@@ -213,6 +213,13 @@ const Sound = (() => {
   };
 })();
 
+// В приложении (Capacitor) вибрация идёт через Haptics, в браузере — через navigator.vibrate
 function vibrate(ms) {
-  try { if (navigator.vibrate) navigator.vibrate(ms); } catch (e) { /* нет вибрации */ }
+  try {
+    const H = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Haptics;
+    if (H) {
+      const strong = Array.isArray(ms) || ms >= 20;
+      H.impact({ style: strong ? 'MEDIUM' : 'LIGHT' });
+    } else if (navigator.vibrate) navigator.vibrate(ms);
+  } catch (e) { /* нет вибрации */ }
 }

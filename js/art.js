@@ -6,6 +6,7 @@ const Art = (() => {
   let W = 0, H = 0, DPR = 1;
   let bg = null, counter = null;
   let time = 0, shake = 0;
+  let safeTop = 0; // отступ под чёлку/статус-бар телефона
   const particles = [];
   const texts = [];
   const flyers = [];
@@ -143,7 +144,7 @@ const Art = (() => {
     }
 
     // вывеска
-    const signW = Math.min(W * 0.3, 200), sx = W / 2 - signW / 2, sy = H * 0.04;
+    const signW = Math.min(W * 0.3, 200), sx = W / 2 - signW / 2, sy = safeTop + H * 0.04 + (safeTop ? 44 : 0); // на телефоне вывеска ниже панели со счётом
     if (upLevel('sign') > 0) {
       g.save();
       g.font = `900 ${signW / 4.2}px Nunito, ui-rounded, system-ui, sans-serif`;
@@ -1022,7 +1023,7 @@ const Art = (() => {
   }
 
   return {
-    resize, invalidate, render, updateFx, burst, floatText, flyCoin, addShake, drawPortrait, drawPerson,
+    resize, invalidate, render, updateFx, setSafeTop(v) { safeTop = v; invalidate(); }, burst, floatText, flyCoin, addShake, drawPortrait, drawPerson,
     slotX, personR, get W() { return W; }, get H() { return H; }, get counterTop() { return L.counterTop; },
   };
 })();

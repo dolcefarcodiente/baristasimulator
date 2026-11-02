@@ -11,6 +11,19 @@
   const wrap = document.getElementById('scene-wrap');
   const canvas = document.getElementById('scene');
   Art.resize();
+  // Насколько сцену нужно опустить под статус-бар: меряем env(safe-area-inset-top) через пробный элемент.
+  // В приложении отступ становится известен не сразу, поэтому меряем ещё раз чуть позже и при повороте.
+  const probe = document.createElement('div');
+  probe.style.cssText = 'position:fixed;top:0;left:0;width:0;height:env(safe-area-inset-top, 0px);visibility:hidden;pointer-events:none';
+  document.body.appendChild(probe);
+  let safeTop = -1;
+  const measureSafeTop = () => {
+    const v = probe.getBoundingClientRect().height;
+    if (v !== safeTop) { safeTop = v; Art.setSafeTop(v); }
+  };
+  measureSafeTop();
+  setTimeout(measureSafeTop, 300); setTimeout(measureSafeTop, 1200);
+  window.addEventListener('resize', measureSafeTop);
   if (window.ResizeObserver) {
     new ResizeObserver(() => Art.resize()).observe(wrap);
     new ResizeObserver(() => Bar.resize()).observe(document.getElementById('cups'));
@@ -96,6 +109,12 @@
   const popups = Progress.boot();
   UI.showMenu();
   UI.queuePopups(popups);
+
+  // В приложении: статус-бар поверх игры, тёмные значки на светлой стене
+  try {
+    const SB = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.StatusBar;
+    if (SB) { SB.setOverlaysWebView({ overlay: true }); SB.setStyle({ style: 'LIGHT' }); }
+  } catch (e) { /* не в приложении */ }
 
   // Офлайн-режим и установка на телефон
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
