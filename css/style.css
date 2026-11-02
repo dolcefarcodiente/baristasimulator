@@ -7,6 +7,7 @@
   --latte: #ead3b5;
   --terra: #e07a5f;
   --green: #2f6b4f;
+  --plum: #5a3e55;
   --terra-d: #c4603f;
   --sage: #81b29a;
   --sage-d: #5f927a;
@@ -227,7 +228,7 @@ button { font-family: inherit; color: inherit; }
 .menu-sheet::before {
   /* полосатый козырёк, как над входом в кофейню */
   content: ""; position: absolute; left: 0; right: 0; top: 0; height: 22px; border-radius: 25px 25px 0 0;
-  background: repeating-linear-gradient(90deg, var(--green) 0 30px, #fff3e2 30px 60px);
+  background: repeating-linear-gradient(90deg, var(--plum) 0 30px, #fff3e2 30px 60px);
   -webkit-mask: radial-gradient(15px 9px at 15px 100%, transparent 98%, #000) 0 0 / 30px 100%;
           mask: radial-gradient(15px 9px at 15px 100%, transparent 98%, #000) 0 0 / 30px 100%;
 }
