@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <title>Пенка — уютная кофейня</title>
+  <meta name="description" content="Уютный симулятор кофейни: готовь напитки, знакомься с постоянными гостями и развивай свою «Пенку».">
+  <meta name="theme-color" content="#3b2a22">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Пенка">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app">
+    <div id="scene-wrap">
+      <canvas id="scene"></canvas>
+      <div id="hud" class="hidden">
+        <div class="hud-pill" id="hud-coins"><span class="coin"></span><span id="hud-coins-val">0</span></div>
+        <div class="hud-pill" id="hud-combo"></div>
+        <div class="hud-pill" id="hud-time"><span class="clock"></span><span id="hud-time-val">2:30</span></div>
+        <button class="hud-pill hud-btn" id="btn-pause" aria-label="Пауза">❚❚</button>
+      </div>
+      <div id="banner"></div>
+      <div id="hint" class="hidden"></div>
+      <div id="toasts"></div>
+    </div>
+    <div id="station" class="hidden">
+      <div id="cups-row">
+        <div id="cups"></div>
+        <button id="btn-trash" class="trash" aria-label="Вылить"></button>
+      </div>
+      <div id="ingredients"></div>
+    </div>
+    <div id="overlay" class="hidden"><div id="panel"></div></div>
+    <div id="modal" class="hidden"><div id="modal-card"></div></div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/icons.js"></script>
+  <script src="js/save.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/progress.js"></script>
+  <script src="js/art.js"></script>
+  <script src="js/shift.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
