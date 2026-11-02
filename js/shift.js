@@ -26,6 +26,7 @@ const Shift = {
       nextSpawn: 1.2, cat: null, pointer: null,
     });
     this.cups = Array.from({ length: Stats.cups() }, () => ({ layers: [] }));
+    Talk.clear();
     this.tutorial = !S.tips.basics;
     // Постоянные гости на эту смену: новые приходят обязательно, знакомые — с шансом.
     this.regPlan = REGULARS.filter(regularEligible)
@@ -215,9 +216,9 @@ const Shift = {
     S.stats.drinks[rid] = (S.stats.drinks[rid] || 0) + 1;
 
     const x = cu.dx, y = cu.hy;
-    Art.floatText(x, y - cu.r * 2.2, '+' + pay, '#b8860b', 22);
+    Art.floatText(x, y - cu.r * 2.2, '+' + pay, '#f2c46a', 22);
     if (memory) Art.floatText(x, y - cu.r * 3.4, t('remembered'), '#e07a5f', 15);
-    else if (f > 0.75) Art.floatText(x, y - cu.r * 3.4, t('speedy'), '#5f927a', 14);
+    else if (f > 0.75) Art.floatText(x, y - cu.r * 3.4, t('speedy'), '#7fc28a', 14);
     const tgt = UI.coinTarget();
     const n = Math.min(6, 1 + Math.floor(pay / 8));
     for (let i = 0; i < n; i++) {
@@ -237,6 +238,7 @@ const Shift = {
     const done = cu.orders.length === 0;
     if (done) {
       this.leave(cu, true);
+      Talk.thanks(cu);
       cu.jumpT = 1;
       for (let i = 0; i < 4; i++) Art.burst(x, y - cu.r, 'heart', 1);
       this.served++;
@@ -286,13 +288,13 @@ const Shift = {
     cu.pat -= cu.patMax * 0.25;
     cu.shakeT = 1;
     this.wrongs++;
-    Art.floatText(cu.dx, cu.hy - cu.r * 2.2, t('wrong'), '#c4473a', 17);
+    Art.floatText(cu.dx, cu.hy - cu.r * 2.2, t('wrong'), '#ff6b6b', 17);
     Sound.play('wrong');
     vibrate([30, 40, 30]);
   },
 
   breakCombo() {
-    if (this.combo >= 3) Art.floatText(Art.W / 2, Art.H * 0.25, t('comboLost'), '#8a6b5a', 15);
+    if (this.combo >= 3) Art.floatText(Art.W / 2, Art.H * 0.25, t('comboLost'), '#d8c3d2', 15);
     this.combo = 0;
     UI.updateHUD();
   },
@@ -363,16 +365,17 @@ const Shift = {
       cu.shakeT = Math.max(0, cu.shakeT - dt * 2);
       cu.wiggleT = Math.max(0, cu.wiggleT - dt * 3);
       cu.joyT = Math.max(0, cu.joyT - dt);
-      if (cu.state === 'enter' && Math.abs(d) < 1) { cu.state = 'wait'; cu.bubbleT = 0.001; }
+      if (cu.state === 'enter' && Math.abs(d) < 1) { cu.state = 'wait'; cu.bubbleT = 0.001; Talk.greet(cu); }
       if (cu.state === 'wait') {
         cu.bubbleT += dt;
         if (!cu.frozen) cu.pat -= dt * (this.closing ? 1.6 : 1);
         if (cu.pat <= 0) {
           this.leave(cu, false);
+          Talk.upset(cu);
           this.missed++;
           this.breakCombo();
           Sound.play('leave');
-          Art.floatText(cu.dx || cu.x, (cu.hy || Art.H * 0.5) - 30, t('leftGuest'), '#8a6b5a', 14);
+          Art.floatText(cu.dx || cu.x, (cu.hy || Art.H * 0.5) - 30, t('leftGuest'), '#d8c3d2', 14);
         }
       }
       if (cu.state === 'leave' && cu.x >= W + 80) this.customers.splice(i, 1);
@@ -440,6 +443,7 @@ const Shift = {
     this.pointer = null;
     this.cat = null;
     UI.hint(null);
+    Talk.clear();
     const target = dayTarget(S.day);
     const ratio = this.earned / target;
     const stars = ratio >= 1 ? 3 : ratio >= 0.7 ? 2 : ratio >= 0.4 ? 1 : 0;

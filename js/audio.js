@@ -1,7 +1,7 @@
 // Звуки и музыка — всё синтезируется через Web Audio, без внешних файлов.
 
 const Sound = (() => {
-  let ac = null, master, sfxBus, musicBus, noiseBuf, crackle = null;
+  let ac = null, master, sfxBus, musicBus, noiseBuf, crackle = null, rain = null;
   let musicOn = true, sfxOn = true;
   let schedTimer = null, nextTime = 0, step = 0;
 
@@ -90,6 +90,10 @@ const Sound = (() => {
     meow() { tone(700, 0.35, { type: 'triangle', vol: 0.09, slide: 1050, lp: 2500 }); tone(1000, 0.25, { type: 'triangle', vol: 0.07, slide: 600, when: 0.25, lp: 2500 }); },
     story() { [0, 7, 12].forEach((n, i) => tone(midi(79 + n), 0.6, { vol: 0.08, when: i * 0.12 })); },
     open() { [0, 4, 7].forEach((n, i) => tone(midi(72 + n), 0.5, { type: 'triangle', vol: 0.09, when: i * 0.09 })); sfx.door(); },
+    // «голос» печатающегося текста в диалоге — тихий короткий щелчок
+    blip() { tone(midi(rand(72, 76) | 0), 0.04, { type: 'square', vol: 0.025, lp: 2200 }); },
+    // далёкий раскат грома: низкий шум, медленно гаснущий
+    thunder() { noise(2.8, { freq: 420, slide: 70, vol: 0.32, attack: 0.15, rate: 0.5 }); noise(1.6, { freq: 900, slide: 120, vol: 0.12, attack: 0.03, when: 0.05 }); },
     close() { [7, 4, 0].forEach((n, i) => tone(midi(72 + n), 0.5, { type: 'triangle', vol: 0.09, when: i * 0.12 })); },
   };
 
@@ -179,11 +183,31 @@ const Sound = (() => {
     crackle = src;
   }
 
+  // Дождь за окном: шум, приглушённый стеклом, и редкие капли по подоконнику
+  function startRain() {
+    if (rain) return;
+    const len = ac.sampleRate * 4;
+    const buf = ac.createBuffer(1, len, ac.sampleRate);
+    const d = buf.getChannelData(0);
+    let b = 0;
+    for (let i = 0; i < len; i++) {
+      b = b * 0.97 + (Math.random() * 2 - 1) * 0.03; // мягкий «розовый» шум
+      d[i] = b * 2.2 + (Math.random() * 2 - 1) * 0.05;
+      if (Math.random() < 0.00025) for (let k = 0; k < 220 && i + k < len; k++) d[i + k] += Math.sin(k * 0.9) * Math.exp(-k / 40) * 0.35;
+    }
+    const src = ac.createBufferSource(); src.buffer = buf; src.loop = true;
+    const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 2400;
+    const g = ac.createGain(); g.gain.value = 0.55;
+    src.connect(f); f.connect(g); g.connect(musicBus); src.start();
+    rain = src;
+  }
+
   function startMusic() {
     if (!ac) return;
     musicBus.gain.cancelScheduledValues(ac.currentTime);
     musicBus.gain.setTargetAtTime(0.55, ac.currentTime, 0.8);
     startCrackle();
+    startRain();
     if (schedTimer) return;
     nextTime = ac.currentTime + 0.1;
     schedTimer = setInterval(() => {
@@ -201,6 +225,7 @@ const Sound = (() => {
       if (musicOn) return;
       clearInterval(schedTimer); schedTimer = null;
       if (crackle) { crackle.stop(); crackle = null; }
+      if (rain) { rain.stop(); rain = null; }
     }, 1200);
   }
 

@@ -3,8 +3,13 @@
 
 const Bar = (() => {
   const cv = document.getElementById('bar');
-  const ctx = cv.getContext('2d');
-  let W = 0, H = 0, DPR = 1, time = 0;
+  const mctx = cv.getContext('2d');
+  // чашки и техника рисуются в маленький буфер и растягиваются без сглаживания — как сцена
+  const lo = document.createElement('canvas');
+  const lctx = lo.getContext('2d');
+  let ctx = lctx;
+  let W = 0, H = 0, DPR = 1, PX = 2, time = 0;
+  const FONT = '"Pixelify Sans", ui-monospace, monospace';
   const born = new WeakMap(); // слой → момент добавления (рост слоя для мгновенных ингредиентов)
   let pulses = [];            // короткие анимации: чайник, помпа, лёд, сливки, джелато, корица
   const INK = '#3b2a22';
@@ -26,6 +31,8 @@ const Bar = (() => {
     DPR = Math.min(window.devicePixelRatio || 1, 2.5);
     W = r.width; H = r.height;
     cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+    PX = Math.max(2, Math.round(DPR * 1.5));
+    lo.width = Math.ceil(cv.width / PX); lo.height = Math.ceil(cv.height / PX);
   }
 
   // ---------- геометрия ----------
@@ -132,21 +139,36 @@ const Bar = (() => {
     // ободок чашки
     ctx.fillStyle = '#fffaf2'; ctx.beginPath(); ctx.ellipse(cx + cw / 2, cy, cw / 2, cw * 0.09, 0, 0, 7); ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = lw; ctx.stroke();
     ctx.fillStyle = 'rgba(0,0,0,.1)'; ctx.beginPath(); ctx.ellipse(cx + cw / 2, cy + 1, cw * 0.42, cw * 0.06, 0, 0, 7); ctx.fill();
-    // подпись
+  }
+
+  // Подпись под чашкой — чётким пиксельным шрифтом поверх растянутого буфера
+  function drawLabel(i, sel) {
+    const s = slot(i), cup = Shift.cups[i];
     const rec = recipeFor(Shift.cupItems(cup));
-    let label = '', col = '#f3dfc8';
+    let label = '', col = '#e9d8b8';
     if (!cup.layers.length) label = Shift.cups.length > 1 && sel ? t('selected') : '';
     else if (!Shift.cupReady(cup)) label = t('brewing');
-    else if (rec && S.recipes.includes(rec.id)) { label = T(rec.name) + ' ✓'; col = '#b7f0c8'; }
+    else if (rec && S.recipes.includes(rec.id)) { label = T(rec.name) + ' ✓'; col = '#9fe6b0'; }
     else label = t('custom');
-    ctx.fillStyle = col; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
-    let fs = 11;
-    ctx.font = `800 ${fs}px Nunito, ui-rounded, system-ui, sans-serif`;
-    while (fs > 8 && ctx.measureText(label).width > s.sw - 8) { fs -= 0.5; ctx.font = `800 ${fs}px Nunito, ui-rounded, system-ui, sans-serif`; }
-    ctx.fillText(label, s.x0 + s.sw / 2, H - 4);
+    const c = mctx;
+    c.fillStyle = col; c.textAlign = 'center'; c.textBaseline = 'alphabetic';
+    let fs = 12;
+    c.font = `600 ${fs}px ${FONT}`;
+    while (fs > 8 && c.measureText(label).width > s.sw - 8) { fs -= 0.5; c.font = `600 ${fs}px ${FONT}`; }
+    c.fillText(label, s.x0 + s.sw / 2, H - 3);
     if (hover && Shift.cups.length > 1) {
-      ctx.fillStyle = 'rgba(255,245,230,.45)'; ctx.font = '900 10px Nunito, ui-rounded, system-ui, sans-serif'; ctx.textAlign = 'right';
-      ctx.fillText(CUP_KEYS[i] || '', s.x0 + s.sw - 5, 11);
+      c.fillStyle = 'rgba(255,245,230,.45)'; c.font = `700 10px ${FONT}`; c.textAlign = 'right';
+      c.fillText(CUP_KEYS[i] || '', s.x0 + s.sw - 6, 12);
+    }
+  }
+  // Выбранная чашка: пиксельные уголки вокруг ячейки
+  function drawSelection(s) {
+    const c = mctx, u = 3, l = 10, x0 = s.x0 + 3, y0 = 3, x1 = s.x0 + s.sw - 3, y1 = H - 3;
+    c.fillStyle = 'rgba(255,240,215,.07)'; c.fillRect(x0, y0, x1 - x0, y1 - y0);
+    c.fillStyle = '#f2c46a';
+    for (const [x, y, dx, dy] of [[x0, y0, 1, 1], [x1, y0, -1, 1], [x0, y1, 1, -1], [x1, y1, -1, -1]]) {
+      c.fillRect(dx > 0 ? x : x - l, dy > 0 ? y : y - u, l, u);
+      c.fillRect(dx > 0 ? x : x - u, dy > 0 ? y : y - l, u, l);
     }
   }
 
@@ -375,16 +397,11 @@ const Bar = (() => {
     time += dt;
     if (W < 2) resize();
     if (W < 2) return;
-    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    ctx = lctx;
+    const k = DPR / PX;
+    ctx.setTransform(k, 0, 0, k, 0, 0);
     ctx.clearRect(0, 0, W, H);
     const n = Shift.cups.length;
-    for (let i = 0; i < n; i++) {
-      const s = slot(i), sel = i === Shift.sel;
-      if (sel && n > 1) {
-        ctx.fillStyle = 'rgba(255,240,215,.1)'; rr(s.x0 + 2, 2, s.sw - 4, H - 4, 12); ctx.fill();
-        ctx.strokeStyle = 'rgba(242,204,143,.7)'; ctx.lineWidth = 2; ctx.stroke();
-      }
-    }
     for (let i = 0; i < n; i++) drawCup(i, i === Shift.sel);
     // оборудование поверх чашек
     for (let i = 0; i < n; i++) {
@@ -403,6 +420,14 @@ const Bar = (() => {
       if (pu.t >= pu.dur) { pulses.splice(i, 1); continue; }
       drawPulse(slot(pu.cup), pu);
     }
+    // растягиваем буфер, сверху — рамка выбранной чашки и подписи
+    mctx.setTransform(1, 0, 0, 1, 0, 0);
+    mctx.clearRect(0, 0, cv.width, cv.height);
+    mctx.imageSmoothingEnabled = false;
+    mctx.drawImage(lo, 0, 0, lo.width * PX, lo.height * PX);
+    mctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    if (n > 1) drawSelection(slot(Shift.sel));
+    for (let i = 0; i < n; i++) drawLabel(i, i === Shift.sel);
   }
 
   function reset() { pulses = []; }

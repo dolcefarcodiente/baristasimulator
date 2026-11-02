@@ -13,6 +13,10 @@
   const wrap = document.getElementById('scene-wrap');
   const canvas = document.getElementById('scene');
   Art.resize();
+  // Пиксельный шрифт для холста: как только загрузится — перерисовываем меню на доске
+  if (document.fonts && document.fonts.load) {
+    Promise.all(['500 16px "Pixelify Sans"', '700 16px "Pixelify Sans"'].map((f) => document.fonts.load(f, 'Sälem АБВ'))).then(() => Art.invalidate()).catch(() => {});
+  }
   // Насколько сцену нужно опустить под статус-бар: меряем env(safe-area-inset-top) через пробный элемент.
   // В приложении отступ становится известен не сразу, поэтому меряем ещё раз чуть позже и при повороте.
   const probe = document.createElement('div');
@@ -31,12 +35,13 @@
     new ResizeObserver(() => Bar.resize()).observe(document.getElementById('cups'));
   } else window.addEventListener('resize', () => { Art.resize(); Bar.resize(); });
 
-  // Небо в меню — по реальному времени суток
+  // Небо в меню — кофейня открыта с 18:00 до 02:00; днём за окном вечные сумерки перед открытием
   function menuSky() {
     const d = new Date();
     const h = d.getHours() + d.getMinutes() / 60;
-    if (h < 6 || h >= 22) return 1;
-    return clamp((h - 7) / 14, 0, 1);
+    if (h >= 18) return (h - 18) / 8;
+    if (h < 2) return (h + 6) / 8;
+    return 0.12;
   }
 
   let last = performance.now();
@@ -56,6 +61,7 @@
       busy: inShift ? { espresso: Shift.jobs.espresso.length, frother: Shift.jobs.frother.length } : {},
     });
     if (inShift) Bar.render(dt);
+    if (inShift && !Shift.paused) Talk.update(dt);
     UI.tick();
     requestAnimationFrame(frame);
   }
