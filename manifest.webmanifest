@@ -1,8 +1,8 @@
 {
-  "name": "Пенка — уютная кофейня",
-  "short_name": "Пенка",
-  "description": "Уютный симулятор кофейни: готовь напитки, знакомься с постоянными гостями и развивай свою кофейню.",
-  "lang": "ru",
+  "name": "Sälem — the café on the corner",
+  "short_name": "Sälem",
+  "description": "A cozy coffee shop game: brew drinks, get to know your regulars and grow your little café on the corner.",
+  "lang": "en",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

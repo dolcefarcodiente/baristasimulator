@@ -1,4 +1,4 @@
-// Пенка — данные игры: ингредиенты, инструменты, рецепты, улучшения, постоянные гости, достижения.
+// Sälem — данные игры: ингредиенты, инструменты, рецепты, улучшения, постоянные гости, достижения.
 // Тексты хранятся парами { ru, en } и читаются через T() из i18n.js.
 
 // ---------- утилиты ----------
@@ -194,14 +194,14 @@ const REGULARS = [
         'Кофе пьют даже на орбите. Но там он хуже вашего — это я вам как учёный говорю.',
         'Студенты считают меня строгим. Не говорите им, что я тут улыбаюсь.',
         'Сегодня открыли новую комету. Хотел назвать её «Ристретто», коллеги против.',
-        'Назвал астероид в честь вашей кофейни. Официально. Теперь «Пенка» летает в космосе.',
+        'Назвал астероид в честь вашей кофейни. Официально. Теперь «Sälem» летает в космосе.',
       ],
       en: [
         'Lev Arkadievich, Department of Astronomy. A ristretto. No nonsense.',
         "They drink coffee even in orbit. But it's worse than yours — I say that as a scientist.",
         "My students think I'm strict. Don't tell them I smile in here.",
         "We discovered a new comet today. I wanted to name it “Ristretto”, my colleagues objected.",
-        'I named an asteroid after your café. Officially. Penka is now flying through space.',
+        'I named an asteroid after your café. Officially. Sälem is now flying through space.',
       ] } },
   { id: 'mark', name: { ru: 'Марк', en: 'Mark' }, fav: 'flatwhite', minDay: 4,
     look: { skin: '#8d5a3b', hair: '#1b1b1b', style: 'curly', shirt: '#f2a541', shirt2: '#3d405b', outfit: 'tee', eye: '#2b1d16', acc: ['helmet'] },
@@ -212,14 +212,14 @@ const REGULARS = [
         'Проехал сегодня сорок километров. Половину — думая о твоём кофе.',
         'Рассказываю про тебя всем клиентам. Бесплатная реклама, не благодари.',
         'Выиграл городскую велогонку! На финише представлял, что еду сюда.',
-        'Теперь на моём рюкзаке наклейка «Пенка». Полгорода спрашивает, где это.',
+        'Теперь на моём рюкзаке наклейка «Sälem». Полгорода спрашивает, где это.',
       ],
       en: [
         "Mark, bike courier! A flat white and I'm back in the saddle.",
         'Rode forty kilometers today. Half of them thinking about your coffee.',
         "I tell all my customers about you. Free advertising, don't mention it.",
         'I won the city bike race! At the finish line I pictured riding here.',
-        "There's a Penka sticker on my backpack now. Half the city asks where it is.",
+        "There's a Sälem sticker on my backpack now. Half the city asks where it is.",
       ] } },
   { id: 'sonya', name: { ru: 'Соня', en: 'Sonya' }, fav: 'raf', minDay: 5,
     look: { skin: '#f3cfb3', hair: '#3d2b56', style: 'bob', shirt: '#e9c46a', shirt2: '#fff', outfit: 'turtleneck', eye: '#5b3a6e', lash: true, acc: ['pencil'] },

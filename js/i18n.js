@@ -1,11 +1,7 @@
 // Переводы интерфейса: русский и английский.
 
-let LANG = 'ru';
-
-function detectLang() {
-  const l = (navigator.languages && navigator.languages[0]) || navigator.language || 'en';
-  return /^(ru|uk|be|kk)/i.test(l) ? 'ru' : 'en';
-}
+// Основной язык — английский; русский включается кнопкой RU/EN.
+let LANG = 'en';
 
 function setLang(l) {
   LANG = l === 'en' ? 'en' : 'ru';
@@ -22,12 +18,12 @@ function pl(n, ru1, ru2, ru5, en1, enN) {
   return plural(n, ru1, ru2, ru5);
 }
 
-// Голос «Пенки»: бариста из маленькой кофейни на углу. Тепло, коротко, с кофейными словечками,
+// Голос Sälem: бариста из маленькой кофейни на углу. Тепло, коротко, с кофейными словечками,
 // но кнопки всегда говорят, что произойдёт. Пол игрока и гостей не угадываем.
 const STR = {
   ru: {
-    title: 'Пенка — кофейня на углу',
-    brand: 'Пенка',
+    title: 'Sälem — кофейня на углу',
+    brand: 'Sälem',
     tagline: 'кофейня на углу',
     day: (n) => `День ${n}`,
     dayEyebrow: (n) => `ДЕНЬ ${n}`,
@@ -121,8 +117,8 @@ const STR = {
     backBody: 'Загляни завтра — подарок будет больше',
   },
   en: {
-    title: 'Penka — the café on the corner',
-    brand: 'Penka',
+    title: 'Sälem — the café on the corner',
+    brand: 'Sälem',
     tagline: 'the café on the corner',
     day: (n) => `Day ${n}`,
     dayEyebrow: (n) => `DAY ${n}`,
@@ -218,6 +214,6 @@ const STR = {
 };
 
 function t(key, ...args) {
-  const v = STR[LANG][key] ?? STR.ru[key];
+  const v = STR[LANG][key] ?? STR.en[key];
   return typeof v === 'function' ? v(...args) : v;
 }

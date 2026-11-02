@@ -21,7 +21,7 @@ function defaultSave() {
     ach: {},
     stats: { served: 0, drinks: {}, bestCombo: 0, bestShift: 0, threeStars: 0, catPets: 0, memory: 0, regularServes: 0, shifts: 0, stars: 0 },
     lastSeen: Date.now(),
-    settings: { music: true, sfx: true, lang: null },
+    settings: { music: true, sfx: true, lang: 'en', langChosen: false },
     tips: {},
   };
 }

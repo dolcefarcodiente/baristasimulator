@@ -1,11 +1,9 @@
 // Service worker: кладёт игру в кэш, чтобы она работала без интернета.
-const CACHE = 'penka-v3';
+const CACHE = 'salem-v4';
 const FILES = [
   './', 'index.html', 'css/style.css', 'manifest.webmanifest',
   'js/i18n.js', 'js/data.js', 'js/icons.js', 'js/save.js', 'js/audio.js', 'js/progress.js', 'js/art.js', 'js/shift.js', 'js/ui.js', 'js/main.js',
   'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png',
-  'fonts/nunito-cyrillic.woff2', 'fonts/nunito-latin.woff2', 'fonts/caveat-cyrillic.woff2', 'fonts/caveat-latin.woff2',
-  'fonts/pacifico-cyrillic.woff2', 'fonts/pacifico-latin.woff2',
 ];
 
 self.addEventListener('install', (e) => {

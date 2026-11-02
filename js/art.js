@@ -99,21 +99,21 @@ const Art = (() => {
     g.fillStyle = '#2f3b36'; rr(g, b.x, b.y, b.w, b.h, 4); g.fill();
     g.fillStyle = '#f5efe4'; g.textAlign = 'center'; g.textBaseline = 'top';
     const fs = clamp(b.w / 9, 10, 18);
-    g.font = `700 ${fs * 1.35}px Caveat, Nunito, cursive`;
+    g.font = `900 ${fs}px Nunito, ui-rounded, system-ui, sans-serif`;
     g.fillText(LANG === 'en' ? 'MENU' : 'МЕНЮ', b.x + b.w / 2, b.y + 6);
     g.font = `700 ${fs * 0.72}px Nunito, ui-rounded, system-ui, sans-serif`;
     const rec = S.recipes.slice(-4).reverse();
-    const lineH = Math.min(fs * 1.05, (b.h - fs * 2.1) / 4);
+    const lineH = Math.min(fs * 0.95, (b.h - fs * 1.8) / 4);
     rec.forEach((id, i) => {
-      const y = b.y + fs * 1.95 + i * lineH;
+      const y = b.y + fs * 1.6 + i * lineH;
       if (y + lineH > b.y + b.h) return;
       const price = String(Math.round(RECIPE[id].price * Stats.priceMult()));
-      const fsz = fs * 1.05;
-      g.font = `700 ${fsz}px Caveat, Nunito, cursive`;
+      const fsz = fs * 0.72;
+      g.font = `700 ${fsz}px Nunito, ui-rounded, system-ui, sans-serif`;
       g.textAlign = 'right'; g.fillText(price, b.x + b.w - 8, y);
       const room = b.w - 22 - g.measureText(price).width;
       let nsz = fsz;
-      while (nsz > 7 && (g.font = `700 ${nsz}px Caveat, Nunito, cursive`, g.measureText(T(RECIPE[id].name)).width > room)) nsz -= 0.5;
+      while (nsz > 7 && (g.font = `700 ${nsz}px Nunito, ui-rounded, system-ui, sans-serif`, g.measureText(T(RECIPE[id].name)).width > room)) nsz -= 0.5;
       g.textAlign = 'left'; g.fillText(T(RECIPE[id].name), b.x + 8, y);
     });
 
@@ -140,7 +140,7 @@ const Art = (() => {
     const signW = Math.min(W * 0.3, 200), sx = W / 2 - signW / 2, sy = H * 0.04;
     if (upLevel('sign') > 0) {
       g.save();
-      g.font = `400 ${signW / 4.6}px Pacifico, Caveat, cursive`;
+      g.font = `900 ${signW / 4.2}px Nunito, ui-rounded, system-ui, sans-serif`;
       g.textAlign = 'center'; g.textBaseline = 'top';
       g.shadowColor = '#ff6fa3'; g.shadowBlur = 18;
       g.fillStyle = '#ffd1e3'; g.fillText(t('brand'), W / 2, sy);
@@ -149,7 +149,7 @@ const Art = (() => {
     } else {
       g.fillStyle = '#a8714a'; rr(g, sx + signW * 0.15, sy, signW * 0.7, signW / 4.4, 8); g.fill();
       g.fillStyle = '#fff3df'; g.textAlign = 'center'; g.textBaseline = 'middle';
-      g.font = `400 ${signW / 7.5}px Pacifico, Caveat, cursive`;
+      g.font = `900 ${signW / 6.5}px Nunito, ui-rounded, system-ui, sans-serif`;
       g.fillText(t('brand'), W / 2, sy + signW / 8.8);
     }
 
@@ -228,9 +228,9 @@ const Art = (() => {
     g.beginPath(); g.moveTo(0, ct - 8); g.lineTo(W, ct - 8); g.stroke();
     if (H - ct > 40) {
       g.fillStyle = 'rgba(255,240,220,.18)';
-      g.font = `700 ${clamp(W / 19, 16, 30)}px Caveat, Nunito, cursive`;
+      g.font = `900 ${clamp(W / 26, 12, 22)}px Nunito, ui-rounded, system-ui, sans-serif`;
       g.textAlign = 'center'; g.textBaseline = 'middle';
-      g.fillText(LANG === 'en' ? 'PENKA · coffee with love' : 'ПЕНКА · кофе с любовью', W / 2, ct + (H - ct) / 2 + 6);
+      g.fillText(LANG === 'en' ? 'SÄLEM · coffee with love' : 'SÄLEM · кофе с любовью', W / 2, ct + (H - ct) / 2 + 6);
     }
     counter = c;
   }

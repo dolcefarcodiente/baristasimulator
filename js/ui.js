@@ -343,7 +343,7 @@ const UI = (() => {
     openPanel(`
       <div class="summary">
         <span class="eyebrow">${t('dayEyebrow', r.day)}</span>
-        <h2 class="hand">${t('shiftOver')}</h2>
+        <h2>${t('shiftOver')}</h2>
         <div class="stars">${[0, 1, 2].map((i) => `<span class="star" data-star="${i}">★</span>`).join('')}</div>
         <div class="earn"><span class="coin"></span><span id="earn-num">0</span></div>
         <div class="target"><div class="tbar"><div class="tfill" id="tfill"></div><i style="left:40%"></i><i style="left:70%"></i></div><small>${t('target', fmt(r.target))}</small></div>
@@ -484,6 +484,7 @@ const UI = (() => {
         b.classList.toggle('off', !S.settings.sfx); Sound.play('tap'); return;
       case 'lang':
         S.settings.lang = LANG === 'ru' ? 'en' : 'ru';
+        S.settings.langChosen = true;
         setLang(S.settings.lang); persist(); applyLang(); Art.invalidate(); Sound.play('tap');
         if (Shift.active) { closeModal(); buildStation(); updateHUD(); Shift.paused = false; pause(); }
         else showMenu();
