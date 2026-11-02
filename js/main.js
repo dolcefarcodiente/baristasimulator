@@ -119,10 +119,10 @@
   UI.showMenu();
   UI.queuePopups(popups);
 
-  // В приложении: статус-бар поверх игры, тёмные значки на светлой стене
+  // В приложении: статус-бар поверх игры, светлые значки на ночной стене
   try {
     const SB = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.StatusBar;
-    if (SB) { SB.setOverlaysWebView({ overlay: true }); SB.setStyle({ style: 'LIGHT' }); }
+    if (SB) { SB.setOverlaysWebView({ overlay: true }); SB.setStyle({ style: 'DARK' }); }
   } catch (e) { /* не в приложении */ }
 
   // Офлайн-режим и установка на телефон
