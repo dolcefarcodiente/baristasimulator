@@ -57,13 +57,20 @@ const Bar = (() => {
   }
 
   // ---------- чашка ----------
-  function cupPath(x, y, w, h) {
+  // Керамическая чашка с чуть неровным контуром, как нарисованная пером (дрожание стабильно по номеру чашки)
+  function seeded(seed) { let v = seed; return () => (v = (v * 16807) % 2147483647) / 2147483647; }
+  function cupPath(x, y, w, h, seed = 1) {
+    const rnd = seeded(seed * 31 + 7), j = () => (rnd() - 0.5) * 1.2;
+    const pts = [[x, y], [x + w / 2, y - 0.5], [x + w, y], [x + w * 0.95, y + h * 0.45], [x + w * 0.9, y + h - w * 0.3], [x + w * 0.75, y + h], [x + w * 0.25, y + h], [x + w * 0.1, y + h - w * 0.3], [x + w * 0.05, y + h * 0.45]];
+    const p = pts.map(([px, py]) => [px + j(), py + j()]);
     ctx.beginPath();
-    ctx.moveTo(x, y); ctx.lineTo(x + w, y);
-    ctx.lineTo(x + w * 0.9, y + h - w * 0.3);
-    ctx.quadraticCurveTo(x + w * 0.88, y + h, x + w * 0.6, y + h);
-    ctx.lineTo(x + w * 0.4, y + h);
-    ctx.quadraticCurveTo(x + w * 0.12, y + h, x + w * 0.1, y + h - w * 0.3);
+    ctx.moveTo(p[0][0], p[0][1]);
+    ctx.lineTo(p[1][0], p[1][1]); ctx.lineTo(p[2][0], p[2][1]);
+    ctx.quadraticCurveTo(p[3][0], p[3][1], p[4][0], p[4][1]);
+    ctx.quadraticCurveTo(p[4][0] - w * 0.02, y + h, p[5][0], p[5][1]);
+    ctx.lineTo(p[6][0], p[6][1]);
+    ctx.quadraticCurveTo(p[7][0] + w * 0.02, y + h, p[7][0], p[7][1]);
+    ctx.quadraticCurveTo(p[8][0], p[8][1], p[0][0], p[0][1]);
     ctx.closePath();
   }
 
@@ -86,20 +93,22 @@ const Bar = (() => {
     const { cx, cy, cw, ch } = s;
     const cup = Shift.cups[i];
     const lw = Math.max(1.4, cw * 0.045);
-    // подставка-блюдце
-    ctx.fillStyle = sel ? '#f1e6d6' : '#d9ccb9';
-    ctx.beginPath(); ctx.ellipse(cx + cw / 2, cy + ch + 1, cw * 0.78, cw * 0.14, 0, 0, 7); ctx.fill();
+    // блюдце с ободком
+    ctx.fillStyle = sel ? '#fff8ee' : '#e8dccb';
+    ctx.beginPath(); ctx.ellipse(cx + cw / 2, cy + ch + 1, cw * 0.8, cw * 0.15, 0, 0, 7); ctx.fill();
     ctx.strokeStyle = INK; ctx.lineWidth = lw; ctx.stroke();
+    ctx.strokeStyle = 'rgba(59,42,34,.25)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.ellipse(cx + cw / 2, cy + ch + 1, cw * 0.55, cw * 0.08, 0, 0, 7); ctx.stroke();
     // ручка
-    ctx.lineWidth = lw * 2.6; ctx.strokeStyle = INK;
-    ctx.beginPath(); ctx.arc(cx + cw, cy + ch * 0.42, cw * 0.22, -Math.PI / 2, Math.PI / 2); ctx.stroke();
-    ctx.lineWidth = lw * 1.2; ctx.strokeStyle = '#fff';
-    ctx.beginPath(); ctx.arc(cx + cw, cy + ch * 0.42, cw * 0.22, -Math.PI / 2, Math.PI / 2); ctx.stroke();
+    ctx.lineWidth = lw * 2.8; ctx.strokeStyle = INK;
+    ctx.beginPath(); ctx.arc(cx + cw * 0.98, cy + ch * 0.42, cw * 0.24, -Math.PI / 2 + 0.2, Math.PI / 2 - 0.1); ctx.stroke();
+    ctx.lineWidth = lw * 1.3; ctx.strokeStyle = '#fffaf2';
+    ctx.beginPath(); ctx.arc(cx + cw * 0.98, cy + ch * 0.42, cw * 0.24, -Math.PI / 2 + 0.2, Math.PI / 2 - 0.1); ctx.stroke();
     // корпус
-    cupPath(cx, cy, cw, ch);
+    cupPath(cx, cy, cw, ch, i + 1);
     ctx.fillStyle = '#fffaf2'; ctx.fill();
     // слои
-    ctx.save(); cupPath(cx, cy, cw, ch); ctx.clip();
+    ctx.save(); cupPath(cx, cy, cw, ch, i + 1); ctx.clip();
     const inner = ch - 4;
     let level = 0;
     const tops = [];
@@ -119,8 +128,10 @@ const Bar = (() => {
     // тень внутри чашки
     ctx.fillStyle = 'rgba(60,30,20,.1)'; ctx.fillRect(cx + cw * 0.7, cy, cw * 0.3, ch);
     ctx.restore();
-    cupPath(cx, cy, cw, ch); ctx.strokeStyle = INK; ctx.lineWidth = lw; ctx.stroke();
-    ctx.fillStyle = 'rgba(0,0,0,.08)'; ctx.beginPath(); ctx.ellipse(cx + cw / 2, cy + 0.5, cw / 2, cw * 0.08, 0, 0, 7); ctx.fill();
+    cupPath(cx, cy, cw, ch, i + 1); ctx.strokeStyle = INK; ctx.lineWidth = lw; ctx.stroke();
+    // ободок чашки
+    ctx.fillStyle = '#fffaf2'; ctx.beginPath(); ctx.ellipse(cx + cw / 2, cy, cw / 2, cw * 0.09, 0, 0, 7); ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = lw; ctx.stroke();
+    ctx.fillStyle = 'rgba(0,0,0,.1)'; ctx.beginPath(); ctx.ellipse(cx + cw / 2, cy + 1, cw * 0.42, cw * 0.06, 0, 0, 7); ctx.fill();
     // подпись
     const rec = recipeFor(Shift.cupItems(cup));
     let label = '', col = '#f3dfc8';
@@ -231,7 +242,7 @@ const Bar = (() => {
     const p = clamp(job.t / job.dur, 0, 1);
     const ing = INGREDIENTS[job.ing];
     const pw = cw * 0.52, ph = cw * 0.62;
-    const restX = cx + cw * 1.25, restY = cy + ch * 0.5 - ph; // стоит справа, под паровой трубкой
+    const restX = Math.min(cx + cw * 1.25, W - pw - 6), restY = cy + ch * 0.5 - ph; // стоит справа, под паровой трубкой
     const pourX = cx + cw * 0.95, pourY = cy - ph * 0.6;
     const k = ease((p - 0.55) / 0.12);                // подняли и наклонили
     const px = lerp(restX, pourX, k), py = lerp(restY, pourY, k);
