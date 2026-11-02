@@ -1,9 +1,10 @@
 // Service worker: кладёт игру в кэш, чтобы она работала без интернета.
-const CACHE = 'salem-v8';
+const CACHE = 'salem-v9';
 const FILES = [
   './', 'index.html', 'css/style.css', 'manifest.webmanifest',
-  'js/i18n.js', 'js/data.js', 'js/icons.js', 'js/save.js', 'js/audio.js', 'js/progress.js', 'js/art.js', 'js/shift.js', 'js/bar.js', 'js/ui.js', 'js/main.js',
+  'js/i18n.js', 'js/sprites.js', 'js/data.js', 'js/icons.js', 'js/save.js', 'js/audio.js', 'js/progress.js', 'js/art.js', 'js/shift.js', 'js/bar.js', 'js/ui.js', 'js/main.js',
   'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png',
+  ...['tony', 'rosa', 'gina', 'sal', 'marco', 'sofia', 'leo', 'g1', 'g2', 'g3', 'g4', 'g5', 'g6', 'g7', 'g8', 'cat', 'bg-wide', 'bg-tall'].map((n) => `img/${n}.png`),
 ];
 
 self.addEventListener('install', (e) => {

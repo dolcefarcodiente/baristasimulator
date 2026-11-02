@@ -267,7 +267,7 @@ const UI = (() => {
       <div class="cards">${cards}</div>`, 'sheet tall');
     el.panel.querySelectorAll('canvas[data-guest]').forEach((c) => {
       const g = REGULAR[c.dataset.guest];
-      Art.drawPortrait(c, g.look, regState(g.id).visits === 0);
+      Art.drawPortrait(c, g.id, regState(g.id).visits === 0);
     });
   }
 
@@ -322,7 +322,7 @@ const UI = (() => {
         ${stories ? `<h3 class="eyebrow">${t('newStories')}</h3>${stories}` : ''}
         <button class="btn primary big" data-act="menu">${t('next')}</button>
       </div>`, `sheet summary-sheet${stories ? ' tall' : ''}`);
-    el.panel.querySelectorAll('canvas[data-guest]').forEach((c) => Art.drawPortrait(c, REGULAR[c.dataset.guest].look));
+    el.panel.querySelectorAll('canvas[data-guest]').forEach((c) => Art.drawPortrait(c, c.dataset.guest));
     // анимация подсчёта
     const num = $('#earn-num'), fill = $('#tfill');
     const ratio = r.earned / r.target;

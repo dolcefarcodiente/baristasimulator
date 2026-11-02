@@ -279,6 +279,7 @@ function randomLook() {
   const age = Math.random() < 0.15 ? 'old' : 'adult';
   return {
     skin: pick(SKINS), hair: age === 'old' ? pick(['#d9d4cc', '#8d8d8d', '#bfb8ad']) : pick(HAIRS), style: pick(STYLES), shirt: pick(SHIRTS), shirt2: pick(SHIRTS2), hat: pick(SHIRTS),
+    sprite: pick(Sprites.GUESTS),
     outfit: pick(OUTFITS), pattern: pick(PATTERNS), head: pick(HEADS), build: rand(0.88, 1.15), nose: pick(NOSES), age,
     mustache: Math.random() < 0.12, eye: pick(EYES), freckles: Math.random() < 0.12, lash: Math.random() < 0.4, earring: Math.random() < 0.2, acc,
   };
