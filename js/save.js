@@ -15,6 +15,7 @@ function defaultSave() {
     day: 1,
     upgrades: {},
     recipes: ['espresso', 'americano', 'latte'],
+    biz: 0, // сколько шагов развития пройдено
     regulars: {},
     quests: null,
     streak: { last: null, count: 0 },
@@ -102,7 +103,8 @@ const Stats = {
   capacity: () => upValue('counter'),
   patienceMult: () => 1 + upValue('patience') + perk('patience'),
   tipMult: () => upValue('tipjar') * (1 + perk('tips')),
-  priceMult: () => 1 + upValue('pastry') + perk('price'),
+  priceMult: () => 1 + upValue('pastry') + perk('price') + BUSINESS.slice(0, S.biz).reduce((a, b) => a + b.price, 0),
+  bizIncome: () => BUSINESS.slice(0, S.biz).reduce((a, b) => a + b.income, 0),
   spawnMult: () => 1 + upValue('sign') + perk('spawn'),
   shiftLen: () => SHIFT_BASE + perk('shift'),
   helperRate: () => upValue('helper'),
@@ -128,5 +130,6 @@ function regularEligible(r) {
 function canAffordSomething() {
   for (const u of UPGRADES) if (!upMaxed(u.id) && S.coins >= upCost(u.id)) return true;
   for (const r of RECIPES) if (!S.recipes.includes(r.id) && S.coins >= r.cost) return true;
+  if (BUSINESS[S.biz] && S.coins >= BUSINESS[S.biz].cost) return true;
   return false;
 }

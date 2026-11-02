@@ -197,7 +197,7 @@ const Sound = (() => {
     }
     const src = ac.createBufferSource(); src.buffer = buf; src.loop = true;
     const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 2400;
-    const g = ac.createGain(); g.gain.value = 0.55;
+    const g = ac.createGain(); g.gain.value = 0.2;
     src.connect(f); f.connect(g); g.connect(musicBus); src.start();
     rain = src;
   }

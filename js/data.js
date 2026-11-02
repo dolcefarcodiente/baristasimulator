@@ -84,6 +84,30 @@ function recipeFor(items) {
 
 // ---------- улучшения ----------
 const sec = (v) => (LANG === 'en' ? `${v} s` : `${v} сек`);
+// Развитие кофейни: шаги по порядку, каждый приносит доход за ночь и открывает кусочек истории
+const BUSINESS = [
+  { id: 'barista', cost: 1500, income: 60, price: 0,
+    name: { ru: 'Нанять баристу', en: 'Hire a barista' },
+    desc: { ru: 'Нико берёт дневные смены: +60 за ночь', en: 'Nico takes the day shifts: +60 a night' },
+    story: { ru: 'Нико, сын Тони, завязывает фартук. «Учись у Sälem», — сказал ему отец. Теперь кофейня работает и днём.', en: "Nico, Tony's son, ties on the apron. «Learn from Sälem», his father said. Now the café is open by day, too." } },
+  { id: 'cart', cost: 4000, income: 150, price: 0,
+    name: { ru: 'Тележка в парке', en: 'Coffee cart in the park' },
+    desc: { ru: 'Марко возит кофе бегунам: +150 за ночь', en: 'Marco serves the morning joggers: +150 a night' },
+    story: { ru: 'Марко прикрутил к велосипеду тележку с кофемашиной. Утром в парке очередь — все спрашивают, где сам Sälem.', en: 'Marco bolted an espresso cart to his bike. By morning there is a line in the park — everyone asks where the real Sälem is.' } },
+  { id: 'brooklyn', cost: 10000, income: 400, price: 0.1,
+    name: { ru: 'Второй Sälem в Бруклине', en: 'Second Sälem in Brooklyn' },
+    desc: { ru: '+400 за ночь, цены +10%', en: '+400 a night, prices +10%' },
+    story: { ru: 'Старая пекарня у моста, кирпич и большие окна. Джина привела весь салон на открытие. На вывеске — тот же Sälem.', en: 'An old bakery by the bridge, brick walls and tall windows. Gina brought the whole salon to the opening. Same Sälem on the sign.' } },
+  { id: 'roastery', cost: 25000, income: 900, price: 0.1,
+    name: { ru: 'Своя обжарка', en: 'Our own roastery' },
+    desc: { ru: '+900 за ночь, цены ещё +10%', en: '+900 a night, prices another +10%' },
+    story: { ru: 'Профессор Сал рассчитал профиль обжарки «как орбиту». Зерно пахнет шоколадом и дождём. Нонна Роза одобрила.', en: 'Professor Sal plotted the roast curve «like an orbit». The beans smell of chocolate and rain. Nonna Rosa approves.' } },
+  { id: 'manhattan', cost: 60000, income: 2000, price: 0,
+    name: { ru: 'Sälem на Пятой авеню', en: 'Sälem on Fifth Avenue' },
+    desc: { ru: 'Флагман в центре: +2000 за ночь', en: 'The flagship downtown: +2000 a night' },
+    story: { ru: 'Лео играет на открытии ту самую медленную мелодию, София читает первую главу. А ты всё равно возвращаешься на свой угол — сюда, к дождю за окном.', en: 'Leo plays that slow tune at the opening, Sofia reads the first chapter. And you still come back to your corner — here, to the rain on the glass.' } },
+];
+
 const UPGRADES = [
   { id: 'espresso_speed', icon: 'tool_machine', costs: [100, 250, 600, 1400], values: [3.0, 2.4, 1.9, 1.5, 1.2],
     name: { ru: 'Кофемашина «Турбо»', en: 'Turbo espresso machine' },

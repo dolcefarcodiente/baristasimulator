@@ -145,6 +145,7 @@ const UI = (() => {
     const opts = [];
     for (const r of RECIPES) if (!S.recipes.includes(r.id)) opts.push({ name: T(r.name), cost: r.cost });
     for (const u of UPGRADES) if (!upMaxed(u.id)) opts.push({ name: T(u.name), cost: upCost(u.id) });
+    if (BUSINESS[S.biz]) opts.push({ name: T(BUSINESS[S.biz].name), cost: BUSINESS[S.biz].cost });
     opts.sort((a, b) => a.cost - b.cost);
     return opts[0] || null;
   }
@@ -194,6 +195,36 @@ const UI = (() => {
     return `<div class="sheet-head"><button class="btn small" data-act="menu">${t('back')}</button><h2>${title}</h2><span class="chip">${coin(S.coins)}</span></div>`;
   }
 
+  const BIZ_ICON = { barista: 'ui_regulars', cart: 'tool_machine', brooklyn: 'logo', roastery: 'espresso', manhattan: 'logo' };
+  // Шаг развития: пройденные отмечены, следующий можно купить, дальние — под замком
+  function bizCard(b, i, from = '') {
+    const done = i < S.biz, next = i === S.biz, afford = next && S.coins >= b.cost;
+    return `<div class="card${afford ? ' can' : ''}${done ? ' owned' : ''}">
+      <div class="card-ico">${iconSvg(BIZ_ICON[b.id])}</div>
+      <div class="card-body"><b>${T(b.name)}</b><small>${T(b.desc)}</small></div>
+      ${done ? `<span class="maxed">✓</span>` : `<button class="btn buy${afford ? ' green' : ''}" data-act="buy-biz" data-from="${from}" ${afford ? '' : 'disabled'}>${next ? coin(b.cost) : '🔒'}</button>`}
+    </div>`;
+  }
+  // Что можно купить прямо сейчас — показывается в итогах смены, чтобы не ходить в магазин
+  function offersHtml() {
+    const list = [];
+    const nb = BUSINESS[S.biz];
+    if (nb && S.coins >= nb.cost) list.push({ cost: nb.cost, html: bizCard(nb, S.biz, 'summary') });
+    for (const r of RECIPES) if (!S.recipes.includes(r.id) && S.coins >= r.cost) list.push({ cost: r.cost, html: `<div class="card can">
+      <div class="card-ico recipe-ico">${r.ings.map((i) => iconSvg(i)).join('')}</div>
+      <div class="card-body"><b>${T(r.name)}</b><small>${t('price', coin(Math.round(r.price * Stats.priceMult())))}</small></div>
+      <button class="btn buy green" data-act="buy-rec" data-id="${r.id}" data-from="summary">${coin(r.cost)}</button></div>` });
+    for (const u of UPGRADES) if (!upMaxed(u.id) && S.coins >= upCost(u.id)) list.push({ cost: upCost(u.id), html: `<div class="card can">
+      <div class="card-ico">${iconSvg(u.icon)}</div>
+      <div class="card-body"><b>${T(u.name)}</b><small>→ ${u.desc(u.values[upLevel(u.id) + 1])}</small></div>
+      <button class="btn buy green" data-act="buy-up" data-id="${u.id}" data-from="summary">${coin(upCost(u.id))}</button></div>` });
+    // шаг развития — первым, остальное — самое дорогое из доступного, максимум три
+    const biz = nb && S.coins >= nb.cost ? [list.shift()] : [];
+    const rest = list.sort((a, b) => b.cost - a.cost).slice(0, 3 - biz.length);
+    const items = [...biz, ...rest];
+    return items.length ? `<h3 class="eyebrow">${t('offersTitle')}</h3><div class="cards">${items.map((x) => x.html).join('')}</div>` : '';
+  }
+
   function showShop(keepScroll) {
     const scroll = el.panel.scrollTop;
     let cards = '';
@@ -210,6 +241,8 @@ const UI = (() => {
           ${maxed ? `<span class="maxed">${t('max')}</span>` : `<button class="btn buy${afford ? ' green' : ''}" data-act="buy-up" data-id="${u.id}" ${afford ? '' : 'disabled'}>${coin(u.costs[lvl])}</button>`}
         </div>`;
       }).join('');
+    } else if (shopTab === 'biz') {
+      cards = BUSINESS.map((b, i) => bizCard(b, i)).join('');
     } else {
       cards = RECIPES.map((r) => {
         const owned = S.recipes.includes(r.id);
@@ -227,6 +260,7 @@ const UI = (() => {
       <div class="tabs">
         <button class="tab ${shopTab === 'up' ? 'on' : ''}" data-act="tab" data-tab="up">${t('equipment')}</button>
         <button class="tab ${shopTab === 'rec' ? 'on' : ''}" data-act="tab" data-tab="rec">${t('recipes')}</button>
+        <button class="tab ${shopTab === 'biz' ? 'on' : ''}" data-act="tab" data-tab="biz">${t('growth')}</button>
       </div>
       <div class="cards">${cards}</div>`, 'sheet tall', !keepScroll);
     if (keepScroll) el.panel.scrollTop = scroll;
@@ -319,9 +353,11 @@ const UI = (() => {
           <div><b>${r.missed}</b><span>${t('leftNoCoffee')}</span></div>
         </div>
         ${r.bonus ? `<div class="bonus-line">${t('starBonus', coin(r.bonus))}</div>` : ''}
+        ${r.branches ? `<div class="bonus-line">${t('branchesLine', coin(r.branches))}</div>` : ''}
         ${stories ? `<h3 class="eyebrow">${t('newStories')}</h3>${stories}` : ''}
+        <div id="offers" class="offers">${offersHtml()}</div>
         <button class="btn primary big" data-act="menu">${t('next')}</button>
-      </div>`, `sheet summary-sheet${stories ? ' tall' : ''}`);
+      </div>`, 'sheet summary-sheet tall');
     el.panel.querySelectorAll('canvas[data-guest]').forEach((c) => Art.drawPortrait(c, c.dataset.guest));
     // анимация подсчёта
     const num = $('#earn-num'), fill = $('#tfill');
@@ -419,7 +455,7 @@ const UI = (() => {
         if (upMaxed(id) || S.coins < upCost(id)) return;
         S.coins -= upCost(id);
         S.upgrades[id] = upLevel(id) + 1;
-        afterBuy(`${T(UPGRADE[id].name)} — ${t('level', upLevel(id))}`);
+        afterBuy(`${T(UPGRADE[id].name)} — ${t('level', upLevel(id))}`, b.dataset.from);
         return;
       }
       case 'buy-rec': {
@@ -428,7 +464,16 @@ const UI = (() => {
         S.coins -= r.cost;
         S.recipes.push(r.id);
         const newIngs = [...new Set(r.ings)].filter((i) => !RECIPES.some((x) => x.id !== r.id && S.recipes.includes(x.id) && x.ings.includes(i)));
-        afterBuy(t('newRecipe', T(r.name)) + (newIngs.length ? t('newIng', newIngs.map((i) => T(INGREDIENTS[i].name).toLowerCase()).join(', ')) : ''));
+        afterBuy(t('newRecipe', T(r.name)) + (newIngs.length ? t('newIng', newIngs.map((i) => T(INGREDIENTS[i].name).toLowerCase()).join(', ')) : ''), b.dataset.from);
+        return;
+      }
+      case 'buy-biz': {
+        const step = BUSINESS[S.biz];
+        if (!step || S.coins < step.cost) return;
+        S.coins -= step.cost;
+        S.biz++;
+        afterBuy(T(step.name), b.dataset.from);
+        queuePopups([{ icon: BIZ_ICON[step.id], title: T(step.name), body: T(step.story), coins: 0, note: T(step.desc) }]);
         return;
       }
       case 'claim': {
@@ -464,7 +509,7 @@ const UI = (() => {
     if (el.panel.classList.contains('menu-sheet')) showMenu();
   }
 
-  function afterBuy(msg) {
+  function afterBuy(msg, from) {
     Progress.check();
     persist();
     Art.invalidate();
@@ -472,7 +517,9 @@ const UI = (() => {
     vibrate(20);
     Art.burst(Art.W / 2, Art.H * 0.3, 'confetti', 24);
     toast(msg, 'gold');
-    showShop(true);
+    const offers = $('#offers');
+    if (from === 'summary' && offers) { offers.innerHTML = offersHtml(); updateHUD(); }
+    else showShop(true);
   }
 
   return {

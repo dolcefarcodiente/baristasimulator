@@ -455,7 +455,10 @@ const Shift = {
     S.stats.stars += stars;
     if (stars === 3) S.stats.threeStars++;
     Progress.onShiftEnd({ earned: this.earned, missed: this.missed, served: this.served, stars });
+    const branches = Stats.bizIncome();
+    S.coins += branches;
     const result = {
+      branches,
       day: S.day, earned: this.earned, target, stars, bonus, record,
       served: this.served, maxCombo: this.maxCombo, missed: this.missed, stories: this.stories.slice(),
     };
