@@ -53,7 +53,7 @@ const Art = (() => {
     L.board.x = Math.round(W * 0.95 - L.board.w); L.board.y = Math.round(H * 0.1);
     invalidate();
   }
-  function invalidate() { bg = null; counter = null; }
+  function invalidate() { bg = null; counter = null; grain = null; }
 
   function slotW(cap) { return L.aw / cap; }
   function slotX(i, cap) { return L.ax0 + (i + 0.5) * slotW(cap); }
@@ -145,6 +145,7 @@ const Art = (() => {
     }
   }
   function pot(g, x, y, w, h, rnd, color) {
+    ao(g, x, y, w * 0.7);
     ink(g, 1.5); g.fillStyle = color;
     tub(g, x, y, w, w * 0.78, h, rnd); g.fill(); g.stroke();
     g.fillStyle = shade(color, -0.2); hrect(g, x - w / 2 - 1.5, y - h, w + 3, h * 0.22, 1.5, rnd, 0.6); g.fill(); g.stroke();
@@ -247,14 +248,12 @@ const Art = (() => {
   }
   // Настенные часы с настоящим временем
   function propClock(g, x, y, r, rnd) {
-    g.fillStyle = '#c9a227'; ink(g, 1.6); hellipse(g, x, y, r, r, rnd, 0.7); g.fill(); g.stroke();
+    g.save(); g.shadowColor = 'rgba(60,30,20,.3)'; g.shadowBlur = 8; g.shadowOffsetY = 4;
+    g.fillStyle = '#c9a227'; ink(g, 1.6); hellipse(g, x, y, r, r, rnd, 0.7); g.fill(); g.restore(); g.stroke();
     g.fillStyle = '#fff8ee'; hellipse(g, x, y, r * 0.82, r * 0.82, rnd, 0.5); g.fill();
     g.fillStyle = INKC;
     for (let i = 0; i < 12; i++) { const a = (i / 12) * Math.PI * 2; const big = i % 3 === 0; g.beginPath(); g.arc(x + Math.cos(a) * r * 0.66, y + Math.sin(a) * r * 0.66, big ? r * 0.07 : r * 0.04, 0, 7); g.fill(); }
-    const d = new Date(), hA = ((d.getHours() % 12) / 12 + d.getMinutes() / 720) * Math.PI * 2 - Math.PI / 2, mA = (d.getMinutes() / 60) * Math.PI * 2 - Math.PI / 2;
-    ink(g, 2); g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(hA) * r * 0.42, y + Math.sin(hA) * r * 0.42); g.stroke();
-    ink(g, 1.4); g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(mA) * r * 0.6, y + Math.sin(mA) * r * 0.6); g.stroke();
-    g.fillStyle = '#c8372d'; g.beginPath(); g.arc(x, y, r * 0.07, 0, 7); g.fill();
+    L.clock = { x, y, r }; // стрелки рисуются каждый кадр
   }
   // Постер в рамке на верёвочке: 0 — «CAFFÈ» с чашкой, 1 — акварель Джины, 2 — звёздная карта Сала
   function propFrame(g, x, y, w, rnd, kind) {
@@ -393,20 +392,21 @@ const Art = (() => {
 
     // ----- окно: деревянная рама от руки, подоконник, табличка OPEN, горшок -----
     const w = L.win;
-    g.fillStyle = '#7a4e33'; ink(g, 2); hrect(g, w.x - 9, w.y - 9, w.w + 18, w.h + 18, 6, rnd, 1.2); g.fill(); g.stroke();
+    const soft = (fn) => { g.save(); g.shadowColor = 'rgba(60,30,20,.32)'; g.shadowBlur = 10; g.shadowOffsetY = 5; fn(); g.restore(); };
+    g.fillStyle = '#7a4e33'; ink(g, 2); soft(() => { hrect(g, w.x - 9, w.y - 9, w.w + 18, w.h + 18, 6, rnd, 1.2); g.fill(); }); hrect(g, w.x - 9, w.y - 9, w.w + 18, w.h + 18, 6, rnd, 1.2); g.stroke();
     g.clearRect(w.x, w.y, w.w, w.h);
     g.fillStyle = '#7a4e33';
     hrect(g, w.x + w.w / 2 - 3.5, w.y - 1, 7, w.h + 2, 0, rnd, 0.8); g.fill();
     hrect(g, w.x - 1, w.y + w.h * 0.45 - 3.5, w.w + 2, 7, 0, rnd, 0.8); g.fill();
     g.strokeStyle = 'rgba(0,0,0,.25)'; g.lineWidth = 1; for (let i = 0; i < 3; i++) { g.beginPath(); g.moveTo(w.x - 6 + i * 2.5, w.y - 6); g.lineTo(w.x - 6 + i * 2.5, w.y + w.h + 6); g.stroke(); }
-    g.fillStyle = '#a8714a'; ink(g, 1.8); hrect(g, w.x - 16, w.y + w.h + 6, w.w + 32, 11, 3, rnd, 1); g.fill(); g.stroke();
+    g.fillStyle = '#a8714a'; ink(g, 1.8); soft(() => { hrect(g, w.x - 16, w.y + w.h + 6, w.w + 32, 11, 3, rnd, 1); g.fill(); }); hrect(g, w.x - 16, w.y + w.h + 6, w.w + 32, 11, 3, rnd, 1); g.stroke();
     g.fillStyle = 'rgba(0,0,0,.12)'; g.fillRect(w.x - 16, w.y + w.h + 17, w.w + 32, 4);
     propOpenSign(g, w.x + w.w * 0.26, w.y + 2, Math.min(1, w.w / 220), rnd);
     propPlant(g, w.x + w.w * 0.8, w.y + w.h + 6, Math.min(1, W / 600) * 0.9, rnd, 0);
 
     // ----- меловая доска: рама с фактурой, мел, рисунок чашки -----
     const b = L.board;
-    g.fillStyle = '#8a5a3c'; ink(g, 2); hrect(g, b.x - 7, b.y - 7, b.w + 14, b.h + 14, 5, rnd, 1.2); g.fill(); g.stroke();
+    g.fillStyle = '#8a5a3c'; ink(g, 2); soft(() => { hrect(g, b.x - 7, b.y - 7, b.w + 14, b.h + 14, 5, rnd, 1.2); g.fill(); }); hrect(g, b.x - 7, b.y - 7, b.w + 14, b.h + 14, 5, rnd, 1.2); g.stroke();
     g.strokeStyle = 'rgba(0,0,0,.22)'; g.lineWidth = 1; for (let i = 0; i < 3; i++) { g.beginPath(); g.moveTo(b.x - 4 + i * 2, b.y - 4); g.lineTo(b.x - 4 + i * 2, b.y + b.h + 4); g.stroke(); }
     g.fillStyle = '#2f3b36'; hrect(g, b.x, b.y, b.w, b.h, 3, rnd, 0.8); g.fill();
     g.fillStyle = 'rgba(255,255,255,.06)'; for (let i = 0; i < 6; i++) { g.beginPath(); g.ellipse(b.x + rnd() * b.w, b.y + rnd() * b.h, 10 + rnd() * 14, 4 + rnd() * 6, rnd() * 3, 0, 7); g.fill(); }
@@ -447,18 +447,33 @@ const Art = (() => {
       const y = shY + k * Math.max(34, H * 0.1);
       if (y > wy - 10) break;
       let x = shX + 4;
-      const order = k === 0 ? ['jar', 'plant', 'cups', 'jar'] : ['books', 'radio', 'plant', 'jar'];
+      const order = k === 0 ? ['moka', 'jar', 'cups', 'plant'] : ['books', 'vase', 'radio', 'jar'];
       for (const item of order) {
         if (x > shX + shW - 18) break;
-        if (item === 'jar') { const v = (rnd() * 4) | 0; propJar(g, x, y, s, rnd, v); x += (v === 2 ? 15 : 24) * s + 5; }
-        else if (item === 'cups') { propCups(g, x, y, s, rnd); x += 27 * s + 5; }
+        if (item === 'jar') { const v = (rnd() * 4) | 0; const jw = (v === 2 ? 13 : v === 1 ? 24 : 20) * s; ao(g, x + jw / 2, y, jw * 0.65); propJar(g, x, y, s, rnd, v); x += jw + 6; }
+        else if (item === 'cups') { ao(g, x + 12 * s, y, 13 * s); propCups(g, x, y, s, rnd); x += 27 * s + 5; }
         else if (item === 'plant') { const kind = k === 0 ? 2 : [1, 3][(rnd() * 2) | 0]; propPlant(g, x + 10 * s, y, s * 0.75, rnd, kind); x += 24 * s + 5; }
-        else if (item === 'books') { propBooks(g, x, y, s, rnd); x += 24 * s + 5; }
-        else if (item === 'radio') { propRadio(g, x, y, s, rnd); x += 32 * s + 5; }
+        else if (item === 'books') { ao(g, x + 11 * s, y, 12 * s); propBooks(g, x, y, s, rnd); x += 24 * s + 5; }
+        else if (item === 'radio') { ao(g, x + 15 * s, y, 16 * s); propRadio(g, x, y, s, rnd); x += 32 * s + 5; }
+        else if (item === 'moka') { propMoka(g, x, y, s, rnd); x += 22 * s + 5; }
+        else if (item === 'vase') { propVase(g, x + 8 * s, y, s * 0.8, rnd); x += 18 * s + 5; }
       }
-      g.fillStyle = '#7a4e33'; ink(g, 1.6); hrect(g, shX, y, shW, 6, 1, rnd, 0.7); g.fill(); g.stroke();
+      g.fillStyle = '#7a4e33'; ink(g, 1.6); soft(() => { hrect(g, shX, y, shW, 6, 1, rnd, 0.7); g.fill(); }); hrect(g, shX, y, shW, 6, 1, rnd, 0.7); g.stroke();
       g.fillStyle = 'rgba(0,0,0,.14)'; g.fillRect(shX, y + 6, shW, 4);
       bracket(g, shX + 6, y + 6, s, rnd); bracket(g, shX + shW - 16, y + 6, s, rnd);
+      if (k === 0) propHerbs(g, shX + 22, y + 9, s * 0.8, rnd);
+    }
+    // гирлянда лампочек от окна к доске
+    {
+      const x0 = w.x + w.w + 10, y0 = w.y - 2, x1 = b.x - 8, y1 = b.y - 2;
+      const sag = clamp((x1 - x0) * 0.25, 12, 40), cx = (x0 + x1) / 2, cy = Math.max(y0, y1) + sag;
+      ink(g, 1.3); g.strokeStyle = '#4a3a2a'; g.beginPath(); g.moveTo(x0, y0); g.quadraticCurveTo(cx, cy, x1, y1); g.stroke();
+      const n = clamp(Math.round((x1 - x0) / 26), 3, 9);
+      L.bulbs = [];
+      for (let i = 1; i <= n; i++) {
+        const tt = i / (n + 1), bx = (1 - tt) * (1 - tt) * x0 + 2 * (1 - tt) * tt * cx + tt * tt * x1, by = (1 - tt) * (1 - tt) * y0 + 2 * (1 - tt) * tt * cy + tt * tt * y1;
+        L.bulbs.push([bx, by + 7]);
+      }
     }
 
     // ----- вывеска -----
@@ -472,7 +487,7 @@ const Art = (() => {
       g.shadowBlur = 6; g.fillText(t('brand'), W / 2, sy);
       g.restore();
     } else {
-      g.fillStyle = '#a8714a'; ink(g, 1.8); hrect(g, sx + signW * 0.15, sy, signW * 0.7, signW / 4.4, 5, rnd, 1); g.fill(); g.stroke();
+      g.fillStyle = '#a8714a'; ink(g, 1.8); soft(() => { hrect(g, sx + signW * 0.15, sy, signW * 0.7, signW / 4.4, 5, rnd, 1); g.fill(); }); hrect(g, sx + signW * 0.15, sy, signW / 4.4 * 0 + signW * 0.7, signW / 4.4, 5, rnd, 1); g.stroke();
       g.strokeStyle = 'rgba(0,0,0,.2)'; g.lineWidth = 1; g.beginPath(); g.moveTo(sx + signW * 0.19, sy + signW / 4.4 - 5); g.lineTo(sx + signW * 0.81, sy + signW / 4.4 - 5); g.stroke();
       g.fillStyle = '#fff3df'; g.textAlign = 'center'; g.textBaseline = 'middle';
       g.font = `900 ${signW / 6.5}px Nunito, ui-rounded, system-ui, sans-serif`;
@@ -488,6 +503,7 @@ const Art = (() => {
       propClock(g, W / 2 - fw * 0.7, midY + fw * 0.55, fw * 0.5, rnd);
       propFrame(g, W / 2 + fw * 0.1, midY + 10, fw, rnd, gina ? 1 : 0);
       if (sal) propFrame(g, W / 2 - fw * 1.2, midY + fw * 1.3, fw, rnd, 2);
+      else propPhoto(g, W / 2 - fw * 1.15, midY + fw * 1.3, fw * 0.9, rnd);
     } else { // узко: столбиком по центру
       const cr = clamp(gap * 0.22, 12, 18), fw = clamp(gap * 0.5, 30, 44);
       propClock(g, W / 2, midY + cr + 4, cr, rnd);
@@ -538,18 +554,31 @@ const Art = (() => {
     counter = c;
   }
 
-  // ---------- небо за окном ----------
+  // ---------- время суток ----------
+  // Смена — это целый день: рассвет, утро, полдень, золотой час, сумерки, ночь.
   const SKY = [
-    [0, '#ffc89a', '#ffe8c7'], [0.25, '#86c6ee', '#d7f0ff'], [0.6, '#7fbfe8', '#ffe2b8'],
-    [0.8, '#ee8a5f', '#f9c98b'], [1, '#34356a', '#86699f'],
+    [0, '#f7b690', '#ffe3c4'], [0.18, '#8cc8ef', '#dff2ff'], [0.45, '#6fb6e8', '#f3f6e8'],
+    [0.66, '#f0a060', '#ffd59a'], [0.82, '#5a4d8a', '#d98c7a'], [1, '#232848', '#4b4a7e'],
   ];
   function skyAt(p) {
     for (let i = 0; i < SKY.length - 1; i++) {
       const a = SKY[i], b = SKY[i + 1];
       if (p <= b[0]) { const t = (p - a[0]) / (b[0] - a[0]); return [mix(a[1], b[1], t), mix(a[2], b[2], t)]; }
     }
-    return [SKY[4][1], SKY[4][2]];
+    return [SKY[SKY.length - 1][1], SKY[SKY.length - 1][2]];
   }
+  // Оттенок освещения комнаты: [момент, цвет, сила]
+  const LIGHT = [[0, '#ffcdb8', 0.3], [0.2, '#ffffff', 0], [0.5, '#ffffff', 0], [0.7, '#ffb577', 0.34], [0.85, '#6c74b8', 0.56], [1, '#4a5190', 0.64]];
+  function lightAt(p) {
+    for (let i = 0; i < LIGHT.length - 1; i++) {
+      const a = LIGHT[i], b = LIGHT[i + 1];
+      if (p <= b[0]) { const t = (p - a[0]) / (b[0] - a[0]); return [mix(a[1], b[1], t), lerp(a[2], b[2], t)]; }
+    }
+    return [LIGHT[LIGHT.length - 1][1], LIGHT[LIGHT.length - 1][2]];
+  }
+  const darkAt = (p) => clamp((p - 0.62) / 0.3, 0, 1);
+  const sunAt = (p) => clamp(Math.sin(clamp((p - 0.05) / 0.6, 0, 1) * Math.PI), 0, 1);
+
   function drawSky(p) {
     const w = L.win;
     const [top, bot] = skyAt(p);
@@ -557,39 +586,210 @@ const Art = (() => {
     gr.addColorStop(0, top); gr.addColorStop(1, bot);
     ctx.fillStyle = gr; ctx.fillRect(w.x, w.y, w.w, w.h);
     ctx.save(); ctx.beginPath(); ctx.rect(w.x, w.y, w.w, w.h); ctx.clip();
-    const dark = clamp((p - 0.7) / 0.3, 0, 1);
-    // солнце / луна
-    const sx = w.x + w.w * lerp(0.15, 0.9, p), sy = w.y + w.h * (0.75 - Math.sin(p * Math.PI) * 0.5);
-    ctx.fillStyle = dark > 0.6 ? '#f6f1d5' : '#ffe08a';
-    ctx.beginPath(); ctx.arc(sx, sy, Math.min(w.w, w.h) * 0.09, 0, 7); ctx.fill();
+    const dark = darkAt(p);
+    // солнце днём, луна ночью
+    const r = Math.min(w.w, w.h) * 0.09;
+    if (p < 0.78) {
+      const sx = w.x + w.w * lerp(0.1, 0.92, p / 0.78), sy = w.y + w.h * (0.82 - Math.sin((p / 0.78) * Math.PI) * 0.6);
+      const halo = ctx.createRadialGradient(sx, sy, r * 0.5, sx, sy, r * 3);
+      halo.addColorStop(0, 'rgba(255,230,160,.55)'); halo.addColorStop(1, 'rgba(255,230,160,0)');
+      ctx.fillStyle = halo; ctx.fillRect(sx - r * 3, sy - r * 3, r * 6, r * 6);
+      ctx.fillStyle = p > 0.6 ? '#ffb24d' : '#ffe08a';
+      ctx.beginPath(); ctx.arc(sx, sy, r, 0, 7); ctx.fill();
+    }
+    if (p > 0.72) {
+      const k = clamp((p - 0.72) / 0.2, 0, 1);
+      const mx = w.x + w.w * lerp(0.95, 0.72, k), my = w.y + w.h * lerp(0.6, 0.18, k);
+      ctx.fillStyle = `rgba(246,241,213,${k})`;
+      ctx.beginPath(); ctx.arc(mx, my, r * 0.9, 0, 7); ctx.fill();
+      ctx.fillStyle = skyAt(p)[0]; ctx.beginPath(); ctx.arc(mx + r * 0.45, my - r * 0.3, r * 0.75, 0, 7); ctx.fill();
+    }
     if (dark > 0.3) {
-      ctx.fillStyle = `rgba(255,255,255,${dark * 0.8})`;
-      const r = seeded(11);
-      for (let i = 0; i < 14; i++) ctx.fillRect(w.x + r() * w.w, w.y + r() * w.h * 0.5, 1.5, 1.5);
+      const sr = seeded(11);
+      for (let i = 0; i < 18; i++) {
+        const tw = 0.5 + 0.5 * Math.sin(time * 2 + i);
+        ctx.fillStyle = `rgba(255,255,255,${(dark - 0.3) * tw})`;
+        ctx.fillRect(w.x + sr() * w.w, w.y + sr() * w.h * 0.5, 1.5, 1.5);
+      }
     }
-    // облака
-    ctx.fillStyle = `rgba(255,255,255,${0.7 - dark * 0.5})`;
-    for (let i = 0; i < 2; i++) {
-      const cx = w.x + ((time * 6 + i * w.w * 0.6) % (w.w + 80)) - 40, cy = w.y + w.h * (0.2 + i * 0.15);
-      ctx.beginPath(); ctx.ellipse(cx, cy, 22, 8, 0, 0, 7); ctx.ellipse(cx + 14, cy - 5, 14, 8, 0, 0, 7); ctx.fill();
+    // облака: утром розовые, ночью почти невидимые
+    ctx.fillStyle = p < 0.18 ? `rgba(255,220,225,.8)` : `rgba(255,255,255,${0.75 - dark * 0.6})`;
+    for (let i = 0; i < 3; i++) {
+      const cx = w.x + ((time * (5 + i * 2) + i * w.w * 0.45) % (w.w + 90)) - 45, cy = w.y + w.h * (0.15 + i * 0.13);
+      ctx.beginPath(); ctx.ellipse(cx, cy, 24, 8, 0, 0, 7); ctx.ellipse(cx + 15, cy - 6, 15, 9, 0, 0, 7); ctx.ellipse(cx - 12, cy - 3, 12, 6, 0, 0, 7); ctx.fill();
     }
-    // крыши домов
-    const city = mix('#c9a98a', '#2d2a48', dark);
+    // дома: силуэты темнеют, окна загораются к вечеру
+    const city = mix(p < 0.18 ? '#d9a88e' : '#c9a98a', '#1f1d38', Math.max(dark, p < 0.18 ? 0.2 : 0));
     ctx.fillStyle = city;
-    const r = seeded(5);
+    const cr = seeded(5);
     let x = w.x;
+    const lit = clamp((p - 0.55) / 0.25, 0, 1);
     while (x < w.x + w.w) {
-      const bw = 24 + r() * 30, bh = w.h * (0.18 + r() * 0.22);
+      const bw = 24 + cr() * 30, bh = w.h * (0.18 + cr() * 0.22);
       ctx.fillRect(x, w.y + w.h - bh, bw - 3, bh);
-      if (dark > 0.2) {
-        ctx.fillStyle = `rgba(255,214,120,${dark})`;
-        for (let k = 0; k < 3; k++) if (r() < 0.6) ctx.fillRect(x + 5 + k * 7, w.y + w.h - bh + 8 + (k % 2) * 10, 4, 5);
-        ctx.fillStyle = city;
-      } else { r(); r(); r(); }
+      for (let k = 0; k < 3; k++) {
+        const on = cr() < 0.6;
+        if (on && lit > 0) { ctx.fillStyle = `rgba(255,214,120,${lit})`; ctx.fillRect(x + 5 + k * 7, w.y + w.h - bh + 8 + (k % 2) * 10, 4, 5); ctx.fillStyle = city; }
+      }
       x += bw;
     }
     ctx.restore();
     return dark;
+  }
+
+  // Освещение комнаты: тёплый или синий оттенок поверх всего, лужицы света от ламп, луч солнца из окна
+  function drawDaylight(p, dark) {
+    const [col, a] = lightAt(p);
+    const sun = sunAt(p);
+    // луч солнца из окна на стену и стойку
+    if (sun > 0.05) {
+      const w = L.win;
+      ctx.save(); ctx.globalCompositeOperation = 'lighter';
+      const slant = lerp(-0.6, 0.6, clamp(p / 0.7, 0, 1)) * w.w;
+      ctx.fillStyle = `rgba(255,236,190,${0.09 * sun})`;
+      ctx.beginPath(); ctx.moveTo(w.x, w.y + w.h * 0.1); ctx.lineTo(w.x + w.w, w.y + w.h * 0.1);
+      ctx.lineTo(w.x + w.w + slant + w.w * 0.5, L.counterTop + 60); ctx.lineTo(w.x + slant - w.w * 0.1, L.counterTop + 60); ctx.closePath(); ctx.fill();
+      ctx.restore();
+    }
+    if (a > 0.01) {
+      ctx.save(); ctx.globalCompositeOperation = 'multiply';
+      const [r, g, b] = hex(col);
+      ctx.fillStyle = `rgba(${r},${g},${b},${a})`; ctx.fillRect(0, 0, W, H);
+      ctx.restore();
+    }
+    if (dark > 0.05) {
+      ctx.save(); ctx.globalCompositeOperation = 'lighter';
+      const len = H * 0.07;
+      for (const x of [W * 0.3, W * 0.7]) {
+        const flick = 1 + Math.sin(time * 7 + x) * 0.03;
+        const gr = ctx.createRadialGradient(x, len + 20, 6, x, len + 20, H * 0.5);
+        gr.addColorStop(0, `rgba(255,190,110,${0.28 * dark * flick})`); gr.addColorStop(0.5, `rgba(255,170,90,${0.1 * dark})`); gr.addColorStop(1, 'rgba(255,170,90,0)');
+        ctx.fillStyle = gr; ctx.fillRect(x - H * 0.5, 0, H, H);
+      }
+      if (L.bulbs) for (const [bx, by] of L.bulbs) {
+        const gr = ctx.createRadialGradient(bx, by, 1, bx, by, 16);
+        gr.addColorStop(0, `rgba(255,220,150,${0.6 * dark})`); gr.addColorStop(1, 'rgba(255,220,150,0)');
+        ctx.fillStyle = gr; ctx.fillRect(bx - 16, by - 16, 32, 32);
+      }
+      ctx.restore();
+    }
+  }
+
+  // Стрелки настенных часов: во время смены идёт игровой день (7:00 → 22:00), в меню — настоящее время
+  function drawClockHands(p, inShift) {
+    const c = L.clock;
+    if (!c) return;
+    let hours;
+    if (inShift) hours = 7 + p * 15;
+    else { const d = new Date(); hours = d.getHours() + d.getMinutes() / 60; }
+    const hA = ((hours % 12) / 12) * Math.PI * 2 - Math.PI / 2, mA = (hours % 1) * Math.PI * 2 - Math.PI / 2;
+    ctx.strokeStyle = INKC; ctx.lineCap = 'round';
+    ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(c.x, c.y); ctx.lineTo(c.x + Math.cos(hA) * c.r * 0.42, c.y + Math.sin(hA) * c.r * 0.42); ctx.stroke();
+    ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(c.x, c.y); ctx.lineTo(c.x + Math.cos(mA) * c.r * 0.62, c.y + Math.sin(mA) * c.r * 0.62); ctx.stroke();
+    ctx.fillStyle = '#c8372d'; ctx.beginPath(); ctx.arc(c.x, c.y, c.r * 0.07, 0, 7); ctx.fill();
+  }
+
+  // Лампочки гирлянды: днём просто стекляшки, ночью горят
+  function drawBulbs(dark) {
+    if (!L.bulbs) return;
+    for (const [bx, by] of L.bulbs) {
+      ctx.fillStyle = dark > 0.2 ? '#ffe9a8' : 'rgba(255,245,220,.8)'; ctx.strokeStyle = INKC; ctx.lineWidth = 1.1;
+      ctx.beginPath(); ctx.ellipse(bx, by, 2.6, 3.6, 0, 0, 7); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#c9a227'; ctx.fillRect(bx - 1.8, by - 5.5, 3.6, 2.5);
+    }
+  }
+
+  // Свеча на стойке — зажигается к вечеру
+  function drawCandle(dark) {
+    if (dark < 0.08) return;
+    const s = clamp(H / 420, 0.6, 1.1);
+    const x = L.mw ? L.mw + 26 * s : W * 0.5 + 40 * s, y = L.counterTop - 8;
+    const k = clamp((dark - 0.08) / 0.3, 0, 1);
+    const fl = 1 + Math.sin(time * 11) * 0.12 + Math.sin(time * 23) * 0.06;
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    const gr = ctx.createRadialGradient(x, y - 14 * s, 2, x, y - 14 * s, 60 * s);
+    gr.addColorStop(0, `rgba(255,200,120,${0.35 * k * fl})`); gr.addColorStop(1, 'rgba(255,200,120,0)');
+    ctx.fillStyle = gr; ctx.fillRect(x - 60 * s, y - 74 * s, 120 * s, 120 * s);
+    ctx.restore();
+    ctx.fillStyle = 'rgba(230,245,250,.55)'; ctx.strokeStyle = INKC; ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.moveTo(x - 6 * s, y - 11 * s); ctx.lineTo(x + 6 * s, y - 11 * s); ctx.lineTo(x + 5 * s, y); ctx.lineTo(x - 5 * s, y); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#fff3d6'; ctx.fillRect(x - 3.5 * s, y - 9 * s, 7 * s, 8 * s);
+    ctx.strokeStyle = INKC; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, y - 9 * s); ctx.lineTo(x, y - 12 * s); ctx.stroke();
+    ctx.fillStyle = `rgba(255,170,60,${k})`; ctx.beginPath(); ctx.ellipse(x, y - 15 * s * fl, 2.2 * s, 4 * s * fl, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = `rgba(255,240,180,${k})`; ctx.beginPath(); ctx.ellipse(x, y - 14 * s * fl, 1.1 * s, 2 * s, 0, 0, 7); ctx.fill();
+  }
+
+  // Бумажная зернистость поверх всей сцены — чтобы заливки не выглядели пластиковыми
+  let grain = null;
+  function buildGrain() {
+    const n = 160, c = document.createElement('canvas'); c.width = n; c.height = n;
+    const g = c.getContext('2d'); const img = g.createImageData(n, n); const d = img.data;
+    const r = seeded(99);
+    for (let i = 0; i < n * n; i++) { const v = 215 + r() * 40; d[i * 4] = v; d[i * 4 + 1] = v - 4; d[i * 4 + 2] = v - 10; d[i * 4 + 3] = 255; }
+    g.putImageData(img, 0, 0);
+    grain = ctx.createPattern(c, 'repeat');
+  }
+  function drawGrain() {
+    if (!grain) buildGrain();
+    ctx.save(); ctx.globalCompositeOperation = 'multiply'; ctx.globalAlpha = 0.28;
+    ctx.fillStyle = grain; ctx.fillRect(0, 0, W, H);
+    ctx.restore();
+  }
+
+  // ---------- ещё предметы ----------
+  // Мягкая тень под предметом на полке
+  function ao(g, cx, y, rx) {
+    g.fillStyle = 'rgba(60,30,20,.16)'; g.beginPath(); g.ellipse(cx, y + 1, rx, rx * 0.22, 0, 0, 7); g.fill();
+  }
+  // Гейзерная кофеварка «мока» — восьмигранная, алюминиевая
+  function propMoka(g, x, y, s, rnd) {
+    const w = 18 * s, h = 30 * s;
+    ao(g, x + w / 2, y, w * 0.7);
+    ink(g, 1.6); g.fillStyle = '#d9dee2';
+    hpath(g, [[x + 3 * s, y], [x + w - 3 * s, y], [x + w, y - h * 0.42], [x + w - 1.5 * s, y - h * 0.46], [x + w - 2.5 * s, y - h * 0.9], [x + w / 2, y - h], [x + 2.5 * s, y - h * 0.9], [x + 1.5 * s, y - h * 0.46], [x, y - h * 0.42]], true, rnd, 0.6); g.fill(); g.stroke();
+    g.strokeStyle = 'rgba(0,0,0,.18)'; g.lineWidth = 1; for (const k of [0.3, 0.5, 0.7]) { g.beginPath(); g.moveTo(x + w * k, y - 2); g.lineTo(x + w * k + (k - 0.5) * 2 * s, y - h * 0.42); g.moveTo(x + w * k, y - h * 0.46); g.lineTo(x + w * k + (k - 0.5) * 1.5 * s, y - h * 0.9); g.stroke(); }
+    g.strokeStyle = 'rgba(255,255,255,.7)'; g.lineWidth = 1.4; g.beginPath(); g.moveTo(x + 4 * s, y - h * 0.84); g.lineTo(x + 5 * s, y - h * 0.5); g.stroke();
+    g.fillStyle = INKC; ink(g, 1.4); hrect(g, x + w - 1 * s, y - h * 0.82, 6 * s, 7 * s, 2 * s, rnd, 0.4); g.fill();
+    g.fillStyle = INKC; g.beginPath(); g.arc(x + w / 2, y - h - 1.5 * s, 2 * s, 0, 7); g.fill();
+    g.beginPath(); g.moveTo(x + 2 * s, y - h * 0.7); g.lineTo(x - 2 * s, y - h * 0.78); g.lineTo(x + 1.5 * s, y - h * 0.62); g.closePath(); g.fillStyle = '#d9dee2'; g.fill(); g.stroke();
+  }
+  // Ваза с тремя цветками
+  function propVase(g, x, y, s, rnd) {
+    ao(g, x, y, 9 * s);
+    g.fillStyle = '#6d9dc5'; ink(g, 1.5);
+    hpath(g, [[x - 4 * s, y - 20 * s], [x + 4 * s, y - 20 * s], [x + 7 * s, y - 12 * s], [x + 6 * s, y], [x - 6 * s, y], [x - 7 * s, y - 12 * s]], true, rnd, 0.6); g.fill(); g.stroke();
+    g.strokeStyle = 'rgba(255,255,255,.6)'; g.lineWidth = 1.3; g.beginPath(); g.moveTo(x - 4 * s, y - 14 * s); g.lineTo(x - 3.5 * s, y - 4 * s); g.stroke();
+    const flowers = [[-5, -34, '#e07a5f'], [1, -40, '#f2cc8f'], [6, -32, '#f19aa8']];
+    for (const [dx, dy, col] of flowers) {
+      g.strokeStyle = '#4f8a4c'; g.lineWidth = 1.3; g.beginPath(); g.moveTo(x, y - 19 * s); g.quadraticCurveTo(x + dx * s * 0.5, y + dy * s * 0.6, x + dx * s, y + dy * s); g.stroke();
+      g.fillStyle = '#5f9a5c'; g.beginPath(); g.ellipse(x + dx * s * 0.6, y + dy * s * 0.6, 3 * s, 1.4 * s, dx > 0 ? -0.6 : 0.6, 0, 7); g.fill();
+      g.fillStyle = col; ink(g, 1);
+      for (let i = 0; i < 5; i++) { const a = (i / 5) * Math.PI * 2; g.beginPath(); g.ellipse(x + dx * s + Math.cos(a) * 2.6 * s, y + dy * s + Math.sin(a) * 2.6 * s, 2.2 * s, 1.5 * s, a, 0, 7); g.fill(); g.stroke(); }
+      g.fillStyle = '#f4c542'; g.beginPath(); g.arc(x + dx * s, y + dy * s, 1.4 * s, 0, 7); g.fill();
+    }
+  }
+  // Старое фото в рамке: двое у кофейни, сепия
+  function propPhoto(g, x, y, w, rnd) {
+    const h = w * 0.8;
+    g.save(); g.shadowColor = 'rgba(60,30,20,.3)'; g.shadowBlur = 6; g.shadowOffsetY = 3;
+    g.fillStyle = '#5a3a2a'; ink(g, 1.5); hrect(g, x, y, w, h, 2, rnd, 0.7); g.fill(); g.restore(); g.stroke();
+    g.fillStyle = '#e8d4b4'; g.fillRect(x + w * 0.1, y + h * 0.12, w * 0.8, h * 0.76);
+    g.fillStyle = '#b89a78';
+    for (const dx of [0.38, 0.62]) { g.beginPath(); g.arc(x + w * dx, y + h * 0.45, w * 0.08, 0, 7); g.fill(); g.beginPath(); g.ellipse(x + w * dx, y + h * 0.75, w * 0.12, h * 0.2, 0, 0, 7); g.fill(); }
+    g.fillStyle = 'rgba(255,255,255,.35)'; g.fillRect(x + w * 0.1, y + h * 0.12, w * 0.8, h * 0.12);
+  }
+  // Пучок сухого эвкалипта вниз головой
+  function propHerbs(g, x, y, s, rnd) {
+    g.strokeStyle = '#8a6a3a'; g.lineWidth = 1.2; g.beginPath(); g.moveTo(x, y); g.lineTo(x, y + 6 * s); g.stroke();
+    for (const dir of [-1, 0, 1]) {
+      g.strokeStyle = '#7a9a6a'; g.lineWidth = 1.2; g.beginPath(); g.moveTo(x, y + 6 * s); g.quadraticCurveTo(x + dir * 4 * s, y + 20 * s, x + dir * 7 * s, y + 34 * s); g.stroke();
+      for (let i = 0; i < 5; i++) {
+        const tt = 0.25 + i * 0.17, px = x + dir * 5 * s * tt + (i % 2 ? 3 : -3) * s, py = y + 6 * s + 28 * s * tt;
+        g.fillStyle = i % 2 ? '#a9c4a0' : '#8fb08a'; g.strokeStyle = '#5f7a5a'; g.lineWidth = 0.9;
+        g.beginPath(); g.ellipse(px, py, 3 * s, 2.2 * s, 0, 0, 7); g.fill(); g.stroke();
+      }
+    }
+    g.fillStyle = '#c8372d'; g.beginPath(); g.ellipse(x, y + 7 * s, 3 * s, 2 * s, 0, 0, 7); g.fill();
   }
 
   function drawLamps(dark) {
@@ -1303,6 +1503,8 @@ const Art = (() => {
     if (shake > 0) ctx.translate(rand(-1, 1) * shake * 6, rand(-1, 1) * shake * 6);
     const dark = drawSky(state.sky);
     ctx.drawImage(bg, 0, 0, W, H);
+    drawClockHands(state.sky, !!state.shift);
+    drawBulbs(dark);
     drawLamps(dark);
     const cap = state.cap || 3;
     for (const cu of state.customers) drawCustomer(cu, cap);
@@ -1310,11 +1512,13 @@ const Art = (() => {
     for (const cu of state.customers) drawHands(cu);
     drawCounterItems();
     drawMachine(state.busy || {});
+    drawCandle(dark);
     drawCat(state.cat);
+    drawDaylight(state.sky, dark);
+    drawGrain();
     for (const cu of state.customers) drawBubble(cu, cap);
     drawPointer(state.pointer);
     drawFx();
-    if (dark > 0) { ctx.fillStyle = `rgba(60,30,60,${dark * 0.12})`; ctx.fillRect(0, 0, W, H); }
     ctx.restore();
   }
 

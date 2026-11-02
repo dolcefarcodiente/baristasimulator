@@ -50,6 +50,7 @@
       cap: Stats.capacity(),
       cat: inShift ? Shift.cat : null,
       pointer: inShift ? Shift.pointer : null,
+      shift: inShift,
       busy: inShift ? { espresso: Shift.jobs.espresso.length, frother: Shift.jobs.frother.length } : {},
     });
     if (inShift) Bar.render(dt);
