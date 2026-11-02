@@ -429,24 +429,6 @@ const Art = (() => {
   const darkAt = (p) => clamp((p - 0.62) / 0.3, 0, 1);
   const sunAt = (p) => clamp(Math.sin(clamp((p - 0.05) / 0.6, 0, 1) * Math.PI), 0, 1);
 
-  // Силуэт ряда домов (случайные ширины и высоты по сиду)
-  function skyline(seed, x0, x1, base, hMin, hMax, color, lit, winCol) {
-    const r = seeded(seed);
-    ctx.fillStyle = color;
-    let x = x0;
-    while (x < x1) {
-      const bw = 14 + r() * 26, bh = hMin + r() * (hMax - hMin);
-      ctx.fillRect(x, base - bh, bw - 2, bh);
-      if (r() < 0.3) ctx.fillRect(x + bw * 0.3, base - bh - 6, bw * 0.3, 6); // надстройка
-      if (lit > 0) {
-        ctx.fillStyle = winCol;
-        for (let wy = base - bh + 6; wy < base - 6; wy += 9) for (let wx = x + 3; wx < x + bw - 6; wx += 7) if (r() < 0.45 * lit) ctx.fillRect(wx, wy, 3, 4);
-        ctx.fillStyle = color;
-      } else for (let k = 0; k < 6; k++) r();
-      x += bw;
-    }
-  }
-
   function drawSky(p) {
     const w = L.win;
     const [top, bot] = skyAt(p);
@@ -455,14 +437,15 @@ const Art = (() => {
     ctx.fillStyle = gr; ctx.fillRect(w.x, w.y, w.w, w.h);
     ctx.save(); ctx.beginPath(); ctx.rect(w.x, w.y, w.w, w.h); ctx.clip();
     const dark = darkAt(p);
-    const lit = clamp((p - 0.55) / 0.25, 0, 1);
-    const horizon = w.y + w.h * 0.62;
+    // видимая часть окна: верх может прятаться под панелью со счётом
+    const vt = Math.max(w.y, safeTop + 48), vh = Math.max(40, w.y + w.h - vt);
+    const horizon = vt + vh * 0.36; // примерно верх крыш на нарисованном виде
     // солнце большое и мягкое, ночью — луна
-    const r = w.h * 0.17;
+    const r = Math.min(w.w, vh) * 0.1;
     let sunX = w.x + w.w * 0.5, sunY = horizon;
     if (p < 0.8) {
       const k = p / 0.8;
-      sunX = w.x + w.w * lerp(0.2, 0.78, k); sunY = horizon + r * 0.3 - Math.sin(k * Math.PI) * w.h * 0.42;
+      sunX = w.x + w.w * lerp(0.2, 0.78, k); sunY = horizon + r * 0.3 - Math.sin(k * Math.PI) * vh * 0.26;
       const halo = ctx.createRadialGradient(sunX, sunY, r * 0.6, sunX, sunY, r * 3.2);
       halo.addColorStop(0, 'rgba(255,230,170,.55)'); halo.addColorStop(1, 'rgba(255,230,170,0)');
       ctx.fillStyle = halo; ctx.fillRect(sunX - r * 3.2, sunY - r * 3.2, r * 6.4, r * 6.4);
@@ -471,7 +454,7 @@ const Art = (() => {
     }
     if (p > 0.74) {
       const k = clamp((p - 0.74) / 0.2, 0, 1);
-      const mx = w.x + w.w * lerp(0.9, 0.72, k), my = w.y + w.h * lerp(0.5, 0.16, k);
+      const mx = w.x + w.w * lerp(0.9, 0.72, k), my = vt + vh * lerp(0.32, 0.1, k);
       ctx.fillStyle = `rgba(250,236,200,${k})`; ctx.beginPath(); ctx.arc(mx, my, r * 0.55, 0, 7); ctx.fill();
       ctx.fillStyle = skyAt(p)[0]; ctx.beginPath(); ctx.arc(mx + r * 0.3, my - r * 0.2, r * 0.45, 0, 7); ctx.fill();
       sunX = mx; sunY = my;
@@ -479,44 +462,15 @@ const Art = (() => {
     // плоские полосы облаков
     ctx.fillStyle = p < 0.18 ? 'rgba(255,214,214,.75)' : p > 0.6 ? `rgba(255,190,150,${0.7 - dark * 0.55})` : 'rgba(255,255,255,.7)';
     for (let i = 0; i < 4; i++) {
-      const cw = w.w * (0.18 + (i % 3) * 0.1), cx = w.x + ((time * (3 + i) + i * w.w * 0.37) % (w.w + cw)) - cw, cy = w.y + w.h * (0.1 + i * 0.1);
+      const cw = w.w * (0.18 + (i % 3) * 0.1), cx = w.x + ((time * (3 + i) + i * w.w * 0.37) % (w.w + cw)) - cw, cy = vt + vh * (0.05 + i * 0.07);
       rr(ctx, cx, cy, cw, 5 + (i % 2) * 2, 3); ctx.fill();
       rr(ctx, cx + cw * 0.2, cy - 5, cw * 0.5, 5, 3); ctx.fill();
     }
     if (dark > 0.3) {
       const sr = seeded(11);
-      for (let i = 0; i < 24; i++) { const tw = 0.5 + 0.5 * Math.sin(time * 2 + i); ctx.fillStyle = `rgba(255,255,255,${(dark - 0.3) * tw})`; ctx.fillRect(w.x + sr() * w.w, w.y + sr() * w.h * 0.45, 1.5, 1.5); }
+      for (let i = 0; i < 24; i++) { const tw = 0.5 + 0.5 * Math.sin(time * 2 + i); ctx.fillStyle = `rgba(255,255,255,${(dark - 0.3) * tw})`; ctx.fillRect(w.x + sr() * w.w, vt + sr() * vh * 0.35, 1.5, 1.5); }
     }
-    // город в три плана: дальний светлее, ближний темнее, окна зажигаются к вечеру
-    const far = mix(bot, '#6a4a6e', 0.55 + dark * 0.3), mid = mix('#7a5272', '#2e2040', dark), near = mix('#4a3050', '#201528', dark);
-    skyline(31, w.x - 20, w.x + w.w + 20, horizon + 2, w.h * 0.14, w.h * 0.42, far, 0, '');
-    skyline(37, w.x - 20, w.x + w.w + 20, horizon + 8, w.h * 0.08, w.h * 0.26, mid, lit * 0.6, 'rgba(255,214,120,.8)');
-    // река с отражением заката
-    const ry0 = horizon + 8, ry1 = w.y + w.h * 0.86;
-    const rg = ctx.createLinearGradient(0, ry0, 0, ry1);
-    rg.addColorStop(0, mix(bot, '#7a5a7a', 0.35 + dark * 0.4)); rg.addColorStop(1, mix('#5a3f5e', '#241a30', dark));
-    ctx.fillStyle = rg; ctx.fillRect(w.x, ry0, w.w, ry1 - ry0);
-    const refl = p < 0.8 ? (p > 0.6 ? 'rgba(255,220,150,' : 'rgba(255,245,210,') : 'rgba(250,236,200,';
-    for (let i = 0; i < 7; i++) {
-      const yy = ry0 + 4 + i * ((ry1 - ry0) / 7), wv = Math.sin(time * 1.5 + i) * 4;
-      const ww2 = r * (1.6 - i * 0.12) + wv;
-      ctx.fillStyle = refl + (0.35 - i * 0.04) + ')'; ctx.fillRect(sunX - ww2 / 2 + wv, yy, ww2, 2.2);
-    }
-    // мост через реку
-    ctx.strokeStyle = near; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(w.x, ry0 + 10); ctx.lineTo(w.x + w.w, ry0 + 10); ctx.stroke();
-    for (let x = w.x + 8; x < w.x + w.w; x += 26) { ctx.beginPath(); ctx.arc(x + 11, ry0 + 10, 10, Math.PI, 0); ctx.stroke(); }
-    // ближний берег: тёмные деревья и кусты с россыпью листьев
-    const br = seeded(43);
-    const bushCol = mix('#5a6a3a', '#1f2a1e', dark), bushDark = mix('#4a5830', '#17201a', dark), leafCol = mix('#d98a5a', '#4a3040', dark);
-    for (let x = w.x - 10; x < w.x + w.w + 10; x += 22) {
-      const bh = w.h * (0.12 + br() * 0.14);
-      ctx.fillStyle = br() < 0.5 ? bushCol : bushDark;
-      ctx.beginPath(); ctx.ellipse(x + 11, w.y + w.h - bh * 0.4, 18, bh, 0, 0, 7); ctx.fill();
-      ctx.fillStyle = leafCol;
-      for (let k = 0; k < 4; k++) if (br() < 0.7) ctx.fillRect(x + br() * 22, w.y + w.h - bh * 0.9 + br() * bh, 2.5, 2);
-    }
-    skyline(41, w.x - 10, w.x + w.w * 0.32, w.y + w.h * 0.72, w.h * 0.1, w.h * 0.22, near, lit, 'rgba(255,214,120,.9)');
-    skyline(47, w.x + w.w * 0.72, w.x + w.w + 10, w.y + w.h * 0.74, w.h * 0.1, w.h * 0.2, near, lit, 'rgba(255,214,120,.9)');
+    drawCity(p, vt, vh);
     // опадающие листья
     const lr = seeded(53);
     for (let i = 0; i < 9; i++) {
@@ -527,6 +481,40 @@ const Art = (() => {
     }
     ctx.restore();
     return dark;
+  }
+
+  // Нарисованный город за окном: днём — дневная картинка с оттенком времени суток, к ночи перетекает в ночную
+  let cityCv = null, cityG = null;
+  function cityTint(p) {
+    if (p < 0.18) return ['#f2a0a8', 0.35 * (1 - p / 0.18)];
+    if (p < 0.5) return ['#ffffff', 0];
+    if (p < 0.72) return ['#ff9a50', 0.4 * (p - 0.5) / 0.22];
+    return ['#6a4a8a', 0.4 + 0.2 * clamp((p - 0.72) / 0.2, 0, 1)];
+  }
+  function drawCity(p, vt, vh) {
+    if (!Sprites.ready('city-day')) return;
+    const w = L.win, day = Sprites.get('city-day');
+    const pw = Math.max(1, Math.ceil(w.w * DPR)), ph = Math.max(1, Math.ceil(vh * DPR));
+    if (!cityCv || cityCv.width !== pw || cityCv.height !== ph) {
+      cityCv = document.createElement('canvas'); cityCv.width = pw; cityCv.height = ph; cityG = cityCv.getContext('2d');
+    }
+    const g = cityG;
+    g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1; g.clearRect(0, 0, pw, ph);
+    const sc = Math.max(pw / day.naturalWidth, ph / day.naturalHeight);
+    const dw = day.naturalWidth * sc, dh = day.naturalHeight * sc, dx = (pw - dw) / 2, dy = (ph - dh) * 0.35;
+    g.drawImage(day, dx, dy, dw, dh);
+    const [tc, ta] = cityTint(p);
+    if (ta > 0.01) {
+      // multiply-оттенок только по самому городу: красим, затем возвращаем прозрачность неба маской
+      g.globalCompositeOperation = 'multiply'; g.fillStyle = mix('#ffffff', tc, ta); g.fillRect(0, 0, pw, ph);
+      g.globalCompositeOperation = 'destination-in'; g.drawImage(day, dx, dy, dw, dh);
+    }
+    const nk = clamp((p - 0.7) / 0.18, 0, 1);
+    if (nk > 0 && Sprites.ready('city-night')) {
+      g.globalCompositeOperation = 'source-over'; g.globalAlpha = nk;
+      g.drawImage(Sprites.get('city-night'), dx, dy, dw, dh); g.globalAlpha = 1;
+    }
+    ctx.drawImage(cityCv, w.x, vt, w.w, vh);
   }
 
   // Освещение комнаты: тёплый или синий оттенок поверх всего, лужицы света от ламп, луч солнца из окна
