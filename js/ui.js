@@ -115,7 +115,7 @@ const UI = (() => {
   function updateHUD() {
     el.coinsVal.textContent = fmt(Shift.earned);
     const m = comboMult(Shift.combo);
-    el.combo.innerHTML = `<span class="flame">🔥</span><b>×${m}</b><small>${Shift.combo}</small>`;
+    el.combo.innerHTML = `${iconSvg('ui_flame', 'flame')}<b>×${m}</b><small>${Shift.combo}</small>`;
     el.combo.classList.toggle('hot', m > 1);
     el.combo.classList.toggle('blaze', m >= 3);
   }
@@ -185,8 +185,8 @@ const UI = (() => {
   }
 
   function settingsButtons() {
-    return `<button class="icon-btn ${S.settings.music ? '' : 'off'}" data-act="music" aria-label="${t('music')}">🎵</button>
-      <button class="icon-btn ${S.settings.sfx ? '' : 'off'}" data-act="sfx" aria-label="${t('sounds')}">🔊</button>
+    return `<button class="icon-btn ${S.settings.music ? '' : 'off'}" data-act="music" aria-label="${t('music')}">${iconSvg('ui_music')}</button>
+      <button class="icon-btn ${S.settings.sfx ? '' : 'off'}" data-act="sfx" aria-label="${t('sounds')}">${iconSvg('ui_sound')}</button>
       <button class="icon-btn lang" data-act="lang" aria-label="${t('language')}">${LANG === 'ru' ? 'RU' : 'EN'}</button>`;
   }
 
@@ -201,19 +201,22 @@ const UI = (() => {
       : '';
     openPanel(`
       <div class="menu">
-        <div class="brand"><div class="brand-logo">${iconSvg('logo')}</div><div><h1>${t('brand')}</h1><p>${t('tagline')}</p></div></div>
-        <div class="chips">
-          <span class="chip">${t('day', S.day)}</span>
-          <span class="chip">${coin(S.coins)}</span>
-          <span class="chip">🔥 ${S.streak.count}</span>
+        <div class="brand">
+          <span class="eyebrow">${t('dayEyebrow', S.day)}</span>
+          <h1 class="logo">${t('brand')}</h1>
+          <p class="tagline">${t('tagline')}</p>
         </div>
-        <div class="goal">${t('goal', coin(dayTarget(S.day)))}</div>
+        <div class="stats">
+          <div class="stat">${coin(S.coins)}</div>
+          <div class="stat">${iconSvg('ui_flame', 'ico')}${t('streak', S.streak.count)}</div>
+        </div>
         <button class="btn primary big" data-act="start">${t('open')}</button>
+        <p class="note">${t('goal', coin(dayTarget(S.day)))}</p>
         ${goalHtml}
         <div class="tiles">
-          <button class="btn tile" data-act="shop"><span class="tile-ico">🛠️</span>${t('upgrades')}${canAffordSomething() ? '<i class="badge">!</i>' : ''}</button>
-          <button class="btn tile" data-act="guests"><span class="tile-ico">💌</span>${t('guests')}</button>
-          <button class="btn tile" data-act="quests"><span class="tile-ico">📋</span>${t('quests')}${unclaimed ? `<i class="badge">${unclaimed}</i>` : ''}</button>
+          <button class="btn tile" data-act="shop">${iconSvg('ui_shop', 'tile-ico')}${t('upgrades')}${canAffordSomething() ? '<i class="badge">!</i>' : ''}</button>
+          <button class="btn tile" data-act="guests">${iconSvg('ui_regulars', 'tile-ico')}${t('guests')}</button>
+          <button class="btn tile" data-act="quests">${iconSvg('ui_todo', 'tile-ico')}${t('quests')}${unclaimed ? `<i class="badge">${unclaimed}</i>` : ''}</button>
         </div>
         <div class="menu-foot">
           ${settingsButtons()}
@@ -236,7 +239,7 @@ const UI = (() => {
         const afford = !maxed && S.coins >= u.costs[lvl];
         const pips = Array.from({ length: max }, (_, i) => `<i class="${i < lvl ? 'on' : ''}"></i>`).join('');
         return `<div class="card${afford ? ' can' : ''}">
-          <div class="card-ico">${u.icon}</div>
+          <div class="card-ico">${iconSvg(u.icon)}</div>
           <div class="card-body"><b>${T(u.name)}</b><div class="pips">${pips}</div>
             <small>${maxed ? u.desc(cur) : `${u.desc(cur)}<br><span class="next">→ ${u.desc(u.values[lvl + 1])}</span>`}</small></div>
           ${maxed ? `<span class="maxed">${t('max')}</span>` : `<button class="btn buy${afford ? ' green' : ''}" data-act="buy-up" data-id="${u.id}" ${afford ? '' : 'disabled'}>${coin(u.costs[lvl])}</button>`}
@@ -308,7 +311,7 @@ const UI = (() => {
     const ms = Progress.msToReset();
     const h = Math.floor(ms / 3.6e6), m = Math.floor((ms % 3.6e6) / 6e4);
     const n = S.streak.count;
-    const week = Array.from({ length: 7 }, (_, i) => `<i class="${i < ((n - 1) % 7) + 1 ? 'on' : ''}">☕</i>`).join('');
+    const week = Array.from({ length: 7 }, (_, i) => `<i class="${i < ((n - 1) % 7) + 1 ? 'on' : ''}"></i>`).join('');
     const qcards = list.map((q, i) => `
       <div class="quest${q.claimed ? ' claimed' : ''}">
         <div class="quest-body"><b>${Progress.questText(q)}</b>
@@ -322,12 +325,12 @@ const UI = (() => {
       ${S.quests.bonusClaimed ? '<span class="maxed">✓</span>' : `<button class="btn buy${allClaimed ? ' green' : ''}" data-act="bonus" ${allClaimed ? '' : 'disabled'}>${coin(Progress.allBonus())}</button>`}
     </div>`;
     const got = ACHIEVEMENTS.filter((a) => S.ach[a.id]).length;
-    const ach = ACHIEVEMENTS.map((a) => `<div class="ach${S.ach[a.id] ? ' on' : ''}"><span>${S.ach[a.id] ? '🏆' : '🔒'}</span><b>${T(a.name)}</b><small>${T(a.desc)}</small><small class="rw">${coin(a.reward)}</small></div>`).join('');
+    const ach = ACHIEVEMENTS.map((a) => `<div class="ach${S.ach[a.id] ? ' on' : ''}"><span class="pin"></span><b>${T(a.name)}</b><small>${T(a.desc)}</small><small class="rw">${coin(a.reward)}</small></div>`).join('');
     openPanel(`${sheetHead(t('quests'))}
-      <div class="streak"><div><b>${t('streak', n)}</b><small>${t('streakHint')}</small></div><div class="week">${week}</div></div>
-      <div class="section-title"><h3>${t('today')}</h3><small>${t('newIn', h, m)}</small></div>
+      <div class="streak">${iconSvg('ui_flame', 'streak-ico')}<div><b>${t('streak', n)}</b><small>${t('streakHint')}</small></div><div class="week">${week}</div></div>
+      <div class="section-title"><h3 class="eyebrow">${t('today')}</h3><small>${t('newIn', h, m)}</small></div>
       <div class="cards">${qcards}${bonus}</div>
-      <div class="section-title"><h3>${t('achievements')}</h3><small>${t('ofTotal', got, ACHIEVEMENTS.length)}</small></div>
+      <div class="section-title"><h3 class="eyebrow">${t('achievements')}</h3><small>${t('ofTotal', got, ACHIEVEMENTS.length)}</small></div>
       <div class="ach-grid">${ach}</div>`, 'sheet tall');
   }
 
@@ -339,8 +342,8 @@ const UI = (() => {
     }).join('');
     openPanel(`
       <div class="summary">
-        <p class="muted">${t('day', r.day)}</p>
-        <h2>${t('shiftOver')}</h2>
+        <span class="eyebrow">${t('dayEyebrow', r.day)}</span>
+        <h2 class="hand">${t('shiftOver')}</h2>
         <div class="stars">${[0, 1, 2].map((i) => `<span class="star" data-star="${i}">★</span>`).join('')}</div>
         <div class="earn"><span class="coin"></span><span id="earn-num">0</span></div>
         <div class="target"><div class="tbar"><div class="tfill" id="tfill"></div><i style="left:40%"></i><i style="left:70%"></i></div><small>${t('target', fmt(r.target))}</small></div>
@@ -351,7 +354,7 @@ const UI = (() => {
           <div><b>${r.missed}</b><span>${t('leftNoCoffee')}</span></div>
         </div>
         ${r.bonus ? `<div class="bonus-line">${t('starBonus', coin(r.bonus))}</div>` : ''}
-        ${stories ? `<h3>${t('newStories')}</h3>${stories}` : ''}
+        ${stories ? `<h3 class="eyebrow">${t('newStories')}</h3>${stories}` : ''}
         <button class="btn primary big" data-act="menu">${t('next')}</button>
       </div>`, `sheet summary-sheet${stories ? ' tall' : ''}`);
     el.panel.querySelectorAll('canvas[data-guest]').forEach((c) => Art.drawPortrait(c, REGULAR[c.dataset.guest].look));
@@ -399,9 +402,9 @@ const UI = (() => {
   function nextPopup() {
     const p = popupQueue.shift();
     if (!p) return;
-    const week = p.streak ? `<div class="week big">${Array.from({ length: 7 }, (_, i) => `<i class="${i < ((p.streak - 1) % 7) + 1 ? 'on' : ''}">☕</i>`).join('')}</div>` : '';
+    const week = p.streak ? `<div class="week big">${Array.from({ length: 7 }, (_, i) => `<i class="${i < ((p.streak - 1) % 7) + 1 ? 'on' : ''}"></i>`).join('')}</div>` : '';
     openModal(`
-      <div class="pop-ico">${p.icon}</div>
+      <div class="pop-ico">${iconSvg(p.icon)}</div>
       <h2>${p.title}</h2>
       <p>${p.body}</p>
       ${week}
@@ -414,7 +417,7 @@ const UI = (() => {
     if (!Shift.active || Shift.paused) return;
     Shift.paused = true;
     openModal(`
-      <div class="pop-ico">☕</div><h2>${t('pause')}</h2>
+      <div class="pop-ico">${iconSvg('logo')}</div><h2>${t('pause')}</h2>
       <p>${t('pauseHint')}</p>
       <div class="row">${settingsButtons()}</div>
       <button class="btn primary big" data-act="resume">${t('resume')}</button>
@@ -451,7 +454,7 @@ const UI = (() => {
         if (upMaxed(id) || S.coins < upCost(id)) return;
         S.coins -= upCost(id);
         S.upgrades[id] = upLevel(id) + 1;
-        afterBuy(`${UPGRADE[id].icon} ${T(UPGRADE[id].name)} — ${t('level', upLevel(id))}`);
+        afterBuy(`${T(UPGRADE[id].name)} — ${t('level', upLevel(id))}`);
         return;
       }
       case 'buy-rec': {

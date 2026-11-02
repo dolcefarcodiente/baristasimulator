@@ -11,6 +11,11 @@
   const wrap = document.getElementById('scene-wrap');
   const canvas = document.getElementById('scene');
   Art.resize();
+  // Шрифты для холста грузим явно: canvas сам их не запрашивает
+  if (document.fonts) {
+    Promise.all(['700 20px Caveat', '400 20px Pacifico', '900 16px Nunito', '700 16px Nunito'].map((f) => document.fonts.load(f)))
+      .then(() => Art.invalidate()).catch(() => {});
+  }
   if (window.ResizeObserver) new ResizeObserver(() => Art.resize()).observe(wrap);
   else window.addEventListener('resize', () => Art.resize());
 

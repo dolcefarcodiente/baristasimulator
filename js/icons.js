@@ -91,6 +91,55 @@ const ICON_BODIES = {
   tool_shelf: `<g transform="translate(-9 3) scale(.75)">${pumpSvg('#e29a3c', '#fff3dd')}</g>
     <g transform="translate(6 3) scale(.75)">${pumpSvg('#6e3d24', '#f4e1c8')}</g>
     <g transform="translate(21 3) scale(.75)">${pumpSvg('#f2df9e', '#fff')}</g>`,
+  // ----- иконки интерфейса и улучшений (вместо эмодзи) -----
+  ui_shop: `<path d="M12 14h24l3 28H9z" fill="#c48b5f" ${SW}/>
+    <path d="M12 14l3-6h18l3 6" fill="#e0b48a" ${SW}/>
+    <g transform="rotate(20 24 29)"><ellipse cx="24" cy="29" rx="5.5" ry="7.5" fill="#5a3422"/>
+    <path d="M22.5 22.5c3 3-1 9 2 13" stroke="#c48b5f" stroke-width="1.8" fill="none"/></g>`,
+  ui_regulars: `<path d="M24 17s-7-4.5-7-9a3.8 3.8 0 0 1 7-2 3.8 3.8 0 0 1 7 2c0 4.5-7 9-7 9z" fill="#f17c8f" ${SW}/>
+    <path d="M37 26h2.5a4.5 4.5 0 0 1 0 9H36" fill="none" ${SW}/>
+    <path d="M10 22h28v7a12 12 0 0 1-12 12h-4a12 12 0 0 1-12-12z" fill="#fff8ee" ${SW}/>
+    <path d="M6 44h36" ${SW}/>`,
+  ui_todo: `<rect x="10" y="7" width="28" height="36" rx="4" fill="#fff8ee" ${SW}/>
+    <rect x="18" y="4" width="12" height="6" rx="2" fill="#e07a5f" ${SW}/>
+    <path d="M15 18l3 3 6-6" stroke="#5f927a" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M28 18h5M15 28h18M15 36h12" ${SW}/>`,
+  ui_music: `<path d="M18 34V12l20-5v22" fill="none" ${SW}/><circle cx="14" cy="34" r="5" fill="#3b2a22"/><circle cx="34" cy="30" r="5" fill="#3b2a22"/>`,
+  ui_sound: `<path d="M8 19h8l10-8v26l-10-8H8z" fill="#3b2a22" ${SW}/><path d="M32 17a9 9 0 0 1 0 14M37 12a16 16 0 0 1 0 24" fill="none" ${SW}/>`,
+  ui_flame: `<path d="M24 4c2 8 13 12 13 25a13 13 0 0 1-26 0c0-6 3-10 5-12 1 4 3 6 5 6-2-6 0-13 3-19z" fill="#f4a259" ${SW}/>
+    <path d="M24 24c1 4 6 6 6 11a6 6 0 0 1-12 0c0-3 2-5 3-7 1 2 2 3 3 3z" fill="#ffd966"/>`,
+  up_groups: `<path d="M30 25l12 7" stroke="#3b2a22" stroke-width="7" stroke-linecap="round"/>
+    <path d="M30 25l12 7" stroke="#3d405b" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M7 18h24v6a8 8 0 0 1-8 8h-8a8 8 0 0 1-8-8z" fill="${STEEL}" ${SW}/>
+    <ellipse cx="19" cy="18" rx="12" ry="3.2" fill="#5a3422" ${SW}/>
+    <path d="M15 33v5M23 33v5" stroke="#5a3422" stroke-width="2.5" stroke-linecap="round"/>`,
+  up_scale: `<path d="M16 9h16l-3 13H19z" fill="#f4f1de" ${SW}/>
+    <rect x="9" y="22" width="30" height="5" rx="2" fill="${STEEL}" ${SW}/>
+    <rect x="6" y="27" width="36" height="13" rx="3" fill="#3d405b" ${SW}/>
+    <rect x="12" y="31" width="14" height="5" rx="1" fill="#8fe3b0"/><circle cx="34" cy="33.5" r="2.5" fill="#e07a5f"/>`,
+  up_counter: `<ellipse cx="24" cy="13" rx="13" ry="4.5" fill="#c48b5f" ${SW}/>
+    <path d="M14 16l-4 26M34 16l4 26M24 18v24M12 32h24" ${SW}/>`,
+  up_chair: `<rect x="10" y="9" width="28" height="21" rx="7" fill="#81b29a" ${SW}/>
+    <rect x="13" y="25" width="22" height="11" rx="3" fill="#a3cdb6" ${SW}/>
+    <rect x="5" y="20" width="10" height="17" rx="5" fill="#81b29a" ${SW}/>
+    <rect x="33" y="20" width="10" height="17" rx="5" fill="#81b29a" ${SW}/>
+    <path d="M10 37v5M38 37v5" ${SW}/>`,
+  up_jar: `<path d="M13 14h22v23a6 6 0 0 1-6 6H19a6 6 0 0 1-6-6z" fill="#eaf6fb" ${SW}/>
+    <path d="M15.5 29h17v8a3.5 3.5 0 0 1-3.5 3.5H19a3.5 3.5 0 0 1-3.5-3.5z" fill="#f4c542"/>
+    <circle cx="20" cy="26" r="3.2" fill="#ffd966" stroke="#c99a16" stroke-width="1.6"/>
+    <circle cx="28" cy="25" r="3.2" fill="#ffd966" stroke="#c99a16" stroke-width="1.6"/>
+    <rect x="12" y="8" width="24" height="6" rx="2" fill="#c48b5f" ${SW}/>
+    <path d="M17 18v5" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>`,
+  up_pastry: `<path d="M5 31c2-11 10-17 19-17s17 6 19 17c-4-2-7-2-9 1-2-4-6-6-10-6s-8 2-10 6c-2-3-5-3-9-1z" fill="#e8a64a" ${SW}/>
+    <path d="M17 18l3 9M31 18l-3 9M24 15v11" stroke="#b5702a" stroke-width="2.2" stroke-linecap="round"/>`,
+  up_sign: `<path d="M16 12l4-6M32 12l-4-6" ${SW}/>
+    <rect x="5" y="12" width="38" height="24" rx="7" fill="#3d405b" ${SW}/>
+    <path d="M11 28c2-9 5-9 6 0s4 0 5-7 4-3 5 2 3 4 5-2 4-2 5 3" stroke="#ff9cc2" stroke-width="2.8" fill="none" stroke-linecap="round"/>`,
+  up_hedgehog: `<path d="M6 37l2-8-4-4 6-2-1-7 6 1 1-6 5 3 3-6 3 6 5-3v6l5 1-1 6 4 3-5 10z" fill="#8a5634" ${SW}/>
+    <path d="M27 25c6-3 14 1 16 8-2 4-10 6-16 4z" fill="#f2d3b0" ${SW}/>
+    <circle cx="34" cy="29" r="1.7" fill="#3b2a22"/><circle cx="43.5" cy="33" r="2.2" fill="#3b2a22"/>
+    <ellipse cx="33" cy="34" rx="2" ry="1.2" fill="#f19aa8"/>
+    <path d="M14 37v4M24 37v4" ${SW}/>`,
   coin: `<circle cx="24" cy="24" r="19" fill="#f4c542" ${SW}/>
     <circle cx="24" cy="24" r="13.5" fill="#ffd966" stroke="#c99a16" stroke-width="2"/>
     <ellipse cx="24" cy="24" rx="6" ry="8.5" fill="#7a4a1f" transform="rotate(25 24 24)"/>

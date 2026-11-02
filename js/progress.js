@@ -131,7 +131,7 @@ const Progress = (() => {
       if (coins >= 1) {
         S.coins += coins;
         popups.push({
-          icon: '🦔', title: t('awayTitle'), body: t('awayBody', Math.floor(hrs)),
+          icon: 'up_hedgehog', title: t('awayTitle'), body: t('awayBody', Math.floor(hrs)),
           coins, note: hrs >= 8 ? t('awayNote') : '',
         });
       }
@@ -139,14 +139,14 @@ const Progress = (() => {
     const today = dateStr();
     if (S.streak.last === null) {
       S.streak = { last: today, count: 1 };
-      popups.push({ icon: '☕', title: t('welcomeTitle'), coins: 0, body: t('welcomeBody'), note: '' });
+      popups.push({ icon: 'logo', title: t('welcomeTitle'), coins: 0, body: t('welcomeBody'), note: '' });
     } else if (S.streak.last !== today) {
       S.streak.count = S.streak.last === yesterdayStr() ? S.streak.count + 1 : 1;
       S.streak.last = today;
       const n = S.streak.count;
       const reward = Math.round((20 + 15 * Math.min(n, 7)) * (1 + Math.min(S.day, 30) / 15) / 5) * 5;
       S.coins += reward;
-      popups.push({ icon: '🔥', title: n > 1 ? t('streakTitle', n) : t('backTitle'), streak: n, coins: reward,
+      popups.push({ icon: 'ui_flame', title: n > 1 ? t('streakTitle', n) : t('backTitle'), streak: n, coins: reward,
         body: n > 1 ? t('streakBody') : t('backBody'), note: '' });
     }
     quests();
