@@ -11,8 +11,10 @@
   const wrap = document.getElementById('scene-wrap');
   const canvas = document.getElementById('scene');
   Art.resize();
-  if (window.ResizeObserver) new ResizeObserver(() => Art.resize()).observe(wrap);
-  else window.addEventListener('resize', () => Art.resize());
+  if (window.ResizeObserver) {
+    new ResizeObserver(() => Art.resize()).observe(wrap);
+    new ResizeObserver(() => Bar.resize()).observe(document.getElementById('cups'));
+  } else window.addEventListener('resize', () => { Art.resize(); Bar.resize(); });
 
   // Небо в меню — по реальному времени суток
   function menuSky() {
@@ -37,6 +39,7 @@
       pointer: inShift ? Shift.pointer : null,
       busy: inShift ? { espresso: Shift.jobs.espresso.length, frother: Shift.jobs.frother.length } : {},
     });
+    if (inShift) Bar.render(dt);
     UI.tick();
     requestAnimationFrame(frame);
   }

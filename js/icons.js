@@ -47,12 +47,13 @@ const ICON_BODIES = {
     <circle cx="24" cy="15" r="2.2" fill="#c08a5a" ${SW}/>
     <path d="M17 26v10" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".45"/>
     <path d="M5 19c-1 2-1.5 3-1.5 4a1.5 1.5 0 0 0 3 0c0-1-.5-2-1.5-4z" fill="#8fd3f4"/>`,
-  filter: `<path d="M14 30h20v8a6 6 0 0 1-6 6h-8a6 6 0 0 1-6-6z" fill="#e3f2f8" ${SW}/>
-    <path d="M15.3 36h17.4v2a4.7 4.7 0 0 1-4.7 4.7h-8a4.7 4.7 0 0 1-4.7-4.7z" fill="#8a5634"/>
-    <path d="M9 9h30l-10 17h-10z" fill="#f4f1de" ${SW}/>
-    <path d="M17 13l3 9M24 12v10M31 13l-3 9" stroke="#d8cfb6" stroke-width="1.8" stroke-linecap="round"/>
-    <rect x="15" y="25.5" width="18" height="4.5" rx="1.5" fill="#f4f1de" ${SW}/>
-    <path d="M7 9h34" ${SW}/>`,
+  filter: `<rect x="8" y="6" width="32" height="9" rx="3" fill="#3d405b" ${SW}/>
+    <path d="M12 15h24v4H12z" fill="#5c6370" ${SW}/>
+    <path d="M12 19h22l-2 20a3 3 0 0 1-3 3H17a3 3 0 0 1-3-3z" fill="rgba(210,235,245,.75)" ${SW}/>
+    <path d="M14.8 28h16.4l-1.2 11a2 2 0 0 1-2 1.8H18a2 2 0 0 1-2-1.8z" fill="#8a5634"/>
+    <path d="M34 21h4a3.5 3.5 0 0 1 0 7h-3" fill="none" ${SW}/>
+    <path d="M23 19v7" stroke="#8a5634" stroke-width="2" stroke-linecap="round" stroke-dasharray="1 2.5"/>
+    <path d="M9 42h30" ${SW}/>`,
   ice: `<rect x="7" y="18" width="18" height="18" rx="4" fill="#dff4fc" ${SW} transform="rotate(-10 16 27)"/>
     <rect x="22" y="12" width="18" height="18" rx="4" fill="#c8ecfa" ${SW} transform="rotate(12 31 21)"/>
     <path d="M11 23l3-1M26 16l3 1" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>`,
@@ -60,24 +61,18 @@ const ICON_BODIES = {
     <path d="M13 15l-4-4h8" fill="none" ${SW}/>
     <path d="M33 20h2a4 4 0 0 1 0 8h-2.5" fill="none" ${SW}/>
     <path d="M14.5 22h18" stroke="#f1dcb8" stroke-width="3"/>`,
-  matcha: `<path d="M30 4l-6 14" stroke="#c9a96e" stroke-width="3" stroke-linecap="round"/>
-    <path d="M20 16l4 3 4-3" fill="none" stroke="#c9a96e" stroke-width="2" stroke-linecap="round"/>
-    <path d="M7 22h34a17 17 0 0 1-34 0z" fill="#efe3cf" ${SW}/>
-    <ellipse cx="24" cy="22" rx="17" ry="3.5" fill="#97c062" ${SW}/>`,
   chocolate: pumpSvg('#6e3d24', '#f4e1c8', '<rect x="21" y="27" width="6" height="5" rx="1" fill="#6e3d24"/>'),
   caramel: pumpSvg('#e29a3c', '#fff3dd', '<circle cx="24" cy="29.5" r="2.6" fill="#e29a3c"/>'),
   vanilla: pumpSvg('#f2df9e', '#fff', '<circle cx="24" cy="29.5" r="2.4" fill="#c9a227"/>'),
-  pumpkin: pumpSvg('#ee9145', '#fff3dd', '<ellipse cx="24" cy="30" rx="3.4" ry="2.8" fill="#ee9145"/><path d="M24 27v-2" stroke="#5f8a3a" stroke-width="1.5"/>'),
+  gelato: `<path d="M12 22h24l-3 17a4 4 0 0 1-4 4H19a4 4 0 0 1-4-4z" fill="#e3f2f8" ${SW}/>
+    <circle cx="24" cy="17" r="10" fill="#fff3d6" ${SW}/>
+    <circle cx="20" cy="14" r="1.3" fill="#8a5634"/><circle cx="27" cy="12" r="1.3" fill="#8a5634"/><circle cx="25" cy="19" r="1.3" fill="#8a5634"/>
+    <path d="M30 9l6-6" ${SW}/><path d="M36 3l3 3" stroke="#d5dee3" stroke-width="4" stroke-linecap="round"/>`,
   cinnamon: `<path d="M14 16h20v-5a3 3 0 0 0-3-3H17a3 3 0 0 0-3 3z" fill="${STEEL}" ${SW}/>
     <circle cx="20" cy="12" r="1.2" fill="#3b2a22"/><circle cx="24" cy="11" r="1.2" fill="#3b2a22"/><circle cx="28" cy="12" r="1.2" fill="#3b2a22"/>
     <rect x="15" y="16" width="18" height="26" rx="4" fill="#fff8ec" ${SW}/>
     <rect x="16.5" y="26" width="15" height="14.5" rx="3" fill="#9b5a2e"/>
     <path d="M19 20v4" stroke="#fff" stroke-width="2" stroke-linecap="round"/>`,
-  marshmallow: `<rect x="12" y="8" width="24" height="6" rx="2" fill="#f19aa8" ${SW}/>
-    <path d="M13 14h22v24a5 5 0 0 1-5 5H18a5 5 0 0 1-5-5z" fill="#f4fbfe" ${SW}/>
-    <rect x="16" y="28" width="7" height="9" rx="2.5" fill="#ffd6e0" stroke="#3b2a22" stroke-width="1.6"/>
-    <rect x="24" y="30" width="7" height="9" rx="2.5" fill="#fff" stroke="#3b2a22" stroke-width="1.6"/>
-    <rect x="20" y="19" width="7" height="9" rx="2.5" fill="#fff" stroke="#3b2a22" stroke-width="1.6"/>`,
   tool_machine: `<rect x="6" y="5" width="36" height="5" rx="2" fill="${STEEL}" ${SW}/>
     <rect x="6" y="9" width="36" height="27" rx="4" fill="#e07a5f" ${SW}/>
     <circle cx="15" cy="17" r="4" fill="#fff" ${SW}/><path d="M15 17l2-1.6" stroke="#3b2a22" stroke-width="1.6"/>

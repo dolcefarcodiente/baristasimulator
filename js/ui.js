@@ -4,7 +4,6 @@ const UI = (() => {
   const $ = (s, r = document) => r.querySelector(s);
   const el = {};
   const ING_KEYS = ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', 'A', 'S', 'D', 'F', 'G', 'H'];
-  const CUP_KEYS = ['Z', 'X', 'C'];
   let shopTab = 'up';
   let hintState = { text: undefined, sel: null, timer: null };
   const popupQueue = [];
@@ -24,10 +23,7 @@ const UI = (() => {
     $('#btn-pause').addEventListener('click', () => pause());
     el.panel.addEventListener('click', onAction);
     el.card.addEventListener('click', onAction);
-    el.cups.addEventListener('pointerdown', (e) => {
-      const b = e.target.closest('[data-cup]');
-      if (b) { e.preventDefault(); Shift.selectCup(+b.dataset.cup); }
-    });
+    Bar.init();
     el.ings.addEventListener('pointerdown', (e) => {
       const b = e.target.closest('[data-ing]');
       if (b) { e.preventDefault(); Shift.addIngredient(b.dataset.ing); }
@@ -43,15 +39,12 @@ const UI = (() => {
     el.app.classList.toggle('in-shift', mode === 'shift');
     el.hud.classList.toggle('hidden', mode !== 'shift');
     el.station.classList.toggle('hidden', mode !== 'shift');
+    if (mode === 'shift') Bar.resize();
   }
 
   // ---------- рабочее место ----------
   function buildStation() {
-    el.cups.innerHTML = Shift.cups.map((_, i) => `
-      <button class="cup-slot" data-cup="${i}" aria-label="${t('cup', i + 1)}">
-        <div class="cup"><div class="cup-handle"></div><div class="cup-body"><div class="fill"></div></div></div>
-        <div class="cup-label"></div>${Shift.cups.length > 1 ? `<span class="key">${CUP_KEYS[i]}</span>` : ''}
-      </button>`).join('');
+    Bar.reset();
     let k = 0;
     el.ings.innerHTML = availableTools().map((tl) => {
       const slots = tl.machine ? Stats.slots(tl.machine) : 0;
@@ -65,27 +58,9 @@ const UI = (() => {
     renderCups();
   }
 
-  function renderCups() { Shift.cups.forEach((_, i) => renderCup(i)); }
-
-  function renderCup(i) {
-    const slot = el.cups.children[i];
-    if (!slot) return;
-    const cup = Shift.cups[i];
-    slot.classList.toggle('selected', i === Shift.sel && Shift.cups.length > 1);
-    slot.querySelector('.fill').innerHTML = cup.layers.map((l) => {
-      const ing = INGREDIENTS[l.ing];
-      const h = (ing.h / 52) * 100;
-      const p = l.job ? clamp(l.job.t / l.job.dur, 0, 1) : 1;
-      return `<div class="layer k-${ing.kind || 'liquid'}${l.job ? ' pending' : ''}" data-h="${h}" style="height:${h * p}%;--c:${ing.color}"></div>`;
-    }).join('');
-    const label = slot.querySelector('.cup-label');
-    const rec = recipeFor(Shift.cupItems(cup));
-    label.classList.remove('match');
-    if (!cup.layers.length) label.textContent = Shift.cups.length > 1 && i === Shift.sel ? t('selected') : '';
-    else if (!Shift.cupReady(cup)) label.textContent = t('brewing');
-    else if (rec && S.recipes.includes(rec.id)) { label.textContent = T(rec.name) + ' ✓'; label.classList.add('match'); }
-    else label.textContent = t('custom');
-  }
+  // Чашки живут на canvas (bar.js); сюда приходят только сигналы о новых слоях
+  function renderCups() {}
+  function renderCup(i) { Bar.touch(i); }
 
   function tick() {
     if (!Shift.active) return;
@@ -96,16 +71,6 @@ const UI = (() => {
       tool.querySelectorAll('.dot').forEach((d, k) => d.style.setProperty('--p', jobs[k] ? clamp(jobs[k].t / jobs[k].dur, 0, 1) : 0));
       tool.classList.toggle('busy', jobs.length >= Stats.slots(key));
       tool.classList.toggle('working', jobs.length > 0);
-    });
-    // растущие слои в чашках
-    Shift.cups.forEach((cup, i) => {
-      const fill = el.cups.children[i] && el.cups.children[i].querySelector('.fill');
-      if (!fill) return;
-      cup.layers.forEach((l, k) => {
-        if (!l.job) return;
-        const d = fill.children[k];
-        if (d) d.style.height = (+d.dataset.h * clamp(l.job.t / l.job.dur, 0, 1)) + '%';
-      });
     });
     const left = Math.max(0, Math.ceil(Shift.len - Shift.t));
     el.timeVal.textContent = Shift.closing ? t('closed') : `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`;

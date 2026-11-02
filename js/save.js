@@ -41,6 +41,19 @@ function loadSave() {
   let data = null;
   try { data = JSON.parse(Storage.get(SAVE_KEY)); } catch (e) { data = null; }
   S = deepMerge(defaultSave(), data || {});
+  migrate();
+}
+
+// Старые сохранения: напитки и гости из прежнего меню переезжают на ближайшие новые
+const OLD_RECIPES = { cocoa: 'cioccolata', raf: 'vanillalatte', caramel: 'caramelmacchiato', icelatte: 'icedlatte', matcha: 'affogato', pumpkin: 'marocchino', filter: 'drip' };
+const OLD_REGULARS = { timur: 'tony', vera: 'rosa', alisa: 'gina', lev: 'sal', mark: 'marco', sonya: 'sofia', maya: 'leo' };
+function migrate() {
+  S.recipes = [...new Set(S.recipes.map((id) => OLD_RECIPES[id] || id).filter((id) => RECIPE[id]))];
+  for (const base of ['espresso', 'americano', 'latte']) if (!S.recipes.includes(base)) S.recipes.push(base);
+  for (const [oldId, newId] of Object.entries(OLD_REGULARS)) {
+    if (S.regulars[oldId]) { if (!S.regulars[newId]) S.regulars[newId] = S.regulars[oldId]; delete S.regulars[oldId]; }
+  }
+  if (S.quests && S.quests.list.some((q) => q.type === 'drink' && !RECIPE[q.drink])) S.quests = null;
 }
 
 function persist() {
