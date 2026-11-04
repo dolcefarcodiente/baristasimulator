@@ -174,7 +174,7 @@ const UI = (() => {
     openPanel(`
       <div class="menu">
         <div class="brand">
-          <span class="eyebrow">${t('dayEyebrow', S.day)}</span>
+          <span class="eyebrow">${t('dayEyebrow', S.day)}${S.franchise ? ` · ${t('franchiseLvl', S.franchise)}` : ''}</span>
           <h1 class="logo">${t('brand')}</h1>
           <p class="tagline">${t('tagline')}</p>
         </div>
@@ -242,6 +242,16 @@ const UI = (() => {
       ${owned ? `<span class="maxed">✓</span>` : `<button class="btn buy${afford ? ' green' : ''}" data-act="buy-decor" data-id="${d.id}" data-from="${from}" ${afford ? '' : 'disabled'}>${coin(d.cost)}</button>`}
     </div>`;
   }
+  // Последний шаг развития — продать франшизу и начать снова, сильнее
+  function franchiseCard() {
+    const ready = canFranchise();
+    const next = Math.round(FRANCHISE_BONUS * (S.franchise + 1) * 100);
+    return `<div class="card franchise${ready ? ' can' : ''}">
+      <div class="card-ico">${iconSvg('logo')}</div>
+      <div class="card-body"><b>${t('franchiseName')}</b><small>${t('franchiseDesc', next)}</small></div>
+      <button class="btn buy${ready ? ' green' : ''}" data-act="franchise" ${ready ? '' : 'disabled'}>${ready ? t('franchiseGo') : '🔒'}</button>
+    </div>`;
+  }
   // Что можно купить прямо сейчас — показывается в итогах смены, чтобы не ходить в магазин
   function offersHtml() {
     const list = [];
@@ -282,7 +292,7 @@ const UI = (() => {
     } else if (shopTab === 'decor') {
       cards = DECOR.map((d) => decorCard(d)).join('');
     } else if (shopTab === 'biz') {
-      cards = BUSINESS.map((b, i) => bizCard(b, i)).join('');
+      cards = BUSINESS.map((b, i) => bizCard(b, i)).join('') + franchiseCard();
     } else {
       cards = RECIPES.map((r) => {
         const owned = S.recipes.includes(r.id);
@@ -498,6 +508,24 @@ const UI = (() => {
       case 'shop': Sound.play('ui'); showShop(); return;
       case 'guests': Sound.play('ui'); showGuests(); return;
       case 'reviews': Sound.play('ui'); showReviews(); return;
+      case 'franchise':
+        if (!canFranchise()) return;
+        Sound.play('ui');
+        openModal(`<div class="pop-ico">${iconSvg('logo')}</div><h2>${t('franchiseName')}</h2>
+          <p>${t('franchiseConfirm', Math.round(FRANCHISE_BONUS * (S.franchise + 1) * 100))}</p>
+          <button class="btn primary big" data-act="franchise-yes">${t('franchiseGo')}</button>
+          <button class="btn small ghost" data-act="franchise-no">${t('notYet')}</button>`);
+        return;
+      case 'franchise-no': closeModal(); return;
+      case 'franchise-yes': {
+        closeModal();
+        sellFranchise();
+        Art.resize(); Art.invalidate();
+        Sound.play('buy'); Art.burst(Art.W / 2, Art.H * 0.3, 'confetti', 50);
+        showMenu();
+        queuePopups([{ icon: 'logo', title: t('franchiseDoneTitle', S.franchise), body: t('franchiseDone', Math.round((Stats.franchiseMult() - 1) * 100)), coins: 0, note: '' }]);
+        return;
+      }
       case 'quests': Sound.play('ui'); showQuests(); return;
       case 'tab': shopTab = b.dataset.tab; Sound.play('tap'); showShop(); return;
       case 'buy-up': {

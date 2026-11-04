@@ -19,6 +19,7 @@ function defaultSave() {
     decor: [], // купленные предметы уюта
     loc: 'home', // где работаем этой ночью
     reviews: [], // последние отзывы гостей
+    franchise: 0, // сколько раз продана франшиза: каждый раз +25% к выручке навсегда
     regulars: {},
     quests: null,
     streak: { last: null, count: 0 },
@@ -63,6 +64,17 @@ function migrate() {
 function persist() {
   S.lastSeen = Date.now();
   Storage.set(SAVE_KEY, JSON.stringify(S));
+}
+
+// Франшиза: продаём сеть Sälem и начинаем снова с одного угла. Деньги, оборудование, меню, филиалы
+// и номер ночи сбрасываются; остаются гости и их истории, уют, мастерство, достижения и настройки.
+const FRANCHISE_BONUS = 0.25;
+const canFranchise = () => S.biz >= BUSINESS.length;
+function sellFranchise() {
+  const keep = { regulars: S.regulars, decor: S.decor, stats: S.stats, ach: S.ach, settings: S.settings, tips: S.tips, streak: S.streak, quests: S.quests };
+  const lvl = S.franchise + 1;
+  S = deepMerge(defaultSave(), { ...keep, franchise: lvl, lastSeen: Date.now() });
+  persist();
 }
 
 function resetSave() {
@@ -118,7 +130,8 @@ const Stats = {
   patienceMult: () => (1 + upValue('patience') + perk('patience') + decor('patience')) * locMod('patience'),
   tipMult: () => upValue('tipjar') * (1 + perk('tips') + decor('tips')) * locMod('tips'),
   priceMult: () => (1 + upValue('pastry') + perk('price') + decor('price') + BUSINESS.slice(0, S.biz).reduce((a, b) => a + b.price, 0)) * locMod('price'),
-  bizIncome: () => BUSINESS.slice(0, S.biz).reduce((a, b) => a + b.income, 0),
+  bizIncome: () => Math.round(BUSINESS.slice(0, S.biz).reduce((a, b) => a + b.income, 0) * Stats.franchiseMult()),
+  franchiseMult: () => 1 + FRANCHISE_BONUS * S.franchise,
   spawnMult: () => (1 + upValue('sign') + perk('spawn') + decor('spawn')) * locMod('spawn') * Rating.mult(),
   shiftLen: () => SHIFT_BASE + perk('shift'),
   helperRate: () => upValue('helper'),

@@ -333,6 +333,8 @@ svg { image-rendering: pixelated; }
 }
 .card.can { background: #2c3e33; }
 .card.owned { opacity: .7; }
+.card.franchise { background: #3a2a18; }
+.card.franchise.can { background: #4a3a1a; }
 .card-ico { width: 48px; flex: none; display: grid; place-items: center; }
 .card-ico > svg { width: 40px; height: 40px; }
 .decor-img { max-width: 44px; max-height: 44px; image-rendering: pixelated; display: block; }
