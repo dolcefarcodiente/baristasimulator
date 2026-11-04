@@ -39,10 +39,10 @@ const Shift = {
     Art.invalidate(); // доска с меню: сезонный напиток
     this.tutorial = !S.tips.basics;
     // Постоянные гости на эту смену: новые приходят обязательно, знакомые — с шансом.
-    this.regPlan = REGULARS.filter(regularEligible)
+    this.regPlan = REGULARS.filter((r) => atHome() && regularEligible(r))
       .filter((r) => regState(r.id).visits === 0 || Math.random() < 0.55)
       .map((r) => ({ id: r.id, time: rand(0.08, 0.8) * this.len, done: false }));
-    this.catTime = hasDecor('catbed') ? rand(10, this.len * 0.5) : S.day >= 2 && Math.random() < 0.6 ? rand(25, this.len - 30) : Infinity;
+    this.catTime = !atHome() ? Infinity : hasDecor('catbed') ? rand(10, this.len * 0.5) : S.day >= 2 && Math.random() < 0.6 ? rand(25, this.len - 30) : Infinity;
     if (this.tutorial) this.spawn(null, 'latte');
     if (this.cups.length > 1 && !S.tips.cups) {
       S.tips.cups = true;

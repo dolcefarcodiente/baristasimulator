@@ -8,7 +8,7 @@
   Sound.setSfx(S.settings.sfx);
   UI.init();
   // Нарисованные фон и гости: когда фон загрузился и стёкла измерены — пересчитываем раскладку
-  Sprites.load((n) => { if (n.startsWith('bg-')) Art.resize(); });
+  Sprites.load((n) => { if (Sprites.isBg(n)) Art.resize(); });
 
   const wrap = document.getElementById('scene-wrap');
   const canvas = document.getElementById('scene');

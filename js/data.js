@@ -104,6 +104,18 @@ const DECOR = [
 ];
 const DECOR_BY_ID = Object.fromEntries(DECOR.map((d) => [d.id, d]));
 
+// Где работаем этой ночью: свой угол или открытые филиалы. need — сколько шагов развития нужно пройти.
+// Постоянные гости, кот и уют — только дома, на углу.
+const LOCATIONS = [
+  { id: 'home', bg: 'bg', need: 0, mods: {},
+    name: { ru: 'Угол', en: 'The corner' }, desc: { ru: 'Свой угол: постоянные гости, кот и уют', en: 'Home: regulars, the cat and your decor' } },
+  { id: 'brooklyn', bg: 'bk', need: 3, mods: { spawn: 1.25, tips: 1.2 },
+    name: { ru: 'Бруклин', en: 'Brooklyn' }, desc: { ru: 'Людно и щедро: гостей +25%, чаевые +20%', en: 'Busy and generous: 25% more guests, tips +20%' } },
+  { id: 'fifth', bg: 'fa', need: 5, mods: { price: 1.35, patience: 0.8 },
+    name: { ru: 'Пятая авеню', en: 'Fifth Avenue' }, desc: { ru: 'Цены +35%, но гости нетерпеливы', en: 'Prices +35%, but impatient guests' } },
+];
+const LOCATION = Object.fromEntries(LOCATIONS.map((l) => [l.id, l]));
+
 // Развитие кофейни: шаги по порядку, каждый приносит доход за ночь и открывает кусочек истории
 const BUSINESS = [
   { id: 'barista', cost: 1500, income: 60, price: 0,

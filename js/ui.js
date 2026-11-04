@@ -182,6 +182,7 @@ const UI = (() => {
           <div class="stat">${coin(S.coins)}</div>
           <div class="stat">${iconSvg('ui_flame', 'ico')}${t('streak', S.streak.count)}</div>
         </div>
+        ${locPicker()}
         <button class="btn primary big" data-act="start">${t('open')}</button>
         <p class="note">${t('goal', coin(dayTarget(S.day)))}</p>
         ${goalHtml}
@@ -195,6 +196,15 @@ const UI = (() => {
           <span class="muted">${Stats.helperRate() ? t('hedgehog', Stats.helperRate()) : t('best', coin(S.stats.bestShift))}</span>
         </div>
       </div>`, 'sheet menu-sheet');
+  }
+
+  // Где работать этой ночью — появляется, когда открыт первый филиал
+  function locPicker() {
+    const open = LOCATIONS.filter((l) => S.biz >= l.need);
+    if (open.length < 2) return '';
+    const cur = curLoc();
+    return `<div class="locs">${open.map((l) => `<button class="loc${l.id === cur.id ? ' on' : ''}" data-act="loc" data-id="${l.id}">${T(l.name)}</button>`).join('')}</div>
+      <p class="loc-note">${T(cur.desc)}</p>`;
   }
 
   function sheetHead(title) {
@@ -360,7 +370,7 @@ const UI = (() => {
     }).join('');
     openPanel(`
       <div class="summary">
-        <span class="eyebrow">${t('dayEyebrow', r.day)}</span>
+        <span class="eyebrow">${t('dayEyebrow', r.day)}${atHome() ? '' : ' · ' + T(curLoc().name)}</span>
         <h2>${t('shiftOver')}</h2>
         <div class="stars">${[0, 1, 2].map((i) => `<span class="star" data-star="${i}">★</span>`).join('')}</div>
         <div class="earn"><span class="coin"></span><span id="earn-num">0</span></div>
@@ -517,6 +527,8 @@ const UI = (() => {
         if (got) { Sound.play('buy'); toast(`🎁 +${coin(got)}`, 'gold'); Art.burst(Art.W / 2, Art.H * 0.3, 'confetti', 30); }
         showQuests(); return;
       }
+      case 'loc':
+        S.loc = b.dataset.id; persist(); Art.resize(); Sound.play('tap'); showMenu(); return;
       case 'music':
         S.settings.music = !S.settings.music; Sound.setMusic(S.settings.music); persist();
         b.classList.toggle('off', !S.settings.music); return;

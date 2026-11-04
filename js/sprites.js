@@ -4,7 +4,8 @@
 const Sprites = (() => {
   const imgs = {};
   const NAMES = ['tony', 'rosa', 'gina', 'sal', 'marco', 'sofia', 'leo', 'g1', 'g2', 'g3', 'g4', 'g5', 'g6', 'g7', 'g8', 'cat', 'pastry', 'tipjar', 'register', 'machine', 'candle', 'city-day', 'city-night', 'bg-wide', 'bg-tall',
-    'decor-succulents', 'decor-hangplant', 'decor-catbed', 'decor-neon', 'decor-books', 'decor-gramophone', 'critic', 'tourists'];
+    'decor-succulents', 'decor-hangplant', 'decor-catbed', 'decor-neon', 'decor-books', 'decor-gramophone', 'critic', 'tourists',
+    'bk-wide', 'bk-tall', 'fa-wide', 'fa-tall'];
   const GUESTS = ['g1', 'g2', 'g3', 'g4', 'g5', 'g6', 'g7', 'g8'];
 
   // Доли: где на картинке стойка, доска, лампы и лампочки гирлянды
@@ -27,14 +28,24 @@ const Sprites = (() => {
       sill: 0.59, dscale: 1.3, spots: { succulents: 0.29, catbed: 0.47, books: 0.67, gramophone: 0.87, hangplant: 0.31, neon: 0.72 },
       win: null,
     },
+    // филиалы: окна прозрачные, доска есть, уюта и подоконника нет
+    'bk-wide': { counter: 0.7, counterFront: 0.81, board: { x0: 0.531, y0: 0.192, x1: 0.739, y1: 0.593 },
+      lamps: [[0.191, 0.174], [0.728, 0.174]], bulbs: [[0.037, 0.059], [0.120, 0.059], [0.242, 0.063], [0.342, 0.063], [0.442, 0.059], [0.531, 0.063], [0.614, 0.063], [0.784, 0.063], [0.860, 0.063], [0.936, 0.059]], win: null },
+    'bk-tall': { counter: 0.672, counterFront: 0.828, board: { x0: 0.555, y0: 0.189, x1: 0.962, y1: 0.361 },
+      lamps: [[0.803, 0.144]], bulbs: [[0.131, 0.095], [0.169, 0.079], [0.231, 0.079], [0.253, 0.103], [0.742, 0.095], [0.767, 0.079], [0.828, 0.079], [0.858, 0.095]], win: null },
+    'fa-wide': { counter: 0.688, counterFront: 0.84, board: { x0: 0.539, y0: 0.207, x1: 0.717, y1: 0.589 },
+      lamps: [[0.191, 0.12], [0.8, 0.12], [0.039, 0.316]], bulbs: [[0.060, 0.056], [0.337, 0.053], [0.553, 0.072], [0.705, 0.069], [0.947, 0.061]], win: null },
+    'fa-tall': { counter: 0.6, counterFront: 0.767, board: { x0: 0.603, y0: 0.167, x1: 0.975, y1: 0.344 },
+      lamps: [[0.812, 0.111], [0.03, 0.267]], bulbs: [[0.658, 0.067], [0.700, 0.050], [0.755, 0.044], [0.867, 0.044], [0.922, 0.050], [0.962, 0.067]], win: null },
   };
 
+  const isBg = (n) => /-(wide|tall)$/.test(n);
   let onReady = null;
   function load(cb) {
     onReady = cb;
     for (const n of NAMES) {
       const im = new Image();
-      im.onload = () => { if (n.startsWith('bg-')) measureWindow(n, im); if (onReady) onReady(n); };
+      im.onload = () => { if (isBg(n)) measureWindow(n, im); if (onReady) onReady(n); };
       im.src = `img/${n}.png`;
       imgs[n] = im;
     }
@@ -58,5 +69,5 @@ const Sprites = (() => {
   const get = (n) => imgs[n];
   const ready = (n) => !!(imgs[n] && imgs[n].complete && imgs[n].naturalWidth > 0);
   const meta = (n) => BG[n];
-  return { load, get, ready, meta, GUESTS };
+  return { load, get, ready, meta, isBg, GUESTS };
 })();

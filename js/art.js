@@ -54,7 +54,10 @@ const Art = (() => {
 
   // ---------- раскладка ----------
   // Фон — нарисованная картинка; выбираем вертикальную или широкую по пропорциям экрана
-  function bgName() { return W / H < 1.05 ? 'bg-tall' : 'bg-wide'; }
+  function bgName() {
+    const kind = W / H < 1.05 ? 'tall' : 'wide', name = `${curLoc().bg}-${kind}`;
+    return Sprites.ready(name) ? name : `bg-${kind}`; // филиал ещё грузится — пока домашний фон
+  }
   function resize() {
     const r = cv.parentElement.getBoundingClientRect();
     DPR = Math.min(window.devicePixelRatio || 1, 2.5);
@@ -65,7 +68,7 @@ const Art = (() => {
     LP = PX / DPR;
     lo.width = Math.ceil(cv.width / PX); lo.height = Math.ceil(cv.height / PX);
     const name = bgName(), im = Sprites.get(name), m = Sprites.meta(name);
-    const iw = (im && im.naturalWidth) || (name === 'bg-wide' ? 1280 : 896), ih = (im && im.naturalHeight) || (name === 'bg-wide' ? 720 : 1344);
+    const iw = (im && im.naturalWidth) || (name.endsWith('wide') ? 1280 : 896), ih = (im && im.naturalHeight) || (name.endsWith('wide') ? 720 : 1344);
     // картинка покрывает сцену целиком и прижата к низу: стойка всегда на месте
     const scale = Math.max(W / iw, H / ih);
     const dw = iw * scale, dh = ih * scale;
@@ -464,7 +467,7 @@ const Art = (() => {
   function drawDecor() {
     L.bed = L.neon = L.gramo = null;
     const m = Sprites.meta(L.bg.name), w = L.win;
-    if (!m.spots || !S.decor.length) return;
+    if (!atHome() || !m.spots || !S.decor.length) return;
     const at = (id) => w.x + w.w * m.spots[id];
     if (hasDecor('hangplant')) { const h = w.h * 0.42; drawSprite('decor-hangplant', at('hangplant'), w.y - LP * 2 + h, h, 'center'); }
     if (hasDecor('neon')) {

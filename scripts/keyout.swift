@@ -2,6 +2,7 @@
 // swift keyout.swift <in.png> <out.png> <maxWidth> [crop=1|0] [magenta] [rect=x0,y0,x1,y1]
 // rect — вырезать только внутри прямоугольника (доли картинки): так у фона прозрачными становятся лишь стёкла окна,
 // а зелёные растения вокруг остаются целыми.
+// fix=x0,y0,x1,y1 — в этом прямоугольнике зелёный оттенок не вырезается, а гасится (отражения окна на стойке).
 // Для зелёных предметов (растения) фон генерируется пурпурным (#FF00FF) и вырезается ключом magenta.
 import Foundation
 import CoreGraphics
@@ -13,6 +14,7 @@ let inURL = URL(fileURLWithPath: args[1]), outURL = URL(fileURLWithPath: args[2]
 let maxW = Int(args[3]) ?? 512
 let crop = args.count > 4 ? args[4] == "1" : true
 let magenta = args.dropFirst(5).contains("magenta")
+let fix: [Float]? = args.dropFirst(5).first { $0.hasPrefix("fix=") }.map { $0.dropFirst(4).split(separator: ",").compactMap { Float($0) } }
 let rect: [Float] = args.dropFirst(5).first { $0.hasPrefix("rect=") }.map { $0.dropFirst(5).split(separator: ",").compactMap { Float($0) } } ?? [0, 0, 1, 1]
 guard let src = CGImageSourceCreateWithURL(inURL as CFURL, nil), let img = CGImageSourceCreateImageAtIndex(src, 0, nil) else { fatalError("нет файла") }
 let w = img.width, h = img.height
@@ -26,6 +28,10 @@ for y in 0..<h {
         let i = (y * w + x) * 4
         let r = Float(data[i]), g = Float(data[i + 1]), b = Float(data[i + 2])
         let fx = Float(x) / Float(w), fy = Float(y) / Float(h)
+        if let f = fix, fx >= f[0], fx <= f[2], fy >= f[1], fy <= f[3], g > r + 2, g >= b {
+            let v = UInt8((r + g + b) / 3 * 0.9) // зелёное отражение -> серый блик на мраморе
+            data[i] = v; data[i + 1] = v; data[i + 2] = v
+        }
         if fx < rect[0] || fx > rect[2] || fy < rect[1] || fy > rect[3] { minX = min(minX, x); minY = min(minY, y); maxX = max(maxX, x); maxY = max(maxY, y); continue }
         // насколько пиксель похож на фон: для зелёного g сильно больше r и b, для пурпурного — наоборот
         let dom = magenta ? min(r, b) - g - 40 : g - max(r, b)

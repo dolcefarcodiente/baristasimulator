@@ -301,6 +301,10 @@ svg { image-rendering: pixelated; }
   box-shadow: var(--frame), inset 0 0 0 2px rgba(255, 220, 180, .06);
 }
 .teaser.ready { background: #2f4a36; color: #d8f5dc; }
+.locs { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.loc { border: none; cursor: pointer; font: 700 14px var(--font); padding: 6px 12px; margin: 3px; background: var(--night-2); color: var(--muted); box-shadow: var(--frame); }
+.loc.on { background: var(--gold); color: var(--dark-text); }
+.loc-note { margin: -6px 0 0; text-align: center; font-size: 13px; color: var(--muted); }
 .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 .tile { position: relative; flex-direction: column; gap: 5px; font-size: 14px; padding: 12px 4px 10px; }
 .tile-ico { width: 38px; height: 38px; }

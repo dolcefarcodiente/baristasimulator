@@ -17,6 +17,7 @@ function defaultSave() {
     recipes: ['espresso', 'americano', 'latte'],
     biz: 0, // сколько шагов развития пройдено
     decor: [], // купленные предметы уюта
+    loc: 'home', // где работаем этой ночью
     regulars: {},
     quests: null,
     streak: { last: null, count: 0 },
@@ -81,6 +82,10 @@ function regState(id) {
 
 // Подарки дружбы от постоянных гостей
 const hasDecor = (id) => S.decor.includes(id);
+// текущее место (если филиал ещё не открыт — дома)
+function curLoc() { const l = LOCATION[S.loc]; return l && S.biz >= l.need ? l : LOCATION.home; }
+const locMod = (key) => curLoc().mods[key] || 1;
+const atHome = () => curLoc().id === 'home';
 function decor(key) {
   let sum = 0;
   for (const id of S.decor) if (DECOR_BY_ID[id] && DECOR_BY_ID[id].key === key) sum += DECOR_BY_ID[id].v;
@@ -109,11 +114,11 @@ const Stats = {
   },
   cups: () => upValue('cups'),
   capacity: () => upValue('counter'),
-  patienceMult: () => 1 + upValue('patience') + perk('patience') + decor('patience'),
-  tipMult: () => upValue('tipjar') * (1 + perk('tips') + decor('tips')),
-  priceMult: () => 1 + upValue('pastry') + perk('price') + decor('price') + BUSINESS.slice(0, S.biz).reduce((a, b) => a + b.price, 0),
+  patienceMult: () => (1 + upValue('patience') + perk('patience') + decor('patience')) * locMod('patience'),
+  tipMult: () => upValue('tipjar') * (1 + perk('tips') + decor('tips')) * locMod('tips'),
+  priceMult: () => (1 + upValue('pastry') + perk('price') + decor('price') + BUSINESS.slice(0, S.biz).reduce((a, b) => a + b.price, 0)) * locMod('price'),
   bizIncome: () => BUSINESS.slice(0, S.biz).reduce((a, b) => a + b.income, 0),
-  spawnMult: () => 1 + upValue('sign') + perk('spawn') + decor('spawn'),
+  spawnMult: () => (1 + upValue('sign') + perk('spawn') + decor('spawn')) * locMod('spawn'),
   shiftLen: () => SHIFT_BASE + perk('shift'),
   helperRate: () => upValue('helper'),
 };
