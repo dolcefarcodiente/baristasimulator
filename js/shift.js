@@ -34,6 +34,7 @@ const Shift = {
     this.cups = Array.from({ length: Stats.cups() }, () => ({ layers: [] }));
     Talk.clear();
     if (!this.tutorial) Events.roll(this.len);
+    this.rating0 = Rating.value();
     // нанятый бариста Нико сам варит простые напитки (до двух ингредиентов), раз в NICO_CD секунд
     this.nico = S.biz >= 1 && !this.tutorial ? { t: 12, cd: NICO_CD } : null;
     Art.invalidate(); // доска с меню: сезонный напиток
@@ -100,7 +101,7 @@ const Shift = {
       * Events.patienceMult() * (kind ? SPECIAL[kind].patience : 1);
     this.customers.push({
       id: ++this.uid, slot, x: -60, tx: 0, state: 'enter', look, orders, reg: regId || null, hidden, revealed: false,
-      kind: kind || null, payMult: kind ? SPECIAL[kind].pay : 1,
+      firstOrder: orders[0], kind: kind || null, payMult: kind ? SPECIAL[kind].pay : 1,
       pat: patMax, patMax, phase: rand(0, 6), bubbleT: 0, jumpT: 0, shakeT: 0, wiggleT: 0, joyT: 0, happy: false,
       frozen: this.tutorial,
     });
@@ -294,6 +295,7 @@ const Shift = {
     const done = cu.orders.length === 0;
     if (done) {
       this.leave(cu, true);
+      Rating.add(cu, true);
       Talk.thanks(cu);
       this.specialDone(cu, true);
       cu.jumpT = 1;
@@ -452,6 +454,7 @@ const Shift = {
         if (!cu.frozen) cu.pat -= dt * (this.closing ? 1.6 : 1);
         if (cu.pat <= 0) {
           this.leave(cu, false);
+          Rating.add(cu, false);
           Talk.upset(cu);
           this.specialDone(cu, false);
           this.missed++;
@@ -548,6 +551,7 @@ const Shift = {
       day: S.day, earned: this.earned, target, stars, bonus, record,
       served: this.served, maxCombo: this.maxCombo, missed: this.missed, stories: this.stories.slice(),
       events: Events.night ? Events.night.log.slice() : [], perfects: this.perfects,
+      rating0: this.rating0, rating1: Rating.value(),
     };
     S.day++;
     Events.clear();

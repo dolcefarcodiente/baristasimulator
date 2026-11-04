@@ -181,6 +181,7 @@ const UI = (() => {
         <div class="stats">
           <div class="stat">${coin(S.coins)}</div>
           <div class="stat">${iconSvg('ui_flame', 'ico')}${t('streak', S.streak.count)}</div>
+          <button class="stat stat-btn" data-act="reviews">★ ${Rating.fmt()}</button>
         </div>
         ${locPicker()}
         <button class="btn primary big" data-act="start">${t('open')}</button>
@@ -205,6 +206,17 @@ const UI = (() => {
     const cur = curLoc();
     return `<div class="locs">${open.map((l) => `<button class="loc${l.id === cur.id ? ' on' : ''}" data-act="loc" data-id="${l.id}">${T(l.name)}</button>`).join('')}</div>
       <p class="loc-note">${T(cur.desc)}</p>`;
+  }
+
+  // Отзывы гостей и рейтинг кофейни
+  function showReviews() {
+    const v = Rating.value(), pct = Math.round((Rating.mult() - 1) * 100);
+    const list = (S.reviews || []).slice(-15).reverse().map((r) => `<div class="review">
+        <div class="review-head"><b>${r.n}</b><span class="rstars">${'★'.repeat(r.s)}${'☆'.repeat(5 - r.s)}</span></div>
+        <p>${Rating.text(r)}</p><small>${t('day', r.night)}</small></div>`).join('');
+    openPanel(`${sheetHead(t('reviewsTitle'))}
+      <div class="rating-big"><b>★ ${v.toFixed(1)}</b><span>${t('ratingEffect', pct)}</span></div>
+      <div class="cards">${list || `<p class="loc-note">${t('noReviews')}</p>`}</div>`, 'sheet tall');
   }
 
   function sheetHead(title) {
@@ -386,6 +398,7 @@ const UI = (() => {
         </div>
         ${r.bonus ? `<div class="bonus-line">${t('starBonus', coin(r.bonus))}</div>` : ''}
         ${r.branches ? `<div class="bonus-line">${t('branchesLine', coin(r.branches))}</div>` : ''}
+        ${r.rating1 ? `<div class="event-line">${t('ratingLine', r.rating0.toFixed(1), r.rating1.toFixed(1))}</div>` : ''}
         ${r.perfects ? `<div class="event-line">${t('perfectLine', r.perfects)}</div>` : ''}
         ${(r.events || []).map((e) => `<div class="event-line">★ ${e}</div>`).join('')}
         ${stories ? `<h3 class="eyebrow">${t('newStories')}</h3>${stories}` : ''}
@@ -484,6 +497,7 @@ const UI = (() => {
       case 'menu': Sound.play('ui'); showMenu(); return;
       case 'shop': Sound.play('ui'); showShop(); return;
       case 'guests': Sound.play('ui'); showGuests(); return;
+      case 'reviews': Sound.play('ui'); showReviews(); return;
       case 'quests': Sound.play('ui'); showQuests(); return;
       case 'tab': shopTab = b.dataset.tab; Sound.play('tap'); showShop(); return;
       case 'buy-up': {

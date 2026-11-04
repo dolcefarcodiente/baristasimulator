@@ -18,6 +18,7 @@ function defaultSave() {
     biz: 0, // сколько шагов развития пройдено
     decor: [], // купленные предметы уюта
     loc: 'home', // где работаем этой ночью
+    reviews: [], // последние отзывы гостей
     regulars: {},
     quests: null,
     streak: { last: null, count: 0 },
@@ -118,7 +119,7 @@ const Stats = {
   tipMult: () => upValue('tipjar') * (1 + perk('tips') + decor('tips')) * locMod('tips'),
   priceMult: () => (1 + upValue('pastry') + perk('price') + decor('price') + BUSINESS.slice(0, S.biz).reduce((a, b) => a + b.price, 0)) * locMod('price'),
   bizIncome: () => BUSINESS.slice(0, S.biz).reduce((a, b) => a + b.income, 0),
-  spawnMult: () => (1 + upValue('sign') + perk('spawn') + decor('spawn')) * locMod('spawn'),
+  spawnMult: () => (1 + upValue('sign') + perk('spawn') + decor('spawn')) * locMod('spawn') * Rating.mult(),
   shiftLen: () => SHIFT_BASE + perk('shift'),
   helperRate: () => upValue('helper'),
 };
