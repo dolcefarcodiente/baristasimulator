@@ -24,6 +24,8 @@ const UI = (() => {
     el.panel.addEventListener('click', onAction);
     el.card.addEventListener('click', onAction);
     Bar.init();
+    Brew.init();
+    $('#qhud').addEventListener('click', onAction);
     el.ings.addEventListener('pointerdown', (e) => {
       const b = e.target.closest('[data-ing]');
       if (b) { e.preventDefault(); Shift.addIngredient(b.dataset.ing); }
@@ -37,8 +39,12 @@ const UI = (() => {
 
   function setMode(mode) {
     el.app.classList.toggle('in-shift', mode === 'shift');
+    el.app.classList.toggle('in-brew', mode === 'brew');
     el.hud.classList.toggle('hidden', mode !== 'shift');
     el.station.classList.toggle('hidden', mode !== 'shift');
+    $('#brew').classList.toggle('hidden', mode !== 'brew');
+    $('#qhud').classList.toggle('hidden', mode !== 'brew');
+    if (mode !== 'brew') $('#qtalk').classList.add('hidden');
     if (mode === 'shift') Bar.resize();
   }
 
@@ -185,6 +191,7 @@ const UI = (() => {
         </div>
         ${locPicker()}
         <button class="btn primary big" data-act="start">${t('open')}</button>
+        <button class="btn big quiet" data-act="quiet"><span>☾ ${t('quietBtn')}</span><small>${t('quietSub')}</small></button>
         <p class="note">${t('goal', coin(dayTarget(S.day)))}</p>
         ${goalHtml}
         <div class="tiles">
@@ -482,6 +489,56 @@ const UI = (() => {
       <button class="btn small ghost" data-act="quit">${t('endShift')}</button>`);
   }
 
+  // ---------- тихая ночь ----------
+  function startQuiet() {
+    Sound.init();
+    closePanel();
+    setMode('brew');
+    Brew.start();
+    updateBrewHud();
+    $('#q-book').textContent = t('qRecipes');
+    $('#q-end').textContent = t('qEnd');
+    banner(t('quietBanner'));
+    Sound.play('open');
+    if (!S.tips.quiet) { S.tips.quiet = true; setTimeout(() => toast(t('quietTip'), 'long'), 1800); }
+  }
+  function updateBrewHud() {
+    const p = Brew.progress();
+    if (!p) return;
+    $('#q-coins').innerHTML = coin(p.earned);
+    $('#q-guest').textContent = t('qGuest', Math.min(p.i, p.n), p.n);
+  }
+  function endBrew(result) {
+    setMode('menu');
+    showSummary(result);
+  }
+  // Книга рецептов: как собрать каждый напиток из меню руками
+  function showRecipeBook() {
+    const step = (ing, ings) => {
+      switch (ing) {
+        case 'espresso': return t('rb_espresso');
+        case 'ristretto': return t('rb_ristretto');
+        case 'lungo': return t('rb_lungo');
+        case 'milk': return ings.includes('ice') ? t('rb_coldMilk') : ings.includes('foam') ? t('rb_foamMilk') : t('rb_milk');
+        case 'foam': return ings.includes('milk') ? null : t('rb_foamOnly');
+        case 'water': return t('rb_water');
+        case 'filter': return t('rb_filter');
+        default: return T(INGREDIENTS[ing].name);
+      }
+    };
+    const cards = S.recipes.map((id) => {
+      const r = RECIPE[id], ings = r.ings;
+      const counts = {};
+      ings.forEach((i) => { counts[i] = (counts[i] || 0) + 1; });
+      const steps = Object.keys(counts).map((i) => { const s = step(i, ings); return s && (counts[i] > 1 ? `${s} ×${counts[i]}` : s); }).filter(Boolean);
+      const cupName = CUP_OF[id] ? T(CUPS[CUP_OF[id]].name) : '';
+      return `<div class="card rb"><div class="card-ico recipe-ico">${ings.map((i) => iconSvg(i)).join('')}</div>
+        <div class="card-body"><b>${T(r.name)}</b><small>${cupName ? `${cupName} · ` : ''}${steps.join(' → ')}</small></div></div>`;
+    }).join('');
+    openPanel(`<div class="sheet-head"><button class="btn small" data-act="qclose">${t('back')}</button><h2>${t('qRecipes')}</h2><span></span></div>
+      <p class="loc-note">${t('rb_intro')}</p><div class="cards">${cards}</div>`, 'sheet tall');
+  }
+
   // ---------- действия ----------
   function startShift() {
     Sound.init();
@@ -508,6 +565,10 @@ const UI = (() => {
       case 'shop': Sound.play('ui'); showShop(); return;
       case 'guests': Sound.play('ui'); showGuests(); return;
       case 'reviews': Sound.play('ui'); showReviews(); return;
+      case 'quiet': startQuiet(); return;
+      case 'qbook': Sound.play('ui'); showRecipeBook(); return;
+      case 'qclose': closePanel(); return;
+      case 'qend': Brew.quit(); return;
       case 'franchise':
         if (!canFranchise()) return;
         Sound.play('ui');
@@ -611,7 +672,7 @@ const UI = (() => {
   }
 
   return {
-    init, setMode, buildStation, renderCup, renderCups, tick, updateHUD, bumpCoins, pressIng, shakeIng, coinTarget,
+    init, setMode, updateBrewHud, endBrew, buildStation, renderCup, renderCups, tick, updateHUD, bumpCoins, pressIng, shakeIng, coinTarget,
     hint, toast, banner, showMenu, showShop, showGuests, showQuests, showSummary, queuePopups, pause, startShift,
     get modalOpen() { return modalOpen; },
     get overlayOpen() { return !el.overlay.classList.contains('hidden'); },

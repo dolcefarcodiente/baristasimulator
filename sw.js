@@ -1,12 +1,13 @@
 // Service worker: кладёт игру в кэш, чтобы она работала без интернета.
-const CACHE = 'salem-v22';
+const CACHE = 'salem-v23';
 const FILES = [
   './', 'index.html', 'css/style.css', 'manifest.webmanifest',
-  'js/i18n.js', 'js/sprites.js', 'js/data.js', 'js/icons.js', 'js/save.js', 'js/audio.js', 'js/progress.js', 'js/art.js', 'js/events.js', 'js/rating.js', 'js/talk.js', 'js/shift.js', 'js/bar.js', 'js/ui.js', 'js/main.js',
+  'js/i18n.js', 'js/sprites.js', 'js/data.js', 'js/icons.js', 'js/save.js', 'js/audio.js', 'js/progress.js', 'js/art.js', 'js/events.js', 'js/rating.js', 'js/talk.js', 'js/shift.js', 'js/bar.js', 'js/brew.js', 'js/ui.js', 'js/main.js',
   'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png',
   'fonts/pixelify-latin.woff2', 'fonts/pixelify-latin-ext.woff2', 'fonts/pixelify-cyrillic.woff2',
   ...['tony', 'rosa', 'gina', 'sal', 'marco', 'sofia', 'leo', 'g1', 'g2', 'g3', 'g4', 'g5', 'g6', 'g7', 'g8', 'cat', 'pastry', 'tipjar', 'register', 'machine', 'candle', 'city-day', 'city-night', 'bg-wide', 'bg-tall',
-    'decor-succulents', 'decor-hangplant', 'decor-catbed', 'decor-neon', 'decor-books', 'decor-gramophone', 'critic', 'tourists', 'bk-wide', 'bk-tall', 'fa-wide', 'fa-tall'].map((n) => `img/${n}.png`),
+    'decor-succulents', 'decor-hangplant', 'decor-catbed', 'decor-neon', 'decor-books', 'decor-gramophone', 'critic', 'tourists', 'bk-wide', 'bk-tall', 'fa-wide', 'fa-tall',
+    'inv-bean1', 'inv-bean2', 'inv-bean3', 'inv-grinder', 'inv-portafilter', 'inv-tamper', 'inv-pitcher', 'inv-whole', 'inv-oat', 'inv-kettle', 'inv-demi', 'inv-cup', 'inv-glass', 'inv-mug', 'inv-vanilla', 'inv-caramel', 'inv-chocolate', 'inv-cinnamon', 'inv-cream', 'inv-ice', 'inv-gelato', 'inv-v60'].map((n) => `img/${n}.png`),
 ];
 
 self.addEventListener('install', (e) => {

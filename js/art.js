@@ -308,7 +308,7 @@ const Art = (() => {
   }
 
   function drawCustomer(cu, cap) {
-    const r = personR(cap);
+    const r = personR(cap) * (cu.big || 1);
     cu.r = r;
     const name = cu.reg || (cu.look && cu.look.sprite) || 'g1';
     const im = Sprites.get(name);
