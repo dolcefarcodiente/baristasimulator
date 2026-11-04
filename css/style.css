@@ -84,6 +84,10 @@ svg { image-rendering: pixelated; }
 #hud-combo.hot { color: var(--gold); background: var(--night-3); }
 #hud-combo.hot .flame { opacity: 1; filter: none; }
 #hud-combo.blaze { background: var(--plum); color: #fff; animation: blink .5s steps(1) infinite; }
+#hud-nico { gap: 6px; font-size: 14px; color: #9fd3ff; }
+#hud-nico .nico-bar { width: 26px; height: 8px; background: var(--ink); box-shadow: 0 0 0 2px #2f5a6a; display: block; }
+#hud-nico .nico-bar i { display: block; height: 100%; width: calc(var(--k, 0) * 100%); background: #9fd3ff; }
+@media (max-width: 430px) { #hud-nico span:last-child { display: none; } }
 #hud-time .clock svg { width: 18px; height: 18px; display: block; }
 #hud-time.warn { background: var(--terra-d); color: #fff; animation: blink .6s steps(1) infinite; }
 .hud-btn { cursor: pointer; padding: 7px 10px; background: var(--cream); }

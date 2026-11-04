@@ -57,6 +57,10 @@ const TALK = {
       ru: ['Простите, знаю, вы закрываетесь. Два с собой?', 'Последний поезд через двадцать минут. Два кофе, пожалуйста.'],
     },
   },
+  nico: {
+    en: (d) => [`${d}, coming right up!`, `I've got the ${d.toLowerCase()} — you handle the rest.`, `Dad says the ${d.toLowerCase()} is my best one.`],
+    ru: (d) => [`${d}, уже несу!`, `${d} беру на себя — ты занимайся остальным.`, `Папа говорит, ${d.toLowerCase()} у меня лучше всего.`],
+  },
   night: {
     en: ['Just in time. The rain picked up.', 'You open this late? Bless you.', 'One coffee and I can face the night.', "It's the only warm window on the block.", 'Mind if I drip on your floor a little?', 'The city sounds so quiet in the rain.'],
     ru: ['Как раз вовремя — дождь усилился.', 'Вы работаете так поздно? Спасибо вам.', 'Одна чашка — и я готов к ночи.', 'Единственное тёплое окно на всей улице.', 'Можно я немного накапаю на пол?', 'Как тихо звучит город под дождём.'],
@@ -124,6 +128,7 @@ const Talk = (() => {
     },
     thanks(cu) { if (cu.kind === 'critic') return; if (cu.reg || cu.kind || Math.random() < 0.35) push(nameOf(cu), pick(lines(TALK.thanks)), !!cu.reg); },
     upset(cu) { push(nameOf(cu), pick(lines(TALK.upset)), !!cu.reg); },
+    nico(drink) { push(t('nicoName'), pick((TALK.nico[LANG] || TALK.nico.en)(drink)), true); },
     clear() { queue = []; cur = null; el.classList.add('hidden'); },
   };
 })();

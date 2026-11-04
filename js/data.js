@@ -108,7 +108,7 @@ const DECOR_BY_ID = Object.fromEntries(DECOR.map((d) => [d.id, d]));
 const BUSINESS = [
   { id: 'barista', cost: 1500, income: 60, price: 0,
     name: { ru: 'Нанять баристу', en: 'Hire a barista' },
-    desc: { ru: 'Нико берёт дневные смены: +60 за ночь', en: 'Nico takes the day shifts: +60 a night' },
+    desc: { ru: 'Нико помогает за стойкой: варит простые напитки сам. И дневные смены: +60 за ночь', en: 'Nico helps at the bar, brewing simple drinks on his own. Plus day shifts: +60 a night' },
     story: { ru: 'Нико, сын Тони, завязывает фартук. «Учись у Sälem», — сказал ему отец. Теперь кофейня работает и днём.', en: "Nico, Tony's son, ties on the apron. «Learn from Sälem», his father said. Now the café is open by day, too." } },
   { id: 'cart', cost: 4000, income: 150, price: 0,
     name: { ru: 'Тележка в парке', en: 'Coffee cart in the park' },

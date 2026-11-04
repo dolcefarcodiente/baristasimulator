@@ -75,6 +75,11 @@ const UI = (() => {
     const left = Math.max(0, Math.ceil(Shift.len - Shift.t));
     el.timeVal.textContent = Shift.closing ? t('closed') : `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`;
     el.time.classList.toggle('warn', !Shift.closing && left <= 20);
+    // Нико: полоска показывает, когда он снова возьмётся за напиток
+    const nico = $('#hud-nico');
+    nico.classList.toggle('hidden', !Shift.nico);
+    nico.querySelector('.nico-name').textContent = t('nicoName');
+    if (Shift.nico) nico.style.setProperty('--k', 1 - clamp(Shift.nico.t / Shift.nico.cd, 0, 1));
   }
 
   function updateHUD() {

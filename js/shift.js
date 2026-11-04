@@ -4,6 +4,8 @@
 const perfectWindow = (j) => Math.max(0.5, j.dur * 0.22);
 const inPerfectWindow = (j) => j.t >= j.dur - perfectWindow(j);
 
+const NICO_CD = 18;
+
 const Shift = {
   active: false,
   paused: false,
@@ -32,6 +34,8 @@ const Shift = {
     this.cups = Array.from({ length: Stats.cups() }, () => ({ layers: [] }));
     Talk.clear();
     if (!this.tutorial) Events.roll(this.len);
+    // нанятый бариста Нико сам варит простые напитки (до двух ингредиентов), раз в NICO_CD секунд
+    this.nico = S.biz >= 1 && !this.tutorial ? { t: 12, cd: NICO_CD } : null;
     Art.invalidate(); // доска с меню: сезонный напиток
     this.tutorial = !S.tips.basics;
     // Постоянные гости на эту смену: новые приходят обязательно, знакомые — с шансом.
@@ -225,17 +229,30 @@ const Shift = {
     this.success(cu, ci, oi);
   },
 
-  success(cu, ci, oi) {
+  // Нико подаёт гостю, который ждёт дольше всех, простой напиток из его заказа (не критику — тот ждёт хозяина)
+  nicoServe() {
+    const cands = this.customers
+      .filter((c) => c.state === 'wait' && c.kind !== 'critic' && !(c.hidden && !c.revealed))
+      .map((c) => ({ c, oi: c.orders.findIndex((id) => RECIPE[id].ings.length <= 2) }))
+      .filter((x) => x.oi >= 0)
+      .sort((a, b) => a.c.pat / a.c.patMax - b.c.pat / b.c.patMax);
+    if (!cands.length) return false;
+    const { c, oi } = cands[0];
+    Talk.nico(T(RECIPE[c.orders[oi]].name));
+    this.success(c, -1, oi, true);
+    return true;
+  },
+
+  success(cu, ci, oi, byNico) {
     const rid = cu.orders[oi];
     const rec = RECIPE[rid];
     cu.orders.splice(oi, 1);
     // качество: сколько слоёв из-под машин вышли идеальными
-    const mach = this.cups[ci].layers.filter((l) => INGREDIENTS[l.ing].machine);
+    const mach = ci >= 0 ? this.cups[ci].layers.filter((l) => INGREDIENTS[l.ing].machine) : [];
     const perf = mach.filter((l) => l.perfect).length;
     const q = mach.length && perf === mach.length ? 'perfect' : perf > 0 ? 'great' : 'good';
     if (!cu.q || q === 'good' || (q === 'great' && cu.q === 'perfect')) cu.q = q; // худшее из заказа
-    this.cups[ci].layers = [];
-    UI.renderCup(ci);
+    if (ci >= 0) { this.cups[ci].layers = []; UI.renderCup(ci); }
     this.combo++;
     this.maxCombo = Math.max(this.maxCombo, this.combo);
     S.stats.bestCombo = Math.max(S.stats.bestCombo, this.combo);
@@ -254,6 +271,7 @@ const Shift = {
     Art.floatText(x, y - cu.r * 2.2, '+' + pay, '#f2c46a', 22);
     if (memory) Art.floatText(x, y - cu.r * 3.4, t('remembered'), '#e07a5f', 15);
     else if (f > 0.75) Art.floatText(x, y - cu.r * 3.4, t('speedy'), '#7fc28a', 14);
+    if (byNico) Art.floatText(x, y - cu.r * 4.5, t('nicoTag'), '#9fd3ff', 15);
     if (q !== 'good') Art.floatText(x, y - cu.r * 4.5, t(q), q === 'perfect' ? '#ffd76a' : '#9fd3ff', q === 'perfect' ? 20 : 16);
     const tgt = UI.coinTarget();
     const n = Math.min(6, 1 + Math.floor(pay / 8));
@@ -390,6 +408,12 @@ const Shift = {
         UI.banner(t('closing'));
         Sound.play('close');
       }
+    }
+
+    // Нико
+    if (this.nico && !this.closing) {
+      this.nico.t -= dt;
+      if (this.nico.t <= 0) this.nico.t = this.nicoServe() ? this.nico.cd : 1;
     }
 
     // оборудование
