@@ -1,5 +1,8 @@
 // Вырезает зелёный хромакей-фон из сгенерированной картинки, обрезает по содержимому и уменьшает.
-// swift keyout.swift <in.png> <out.png> <maxWidth> [crop=1|0]
+// swift keyout.swift <in.png> <out.png> <maxWidth> [crop=1|0] [magenta] [rect=x0,y0,x1,y1]
+// rect — вырезать только внутри прямоугольника (доли картинки): так у фона прозрачными становятся лишь стёкла окна,
+// а зелёные растения вокруг остаются целыми.
+// Для зелёных предметов (растения) фон генерируется пурпурным (#FF00FF) и вырезается ключом magenta.
 import Foundation
 import CoreGraphics
 import ImageIO
@@ -9,6 +12,8 @@ let args = CommandLine.arguments
 let inURL = URL(fileURLWithPath: args[1]), outURL = URL(fileURLWithPath: args[2])
 let maxW = Int(args[3]) ?? 512
 let crop = args.count > 4 ? args[4] == "1" : true
+let magenta = args.dropFirst(5).contains("magenta")
+let rect: [Float] = args.dropFirst(5).first { $0.hasPrefix("rect=") }.map { $0.dropFirst(5).split(separator: ",").compactMap { Float($0) } } ?? [0, 0, 1, 1]
 guard let src = CGImageSourceCreateWithURL(inURL as CFURL, nil), let img = CGImageSourceCreateImageAtIndex(src, 0, nil) else { fatalError("нет файла") }
 let w = img.width, h = img.height
 let cs = CGColorSpace(name: CGColorSpace.sRGB)!
@@ -20,15 +25,23 @@ for y in 0..<h {
     for x in 0..<w {
         let i = (y * w + x) * 4
         let r = Float(data[i]), g = Float(data[i + 1]), b = Float(data[i + 2])
-        // насколько пиксель «зелёный»: g сильно больше r и b
-        let dom = g - max(r, b)
+        let fx = Float(x) / Float(w), fy = Float(y) / Float(h)
+        if fx < rect[0] || fx > rect[2] || fy < rect[1] || fy > rect[3] { minX = min(minX, x); minY = min(minY, y); maxX = max(maxX, x); maxY = max(maxY, y); continue }
+        // насколько пиксель похож на фон: для зелёного g сильно больше r и b, для пурпурного — наоборот
+        let dom = magenta ? min(r, b) - g - 40 : g - max(r, b)
         var alpha: Float = 1
         if dom > 90 { alpha = 0 }
         else if dom > 30 { alpha = 1 - (dom - 30) / 60 }
         if alpha < 1 {
             // убираем зелёный ореол на полупрозрачных краях
-            let ng = min(g, max(r, b) + 10)
-            data[i] = UInt8(r * alpha); data[i + 1] = UInt8(ng * alpha); data[i + 2] = UInt8(b * alpha); data[i + 3] = UInt8(255 * alpha)
+            if magenta {
+                let cap = g + 30
+                data[i] = UInt8(min(r, cap) * alpha); data[i + 1] = UInt8(g * alpha); data[i + 2] = UInt8(min(b, cap) * alpha)
+            } else {
+                let ng = min(g, max(r, b) + 10)
+                data[i] = UInt8(r * alpha); data[i + 1] = UInt8(ng * alpha); data[i + 2] = UInt8(b * alpha)
+            }
+            data[i + 3] = UInt8(255 * alpha)
         }
         if alpha > 0.05 { minX = min(minX, x); minY = min(minY, y); maxX = max(maxX, x); maxY = max(maxY, y) }
     }

@@ -84,6 +84,24 @@ function recipeFor(items) {
 
 // ---------- улучшения ----------
 const sec = (v) => (LANG === 'en' ? `${v} s` : `${v} сек`);
+// Уют: предметы на подоконнике и в окне. Видны в сцене и дают небольшой бонус.
+// key — какой бонус (как у постоянных гостей), v — его размер
+const DECOR = [
+  { id: 'succulents', cost: 350, key: 'tips', v: 0.05,
+    name: { ru: 'Кактусы на подоконник', en: 'Windowsill cacti' }, desc: { ru: '+5% к чаевым', en: '+5% tips' } },
+  { id: 'hangplant', cost: 550, key: 'patience', v: 0.05,
+    name: { ru: 'Подвесной плющ', en: 'Hanging pothos' }, desc: { ru: 'Гости ждут на 5% дольше', en: 'Guests wait 5% longer' } },
+  { id: 'catbed', cost: 800, key: 'cat', v: 1,
+    name: { ru: 'Корзинка для кота', en: 'Cat basket' }, desc: { ru: 'Кот приходит каждую ночь и мурчит щедрее', en: 'The cat comes every night and purrs twice as much' } },
+  { id: 'neon', cost: 1000, key: 'spawn', v: 0.08,
+    name: { ru: 'Неоновая вывеска', en: 'Neon cup sign' }, desc: { ru: 'Видно с улицы: гостей на 8% больше', en: 'Seen from the street: 8% more guests' } },
+  { id: 'books', cost: 1300, key: 'price', v: 0.05,
+    name: { ru: 'Книги и лампа', en: 'Books and a lamp' }, desc: { ru: 'Уютнее — цены +5%', en: 'Cozier, so prices +5%' } },
+  { id: 'gramophone', cost: 1800, key: 'patience', v: 0.08,
+    name: { ru: 'Граммофон', en: 'Gramophone' }, desc: { ru: 'Под музыку гости ждут на 8% дольше', en: 'With music, guests wait 8% longer' } },
+];
+const DECOR_BY_ID = Object.fromEntries(DECOR.map((d) => [d.id, d]));
+
 // Развитие кофейни: шаги по порядку, каждый приносит доход за ночь и открывает кусочек истории
 const BUSINESS = [
   { id: 'barista', cost: 1500, income: 60, price: 0,

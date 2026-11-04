@@ -3,7 +3,8 @@
 
 const Sprites = (() => {
   const imgs = {};
-  const NAMES = ['tony', 'rosa', 'gina', 'sal', 'marco', 'sofia', 'leo', 'g1', 'g2', 'g3', 'g4', 'g5', 'g6', 'g7', 'g8', 'cat', 'pastry', 'tipjar', 'register', 'machine', 'candle', 'city-day', 'city-night', 'bg-wide', 'bg-tall'];
+  const NAMES = ['tony', 'rosa', 'gina', 'sal', 'marco', 'sofia', 'leo', 'g1', 'g2', 'g3', 'g4', 'g5', 'g6', 'g7', 'g8', 'cat', 'pastry', 'tipjar', 'register', 'machine', 'candle', 'city-day', 'city-night', 'bg-wide', 'bg-tall',
+    'decor-succulents', 'decor-hangplant', 'decor-catbed', 'decor-neon', 'decor-books', 'decor-gramophone'];
   const GUESTS = ['g1', 'g2', 'g3', 'g4', 'g5', 'g6', 'g7', 'g8'];
 
   // Доли: где на картинке стойка, доска, лампы и лампочки гирлянды
@@ -13,6 +14,8 @@ const Sprites = (() => {
       board: { x0: 0.573, y0: 0.259, x1: 0.698, y1: 0.646 },
       lamps: [[0.194, 0.158], [0.767, 0.158]],
       bulbs: [[0.050, 0.065], [0.122, 0.055], [0.176, 0.030], [0.236, 0.030], [0.300, 0.065], [0.373, 0.085], [0.453, 0.085], [0.529, 0.065], [0.589, 0.032], [0.647, 0.061], [0.712, 0.069], [0.802, 0.079], [0.867, 0.075], [0.924, 0.079], [0.989, 0.055]],
+      // подоконник (верх) и места для уюта — доли ширины окна
+      sill: 0.682, spots: { succulents: 0.3, catbed: 0.5, books: 0.68, gramophone: 0.88, hangplant: 0.16, neon: 0.5 },
       win: null, // прозрачная область считается при загрузке
     },
     'bg-tall': {
@@ -20,6 +23,8 @@ const Sprites = (() => {
       board: { x0: 0.663, y0: 0.227, x1: 0.96, y1: 0.378 },
       lamps: [[0.8, 0.167]],
       bulbs: [[0.025, 0.036], [0.130, 0.050], [0.253, 0.058], [0.385, 0.051], [0.517, 0.047], [0.623, 0.032], [0.708, 0.011], [0.875, 0.031], [0.963, 0.051]],
+      // на телефоне левый край окна за экраном — предметы ближе к центру и крупнее (окно узкое)
+      sill: 0.59, dscale: 1.3, spots: { succulents: 0.29, catbed: 0.47, books: 0.67, gramophone: 0.87, hangplant: 0.31, neon: 0.72 },
       win: null,
     },
   };

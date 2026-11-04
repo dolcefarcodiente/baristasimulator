@@ -16,6 +16,7 @@ function defaultSave() {
     upgrades: {},
     recipes: ['espresso', 'americano', 'latte'],
     biz: 0, // сколько шагов развития пройдено
+    decor: [], // купленные предметы уюта
     regulars: {},
     quests: null,
     streak: { last: null, count: 0 },
@@ -79,6 +80,13 @@ function regState(id) {
 }
 
 // Подарки дружбы от постоянных гостей
+const hasDecor = (id) => S.decor.includes(id);
+function decor(key) {
+  let sum = 0;
+  for (const id of S.decor) if (DECOR_BY_ID[id] && DECOR_BY_ID[id].key === key) sum += DECOR_BY_ID[id].v;
+  return sum;
+}
+
 function perk(key) {
   let sum = 0;
   for (const r of REGULARS) if (r.perk.key === key && regState(r.id).hearts >= MAX_HEARTS) sum += r.perk.v;
@@ -101,11 +109,11 @@ const Stats = {
   },
   cups: () => upValue('cups'),
   capacity: () => upValue('counter'),
-  patienceMult: () => 1 + upValue('patience') + perk('patience'),
-  tipMult: () => upValue('tipjar') * (1 + perk('tips')),
-  priceMult: () => 1 + upValue('pastry') + perk('price') + BUSINESS.slice(0, S.biz).reduce((a, b) => a + b.price, 0),
+  patienceMult: () => 1 + upValue('patience') + perk('patience') + decor('patience'),
+  tipMult: () => upValue('tipjar') * (1 + perk('tips') + decor('tips')),
+  priceMult: () => 1 + upValue('pastry') + perk('price') + decor('price') + BUSINESS.slice(0, S.biz).reduce((a, b) => a + b.price, 0),
   bizIncome: () => BUSINESS.slice(0, S.biz).reduce((a, b) => a + b.income, 0),
-  spawnMult: () => 1 + upValue('sign') + perk('spawn'),
+  spawnMult: () => 1 + upValue('sign') + perk('spawn') + decor('spawn'),
   shiftLen: () => SHIFT_BASE + perk('shift'),
   helperRate: () => upValue('helper'),
 };
@@ -131,5 +139,6 @@ function canAffordSomething() {
   for (const u of UPGRADES) if (!upMaxed(u.id) && S.coins >= upCost(u.id)) return true;
   for (const r of RECIPES) if (!S.recipes.includes(r.id) && S.coins >= r.cost) return true;
   if (BUSINESS[S.biz] && S.coins >= BUSINESS[S.biz].cost) return true;
+  for (const d of DECOR) if (!hasDecor(d.id) && S.coins >= d.cost) return true;
   return false;
 }

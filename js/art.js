@@ -34,6 +34,7 @@ const Art = (() => {
     drop: ['..#..', '.###.', '#####', '#####', '.###.'],
     z: ['####', '..#.', '.#..', '####'],
     arrow: ['..###..', '..###..', '..###..', '#######', '.#####.', '..###..', '...#...'],
+    note: ['...##', '...#.', '...#.', '.###.', '####.', '.##..'],
   };
   function pix(rows, x, y, s, color, outline) {
     x = snap(x); y = snap(y);
@@ -80,6 +81,7 @@ const Art = (() => {
     L.board = { x: X(m.board.x0), y: Y(m.board.y0), w: (m.board.x1 - m.board.x0) * dw, h: (m.board.y1 - m.board.y0) * dh };
     L.lamps = m.lamps.map(([fx, fy]) => [X(fx), Y(fy)]);
     L.bulbs = m.bulbs.map(([fx, fy]) => [X(fx), Y(fy)]);
+    L.sill = Y(m.sill);
     invalidate();
   }
   function invalidate() { bg = null; }
@@ -246,6 +248,12 @@ const Art = (() => {
       const gr = ctx.createRadialGradient(bx, by, 1, bx, by, 12);
       gr.addColorStop(0, `rgba(255,220,150,${0.45 * dark})`); gr.addColorStop(1, 'rgba(255,220,150,0)');
       ctx.fillStyle = gr; ctx.fillRect(bx - 12, by - 12, 24, 24);
+    }
+    if (L.neon) {
+      const { x, y, r } = L.neon, fl = Math.sin(time * 31) > 0.96 ? 0.35 : 1; // иногда мигает
+      const gr = ctx.createRadialGradient(x, y, 2, x, y, r);
+      gr.addColorStop(0, `rgba(255,90,160,${0.32 * fl})`); gr.addColorStop(1, 'rgba(255,90,160,0)');
+      ctx.fillStyle = gr; ctx.fillRect(x - r, y - r, r * 2, r * 2);
     }
     if (L.candle) {
       const { x, y } = L.candle, fl = 1 + Math.sin(time * 11) * 0.12 + Math.sin(time * 23) * 0.06;
@@ -451,18 +459,51 @@ const Art = (() => {
     L.candle = { x, y: fy };
   }
 
+  // Уют: подвесной плющ и неон в окне, остальное — на подоконнике. Размеры — доли ширины окна.
+  const DECOR_H = { succulents: 0.075, catbed: 0.085, books: 0.15, gramophone: 0.19 };
+  function drawDecor() {
+    L.bed = L.neon = L.gramo = null;
+    const m = Sprites.meta(L.bg.name), w = L.win;
+    if (!m.spots || !S.decor.length) return;
+    const at = (id) => w.x + w.w * m.spots[id];
+    if (hasDecor('hangplant')) { const h = w.h * 0.42; drawSprite('decor-hangplant', at('hangplant'), w.y - LP * 2 + h, h, 'center'); }
+    if (hasDecor('neon')) {
+      const h = Math.min(w.w * 0.24, w.h * 0.34), x = at('neon');
+      drawSprite('decor-neon', x, w.y - LP * 2 + h, h, 'center');
+      L.neon = { x, y: w.y + h * 0.6, r: h * 0.9 };
+    }
+    for (const id of ['succulents', 'catbed', 'books', 'gramophone']) {
+      if (!hasDecor(id)) continue;
+      const h = w.w * DECOR_H[id] * (m.dscale || 1), x = at(id);
+      const dw = drawSprite('decor-' + id, x, L.sill, h, 'center');
+      if (id === 'catbed') L.bed = { x, y: L.sill - h * 0.3, h };
+      if (id === 'gramophone') L.gramo = { x: x - dw * 0.2, y: L.sill - h * 0.95 };
+    }
+    // ноты из граммофона, пока играет музыка
+    if (L.gramo && S.settings.music) {
+      for (let i = 0; i < 2; i++) {
+        const k = (time * 0.45 + i * 0.5) % 1;
+        ctx.globalAlpha = 1 - k;
+        pix(BMP.note, L.gramo.x - k * 14 + Math.sin(time * 3 + i) * 4, L.gramo.y - k * 30, LP, i ? '#f2c46a' : '#fbf1dc', INK);
+      }
+      ctx.globalAlpha = 1;
+    }
+  }
+
   // Рыжий кот: появляется на стойке, сворачивается клубком и спит, мурчит, когда гладят
   function drawCat(cat) {
     if (!cat || !Sprites.ready('cat')) return;
     const im = Sprites.get('cat');
     const s = clamp(H / 420, 0.6, 1.1);
-    const h = 34 * s, w = h * im.naturalWidth / im.naturalHeight;
+    const bed = L.bed; // есть корзинка — кот спит в ней на подоконнике
+    const h = bed ? bed.h * 1.05 : 34 * s, w = h * im.naturalWidth / im.naturalHeight;
     if (cat.sx == null && cat.state !== 'in') cat.sx = cat.x;
     let x, a;
     if (cat.state === 'in') { x = cat.tx; a = 1 - clamp(Math.abs(cat.tx - cat.x) / 160, 0, 1); }
     else if (cat.state === 'out') { x = cat.sx; a = clamp(1 - (cat.x - cat.sx) / 120, 0, 1); }
     else { x = cat.x; a = 1; }
-    const y = L.counterMid + 2;
+    if (bed) x = bed.x;
+    const y = bed ? bed.y : L.counterMid + 2;
     const breathe = Math.sin(time * 1.8) > 0 ? LP : 0;
     ctx.save(); ctx.globalAlpha = a;
     if ((cat.dir || 1) === 1) { ctx.translate(x, 0); ctx.scale(-1, 1); ctx.translate(-x, 0); }
@@ -475,6 +516,7 @@ const Art = (() => {
     }
     if (cat.petT > 0) pix(BMP.heart, x - w * 0.1, y - h - 10 - (Math.sin(time * 6) > 0 ? LP * 2 : 0), LP * 2, '#ff6b8a', INK);
     cat.hit = { x0: x - w / 2 - 6, y0: y - h - 10, x1: x + w / 2 + 6, y1: y + 6 };
+    cat.cx = x; cat.cy = y - h / 2;
   }
 
   // ---------- частицы и тексты ----------
@@ -567,6 +609,8 @@ const Art = (() => {
     pix(BMP.arrow, cu.dx - s * 3.5, cu.hy - cu.r * 2.6 + (Math.sin(time * 6) > 0 ? s : 0), s, '#fbf1dc', INK);
   }
 
+  const menuCat = { state: 'sit', x: 0, tx: 0, dir: -1, petT: 0 };
+
   // ---------- кадр ----------
   function render(state) {
     const name = L.bg.name, im = Sprites.get(name);
@@ -583,6 +627,10 @@ const Art = (() => {
     ctx.fillStyle = '#1e1420'; ctx.fillRect(-20, -20, W + 40, H + 40);
     drawWindow(p);
     ctx.drawImage(im, L.bg.x, L.bg.y, L.bg.w, L.bg.h);
+    drawDecor();
+    // в меню кот, если есть корзинка, просто спит в ней
+    const cat = state.cat || (!state.shift && L.bed ? menuCat : null);
+    if (L.bed) drawCat(cat);
     drawLamps(dark);
     const cap = state.cap || 3;
     for (const cu of state.customers) drawCustomer(cu, cap);
@@ -591,7 +639,7 @@ const Art = (() => {
     ctx.drawImage(im, 0, sy, im.naturalWidth, im.naturalHeight - sy, L.bg.x, ct, L.bg.w, L.bg.h - (ct - L.bg.y));
     drawCounterItems(state.busy || {});
     drawCandle();
-    drawCat(state.cat);
+    if (!L.bed) drawCat(cat);
     drawLight(p, dark);
     drawVignette();
     for (const cu of state.customers) if (cu.r && cu.state !== 'enter') moodMark(cu);

@@ -32,7 +32,7 @@ const Shift = {
     this.regPlan = REGULARS.filter(regularEligible)
       .filter((r) => regState(r.id).visits === 0 || Math.random() < 0.55)
       .map((r) => ({ id: r.id, time: rand(0.08, 0.8) * this.len, done: false }));
-    this.catTime = S.day >= 2 && Math.random() < 0.6 ? rand(25, this.len - 30) : Infinity;
+    this.catTime = hasDecor('catbed') ? rand(10, this.len * 0.5) : S.day >= 2 && Math.random() < 0.6 ? rand(25, this.len - 30) : Infinity;
     if (this.tutorial) this.spawn(null, 'latte');
     if (this.cups.length > 1 && !S.tips.cups) {
       S.tips.cups = true;
@@ -148,7 +148,10 @@ const Shift = {
   tap(x, y) {
     if (!this.active || this.paused) return;
     const inR = (r) => r && x >= r.x0 && x <= r.x1 && y >= r.y0 && y <= r.y1;
-    if (this.cat && this.cat.state !== 'out' && inR(this.cat.hit)) { this.petCat(); return; }
+    const catHit = this.cat && this.cat.state !== 'out' && inR(this.cat.hit);
+    // кот на стойке — впереди гостей; кот в корзинке на подоконнике — позади, гости важнее
+    const catBehind = hasDecor('catbed');
+    if (catHit && !catBehind) { this.petCat(); return; }
     const waiting = this.customers.filter((c) => c.state === 'wait');
     for (const cu of waiting) {
       if (inR(cu.bub)) {
@@ -157,6 +160,7 @@ const Shift = {
       }
     }
     for (const cu of waiting) if (inR(cu.hit)) { this.serveTo(cu); return; }
+    if (catHit) this.petCat();
   },
 
   serveSlot(slot) {
@@ -302,15 +306,16 @@ const Shift = {
   petCat() {
     const cat = this.cat;
     cat.petT = 1.5;
-    Art.burst(cat.x, Art.counterTop - 40, 'heart', 3);
+    const cx = cat.cx ?? cat.x, cy = cat.cy ?? Art.counterTop - 40;
+    Art.burst(cx, cy, 'heart', 3);
     Sound.play('meow');
     if (cat.petted) return;
     cat.petted = true;
-    const coins = 10 + S.day * 3;
+    const coins = (10 + S.day * 3) * (hasDecor('catbed') ? 2 : 1);
     S.coins += coins;
     this.earned += coins;
     S.stats.catPets++;
-    Art.floatText(cat.x, Art.counterTop - 70, t('purr', coins), '#e07a5f', 17);
+    Art.floatText(cx, cy - 30, t('purr', coins), '#e07a5f', 17);
     Progress.check();
     UI.updateHUD();
   },

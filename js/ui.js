@@ -145,6 +145,7 @@ const UI = (() => {
     const opts = [];
     for (const r of RECIPES) if (!S.recipes.includes(r.id)) opts.push({ name: T(r.name), cost: r.cost });
     for (const u of UPGRADES) if (!upMaxed(u.id)) opts.push({ name: T(u.name), cost: upCost(u.id) });
+    for (const d of DECOR) if (!hasDecor(d.id)) opts.push({ name: T(d.name), cost: d.cost });
     if (BUSINESS[S.biz]) opts.push({ name: T(BUSINESS[S.biz].name), cost: BUSINESS[S.biz].cost });
     opts.sort((a, b) => a.cost - b.cost);
     return opts[0] || null;
@@ -205,11 +206,21 @@ const UI = (() => {
       ${done ? `<span class="maxed">✓</span>` : `<button class="btn buy${afford ? ' green' : ''}" data-act="buy-biz" data-from="${from}" ${afford ? '' : 'disabled'}>${next ? coin(b.cost) : '🔒'}</button>`}
     </div>`;
   }
+  // Предмет уюта: картинка самого предмета вместо значка
+  function decorCard(d, from = '') {
+    const owned = hasDecor(d.id), afford = !owned && S.coins >= d.cost;
+    return `<div class="card${afford ? ' can' : ''}${owned ? ' owned' : ''}">
+      <div class="card-ico"><img class="decor-img" src="img/decor-${d.id}.png" alt=""></div>
+      <div class="card-body"><b>${T(d.name)}</b><small>${T(d.desc)}</small></div>
+      ${owned ? `<span class="maxed">✓</span>` : `<button class="btn buy${afford ? ' green' : ''}" data-act="buy-decor" data-id="${d.id}" data-from="${from}" ${afford ? '' : 'disabled'}>${coin(d.cost)}</button>`}
+    </div>`;
+  }
   // Что можно купить прямо сейчас — показывается в итогах смены, чтобы не ходить в магазин
   function offersHtml() {
     const list = [];
     const nb = BUSINESS[S.biz];
     if (nb && S.coins >= nb.cost) list.push({ cost: nb.cost, html: bizCard(nb, S.biz, 'summary') });
+    for (const d of DECOR) if (!hasDecor(d.id) && S.coins >= d.cost) list.push({ cost: d.cost, html: decorCard(d, 'summary') });
     for (const r of RECIPES) if (!S.recipes.includes(r.id) && S.coins >= r.cost) list.push({ cost: r.cost, html: `<div class="card can">
       <div class="card-ico recipe-ico">${r.ings.map((i) => iconSvg(i)).join('')}</div>
       <div class="card-body"><b>${T(r.name)}</b><small>${t('price', coin(Math.round(r.price * Stats.priceMult())))}</small></div>
@@ -241,6 +252,8 @@ const UI = (() => {
           ${maxed ? `<span class="maxed">${t('max')}</span>` : `<button class="btn buy${afford ? ' green' : ''}" data-act="buy-up" data-id="${u.id}" ${afford ? '' : 'disabled'}>${coin(u.costs[lvl])}</button>`}
         </div>`;
       }).join('');
+    } else if (shopTab === 'decor') {
+      cards = DECOR.map((d) => decorCard(d)).join('');
     } else if (shopTab === 'biz') {
       cards = BUSINESS.map((b, i) => bizCard(b, i)).join('');
     } else {
@@ -260,6 +273,7 @@ const UI = (() => {
       <div class="tabs">
         <button class="tab ${shopTab === 'up' ? 'on' : ''}" data-act="tab" data-tab="up">${t('equipment')}</button>
         <button class="tab ${shopTab === 'rec' ? 'on' : ''}" data-act="tab" data-tab="rec">${t('recipes')}</button>
+        <button class="tab ${shopTab === 'decor' ? 'on' : ''}" data-act="tab" data-tab="decor">${t('decorTab')}</button>
         <button class="tab ${shopTab === 'biz' ? 'on' : ''}" data-act="tab" data-tab="biz">${t('growth')}</button>
       </div>
       <div class="cards">${cards}</div>`, 'sheet tall', !keepScroll);
@@ -465,6 +479,14 @@ const UI = (() => {
         S.recipes.push(r.id);
         const newIngs = [...new Set(r.ings)].filter((i) => !RECIPES.some((x) => x.id !== r.id && S.recipes.includes(x.id) && x.ings.includes(i)));
         afterBuy(t('newRecipe', T(r.name)) + (newIngs.length ? t('newIng', newIngs.map((i) => T(INGREDIENTS[i].name).toLowerCase()).join(', ')) : ''), b.dataset.from);
+        return;
+      }
+      case 'buy-decor': {
+        const d = DECOR_BY_ID[b.dataset.id];
+        if (!d || hasDecor(d.id) || S.coins < d.cost) return;
+        S.coins -= d.cost;
+        S.decor.push(d.id);
+        afterBuy(t('decorBought', T(d.name)), b.dataset.from);
         return;
       }
       case 'buy-biz': {
