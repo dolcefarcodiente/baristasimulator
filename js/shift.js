@@ -27,6 +27,8 @@ const Shift = {
     });
     this.cups = Array.from({ length: Stats.cups() }, () => ({ layers: [] }));
     Talk.clear();
+    if (!this.tutorial) Events.roll(this.len);
+    Art.invalidate(); // доска с меню: сезонный напиток
     this.tutorial = !S.tips.basics;
     // Постоянные гости на эту смену: новые приходят обязательно, знакомые — с шансом.
     this.regPlan = REGULARS.filter(regularEligible)
@@ -50,6 +52,8 @@ const Shift = {
   },
 
   pickRecipe() {
+    const season = Events.drinkId();
+    if (season && Math.random() < 0.3) return season;
     const pool = S.recipes;
     const w = pool.map((id) => 1 + RECIPE[id].index * 0.25);
     let x = Math.random() * w.reduce((a, b) => a + b, 0);
@@ -57,7 +61,7 @@ const Shift = {
     return pool[pool.length - 1];
   },
 
-  spawn(regId, forced) {
+  spawn(regId, forced, kind) {
     if (regId && this.customers.some((c) => c.reg === regId)) return true;
     const slot = this.freeSlot();
     if (slot < 0) return false;
@@ -71,15 +75,24 @@ const Shift = {
         S.tips.regular = true;
         UI.toast(t('regularTip'), 'long');
       }
+    } else if (kind) {
+      // особые гости: критик просит самое сложное, туристы — три напитка, полуночник — два
+      if (kind === 'critic') {
+        const pool = [...S.recipes, Events.drinkId()].filter(Boolean).sort((a, b) => RECIPE[b].ings.length - RECIPE[a].ings.length);
+        orders = [pick(pool.slice(0, 3))];
+      } else orders = Array.from({ length: kind === 'tourists' ? 3 : 2 }, () => this.pickRecipe());
+      look = SPECIAL[kind].sprite ? { sprite: SPECIAL[kind].sprite } : randomLook();
     } else {
       orders = [forced || this.pickRecipe()];
       if (!forced && Math.random() < multiDrinkChance(S.day)) orders.push(this.pickRecipe());
       look = randomLook();
     }
     const complexity = orders.reduce((a, id) => a + RECIPE[id].ings.length, 0);
-    const patMax = (basePatience(S.day) + complexity * 2.5) * Stats.patienceMult() * (orders.length > 1 ? 1.35 : 1);
+    const patMax = (basePatience(S.day) + complexity * 2.5) * Stats.patienceMult() * (orders.length > 1 ? 1.35 : 1)
+      * Events.patienceMult() * (kind ? SPECIAL[kind].patience : 1);
     this.customers.push({
       id: ++this.uid, slot, x: -60, tx: 0, state: 'enter', look, orders, reg: regId || null, hidden, revealed: false,
+      kind: kind || null, payMult: kind ? SPECIAL[kind].pay : 1,
       pat: patMax, patMax, phase: rand(0, 6), bubbleT: 0, jumpT: 0, shakeT: 0, wiggleT: 0, joyT: 0, happy: false,
       frozen: this.tutorial,
     });
@@ -214,7 +227,7 @@ const Shift = {
     const f = clamp(cu.pat / cu.patMax, 0, 1);
     const tip = price * (0.15 + 0.45 * f) * Stats.tipMult();
     const cm = comboMult(this.combo);
-    const pay = Math.round(price + tip * cm * (memory ? 2 : 1));
+    const pay = Math.round((price + tip * cm * (memory ? 2 : 1)) * cu.payMult);
     this.earned += pay;
     S.coins += pay;
     S.stats.drinks[rid] = (S.stats.drinks[rid] || 0) + 1;
@@ -243,6 +256,7 @@ const Shift = {
     if (done) {
       this.leave(cu, true);
       Talk.thanks(cu);
+      this.specialDone(cu, true);
       cu.jumpT = 1;
       for (let i = 0; i < 4; i++) Art.burst(x, y - cu.r, 'heart', 1);
       this.served++;
@@ -263,6 +277,16 @@ const Shift = {
       persist();
     }
     UI.updateHUD();
+  },
+
+  // Итог особого гостя: строчка в итогах смены, у критика — ещё и рецензия
+  specialDone(cu, ok) {
+    if (!cu.kind) return;
+    if (cu.kind === 'critic') {
+      if (ok) S.buzz = 1;
+      setTimeout(() => UI.toast(t(ok ? 'criticGood' : 'criticBad'), ok ? 'gold' : ''), 900);
+    }
+    Events.log(t(`ev_${cu.kind}_${ok ? 'ok' : 'fail'}`));
   },
 
   regularServed(cu, memory) {
@@ -329,11 +353,13 @@ const Shift = {
     if (!this.tutorial && !this.closing) {
       this.t += dt;
       for (const p of this.regPlan) if (!p.done && this.t >= p.time && this.spawn(p.id)) p.done = true;
+      const ev = Events.night;
+      for (const k of ['critic', 'tourists']) if (ev && ev[k] && !ev[k].done && this.t >= ev[k].time && this.spawn(null, null, k)) ev[k].done = true;
       this.nextSpawn -= dt;
       const present = this.customers.filter((c) => c.state !== 'leave').length;
       if (present === 0) this.nextSpawn = Math.min(this.nextSpawn, 0.8);
       if (this.nextSpawn <= 0) {
-        this.nextSpawn = this.spawn() ? (baseSpawn(S.day) / Stats.spawnMult()) * rand(0.75, 1.25) : 0.5;
+        this.nextSpawn = this.spawn() ? (baseSpawn(S.day) / Stats.spawnMult() / Events.spawnMult()) * rand(0.75, 1.25) : 0.5;
       }
       if (this.t >= this.len) {
         this.t = this.len;
@@ -377,6 +403,7 @@ const Shift = {
         if (cu.pat <= 0) {
           this.leave(cu, false);
           Talk.upset(cu);
+          this.specialDone(cu, false);
           this.missed++;
           this.breakCombo();
           Sound.play('leave');
@@ -410,6 +437,10 @@ const Shift = {
 
     // обучение
     if (this.tutorial) this.tutorialHint();
+
+    // полуночник стучится, когда уже закрываемся
+    const ev = Events.night;
+    if (this.closing && ev && ev.owl && !ev.owl.done && this.spawn(null, null, 'owl')) ev.owl.done = true;
 
     if (this.closing && this.customers.length === 0) {
       this.endT += dt;
@@ -466,8 +497,10 @@ const Shift = {
       branches,
       day: S.day, earned: this.earned, target, stars, bonus, record,
       served: this.served, maxCombo: this.maxCombo, missed: this.missed, stories: this.stories.slice(),
+      events: Events.night ? Events.night.log.slice() : [],
     };
     S.day++;
+    Events.clear();
     Art.invalidate();
     persist();
     UI.showSummary(result);

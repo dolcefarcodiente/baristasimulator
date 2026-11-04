@@ -148,7 +148,7 @@ const Bar = (() => {
     let label = '', col = '#e9d8b8';
     if (!cup.layers.length) label = Shift.cups.length > 1 && sel ? t('selected') : '';
     else if (!Shift.cupReady(cup)) label = t('brewing');
-    else if (rec && S.recipes.includes(rec.id)) { label = T(rec.name) + ' ✓'; col = '#9fe6b0'; }
+    else if (rec && (S.recipes.includes(rec.id) || rec.seasonal)) { label = T(rec.name) + ' ✓'; col = '#9fe6b0'; }
     else label = t('custom');
     const c = mctx;
     c.fillStyle = col; c.textAlign = 'center'; c.textBaseline = 'alphabetic';

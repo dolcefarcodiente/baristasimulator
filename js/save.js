@@ -122,6 +122,7 @@ const Stats = {
 function availableIngredients() {
   const set = new Set();
   for (const id of S.recipes) for (const ing of RECIPE[id].ings) set.add(ing);
+  for (const ing of Events.extraIngs()) set.add(ing);
   return INGREDIENT_ORDER.filter((i) => set.has(i));
 }
 

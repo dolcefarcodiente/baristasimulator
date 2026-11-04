@@ -368,6 +368,7 @@ const UI = (() => {
         </div>
         ${r.bonus ? `<div class="bonus-line">${t('starBonus', coin(r.bonus))}</div>` : ''}
         ${r.branches ? `<div class="bonus-line">${t('branchesLine', coin(r.branches))}</div>` : ''}
+        ${(r.events || []).map((e) => `<div class="event-line">★ ${e}</div>`).join('')}
         ${stories ? `<h3 class="eyebrow">${t('newStories')}</h3>${stories}` : ''}
         <div id="offers" class="offers">${offersHtml()}</div>
         <button class="btn primary big" data-act="menu">${t('next')}</button>
@@ -450,6 +451,8 @@ const UI = (() => {
     tick();
     banner(t('opened', S.day));
     Sound.play('open');
+    const intro = Events.intro();
+    if (intro) setTimeout(() => toast(`${t('tonight')}: ${intro}`, 'long'), 1700);
   }
 
   function onAction(e) {

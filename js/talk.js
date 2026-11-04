@@ -43,6 +43,20 @@ const TALK = {
     g7: { en: ['Long day. Longer night. Please.', 'The office lights are still on across the street. Not mine anymore.'], ru: ['Длинный день. Ещё длиннее ночь. Пожалуйста.', 'В офисе напротив всё ещё горит свет. Уже не мой.'] },
     g8: { en: ['Good evening! The window lights looked so warm from outside.', 'Waiting for my sister. She is always late.'], ru: ['Добрый вечер! Окна снаружи светятся так тепло.', 'Жду сестру. Она вечно опаздывает.'] },
   },
+  special: {
+    critic: {
+      en: ['Bellini. I write about coffee. Impress me.', 'I have tasted espresso in Naples. Let us see.'],
+      ru: ['Беллини. Пишу о кофе. Удивите меня.', 'Я пил эспрессо в Неаполе. Посмотрим.'],
+    },
+    tourists: {
+      en: ['Three of us! Our guidebook says you are the best on this street!', 'We got lost in the rain and found you!'],
+      ru: ['Нас трое! В путеводителе сказано, что вы лучшие на улице!', 'Мы заблудились под дождём — и нашли вас!'],
+    },
+    owl: {
+      en: ['Sorry, I know you are closing. Two to go, please?', 'Last train is in twenty minutes. Two coffees, please.'],
+      ru: ['Простите, знаю, вы закрываетесь. Два с собой?', 'Последний поезд через двадцать минут. Два кофе, пожалуйста.'],
+    },
+  },
   night: {
     en: ['Just in time. The rain picked up.', 'You open this late? Bless you.', 'One coffee and I can face the night.', "It's the only warm window on the block.", 'Mind if I drip on your floor a little?', 'The city sounds so quiet in the rain.'],
     ru: ['Как раз вовремя — дождь усилился.', 'Вы работаете так поздно? Спасибо вам.', 'Одна чашка — и я готов к ночи.', 'Единственное тёплое окно на всей улице.', 'Можно я немного накапаю на пол?', 'Как тихо звучит город под дождём.'],
@@ -95,19 +109,20 @@ const Talk = (() => {
     cur.hold += dt;
     if (cur.hold > 2.4 + cur.text.length * 0.025 || (queue.length && cur.hold > 0.9)) next();
   }
-  function nameOf(cu) { return cu.reg ? T(REGULAR[cu.reg].name) : t('guestName'); }
+  function nameOf(cu) { return cu.reg ? T(REGULAR[cu.reg].name) : cu.kind ? T(SPECIAL[cu.kind].name) : t('guestName'); }
 
   return {
     update,
     // гость подошёл к стойке
     greet(cu) {
       let pool;
+      if (cu.kind) { push(nameOf(cu), pick(lines(TALK.special[cu.kind])), true); return; }
       if (cu.reg) pool = lines(TALK.greet[cu.reg]);
       else if (Math.random() < 0.5 && TALK.sprite[cu.look && cu.look.sprite]) pool = lines(TALK.sprite[cu.look.sprite]);
       else pool = lines(TALK.night);
       if (cu.reg || Math.random() < 0.6) push(nameOf(cu), pick(pool), !!cu.reg);
     },
-    thanks(cu) { if (cu.reg || Math.random() < 0.35) push(nameOf(cu), pick(lines(TALK.thanks)), !!cu.reg); },
+    thanks(cu) { if (cu.kind === 'critic') return; if (cu.reg || cu.kind || Math.random() < 0.35) push(nameOf(cu), pick(lines(TALK.thanks)), !!cu.reg); },
     upset(cu) { push(nameOf(cu), pick(lines(TALK.upset)), !!cu.reg); },
     clear() { queue = []; cur = null; el.classList.add('hidden'); },
   };

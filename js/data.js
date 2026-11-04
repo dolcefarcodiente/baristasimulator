@@ -79,6 +79,8 @@ function sameSet(a, b) {
   return x.every((v, i) => v === y[i]);
 }
 function recipeFor(items) {
+  const season = typeof Events !== 'undefined' && Events.drinkId();
+  if (season && sameSet(RECIPE[season].ings, items)) return RECIPE[season];
   return RECIPES.find((r) => sameSet(r.ings, items)) || null;
 }
 

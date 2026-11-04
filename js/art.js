@@ -107,7 +107,8 @@ const Art = (() => {
     g.fillText(LANG === 'en' ? 'MENU' : 'МЕНЮ', b.x + b.w / 2, b.y + pad);
     const u = Math.max(1, Math.round(LP));
     for (let x = b.x + b.w * 0.28; x < b.x + b.w * 0.72; x += u * 3) g.fillRect(snap(x, u), b.y + pad + fs * 1.2, u * 2, u);
-    const rec = S.recipes.slice(-5).reverse();
+    const season = Events.drinkId();
+    const rec = [season, ...S.recipes.slice(-5).reverse()].filter(Boolean).slice(0, 5);
     const fsz = Math.round(clamp(fs * 0.62, 9, 14));
     const lineH = fsz * 1.55;
     const tall = b.h > b.w * 1.3; // высокая доска: цена под названием
@@ -120,7 +121,7 @@ const Art = (() => {
       let nsz = fsz;
       const room = tall ? b.w - pad * 2 : b.w - pad * 2 - fsz * 2.2;
       while (nsz > 8 && (g.font = `500 ${nsz}px ${FONT}`, g.measureText(name).width > room)) nsz -= 1;
-      g.fillStyle = chalk; g.textAlign = 'left'; g.fillText(name, b.x + pad, y);
+      g.fillStyle = id === season ? '#ffb070' : chalk; g.textAlign = 'left'; g.fillText((id === season ? '★ ' : '') + name, b.x + pad, y);
       g.font = `700 ${fsz}px ${FONT}`; g.fillStyle = '#f2c46a'; g.textAlign = 'right';
       g.fillText('$' + price, b.x + b.w - pad, tall ? y + lineH * 0.85 : y);
     });
@@ -351,7 +352,8 @@ const Art = (() => {
     const rows = cu.orders.length;
     const bh = pad + rows * rowH + 8 + pad - 2;
     const bx = clamp(cu.dx - bw / 2, 4, W - bw - 4);
-    const by = cu.hy - r * 1.35 - 12 - bh;
+    // высокое облачко (туристы, два-три напитка) не должно уходить под панель со счётом
+    const by = Math.max(cu.hy - r * 1.35 - 12 - bh, safeTop + 52 + (cu.reg || cu.kind ? nameS + 10 : 0));
     // появляется ступенчато: 3 кадра вместо плавного масштаба
     const k = Math.min(1, cu.bubbleT * 5);
     if (k < 0.34) return;
@@ -403,19 +405,17 @@ const Art = (() => {
       c.fillRect(snap(bx + 9 + i * segW, u), barY, Math.max(u, snap(segW - u * 2, u)), u * 3);
     }
     // имя постоянного гостя — табличка сверху
-    if (cu.reg) {
-      const reg = REGULAR[cu.reg];
-      const st = regState(cu.reg);
-      const label = `${T(reg.name)} ♥${st.hearts}`;
+    if (cu.reg || cu.kind) {
+      const label = cu.reg ? `${T(REGULAR[cu.reg].name)} ♥${regState(cu.reg).hearts}` : (cu.kind === 'critic' ? '★ ' : '') + T(SPECIAL[cu.kind].name);
       c.font = `700 ${nameS - 1}px ${FONT}`;
       const lw = Math.min(bw + 10, c.measureText(label).width + 16);
       const lx = clamp(cu.dx - lw / 2, 4, W - lw - 4), ly = by - nameS - 10;
-      pbox(c, lx, ly, lw, nameS + 8, u * 2, '#7a3a5a', INK);
+      pbox(c, lx, ly, lw, nameS + 8, u * 2, cu.kind === 'critic' ? '#8a6a1a' : cu.kind ? '#2f5a6a' : '#7a3a5a', INK);
       c.fillStyle = '#fbf1dc'; fitText(c, label, lw - 10, nameS - 1, 700);
       c.textBaseline = 'middle'; c.fillText(label, lx + lw / 2, ly + (nameS + 8) / 2 + 1);
     }
     c.restore();
-    cu.bub = { x0: bx, y0: by - (cu.reg ? nameS + 10 : 0), x1: bx + bw, y1: by + bh + 8 };
+    cu.bub = { x0: bx, y0: by - (cu.reg || cu.kind ? nameS + 10 : 0), x1: bx + bw, y1: by + bh + 8 };
   }
 
   // ---------- предметы на стойке и кот ----------
@@ -682,6 +682,6 @@ const Art = (() => {
 
   return {
     resize, invalidate, render, updateFx, setSafeTop(v) { safeTop = v; resize(); }, burst, floatText, flyCoin, addShake, drawPortrait,
-    slotX, personR, get W() { return W; }, get H() { return H; }, get counterTop() { return L.counterTop; },
+    slotX, personR, rainK, get W() { return W; }, get H() { return H; }, get counterTop() { return L.counterTop; },
   };
 })();
