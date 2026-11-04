@@ -142,6 +142,14 @@ svg { image-rendering: pixelated; }
   background: var(--plum); color: var(--cream); box-shadow: var(--frame);
 }
 #talk .who.guest { background: var(--night-3); }
+#talk .choices { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; pointer-events: auto; }
+#talk .choices:empty { display: none; }
+#talk .choice {
+  flex: 1 1 140px; border: none; cursor: pointer; font: 600 14px var(--font); padding: 7px 10px; margin: 3px;
+  background: var(--cream); color: var(--dark-text); box-shadow: var(--frame), var(--drop); text-align: left;
+}
+#talk .choice::before { content: "▸ "; color: var(--terra); }
+#talk .choice:active { transform: translateY(var(--p)); box-shadow: var(--frame); }
 #talk .caret { display: inline-block; width: 8px; height: 10px; margin-left: 4px; background: var(--gold); animation: blink .7s steps(1) infinite; vertical-align: -1px; }
 
 /* ---------- рабочая станция ---------- */

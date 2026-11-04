@@ -334,7 +334,7 @@ const Shift = {
     const reg = REGULAR[cu.reg];
     const st = regState(cu.reg);
     const before = st.hearts;
-    st.hearts = Math.min(MAX_HEARTS, before + (memory ? 2 : 1));
+    st.hearts = Math.min(MAX_HEARTS, before + (memory ? 2 : 1) + (cu.bonusHeart || 0));
     st.visits++;
     S.stats.regularServes++;
     if (memory) S.stats.memory++;

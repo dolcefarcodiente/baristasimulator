@@ -75,6 +75,67 @@ const TALK = {
   },
 };
 
+// Вопросы постоянных: два ответа, good — тот, что им по душе (+1 сердечко, когда получат кофе)
+const Q = (en, ru, a, r, good) => ({ q: { en, ru }, a, r, good });
+const ASK = {
+  tony: [
+    Q('My son wants to quit school and make coffee. What do I tell him?', 'Сын хочет бросить учёбу и варить кофе. Что ему сказать?',
+      [{ en: 'Let him try a summer at the bar', ru: 'Пусть попробует лето за стойкой' }, { en: 'School first, coffee later', ru: 'Сначала учёба, потом кофе' }],
+      [{ en: 'A summer, eh? Fine. But he starts with the dishes!', ru: 'Лето, говоришь? Ладно. Но начнёт с посуды!' }, { en: 'Hm. Sensible. Boring, but sensible.', ru: 'Хм. Разумно. Скучно, но разумно.' }], 0),
+    Q('Pineapple on pizza. Yes or no?', 'Ананас на пицце. Да или нет?',
+      [{ en: 'Never. Not in this house', ru: 'Никогда. Не в этом доме' }, { en: "Why not, if it's tasty?", ru: 'А почему нет, если вкусно?' }],
+      [{ en: 'Ha! Finally, someone with taste.', ru: 'Ха! Наконец-то человек со вкусом.' }, { en: "Tasty?! I'll pretend I didn't hear that.", ru: 'Вкусно?! Сделаю вид, что не слышал.' }], 0),
+  ],
+  rosa: [
+    Q('Cara, you work so late. Is there someone special?', 'Cara, ты так поздно работаешь. Есть кто-то особенный?',
+      [{ en: 'The café is my someone', ru: 'Моя любовь — кофейня' }, { en: 'Not yet, Nonna', ru: 'Пока нет, нонна' }],
+      [{ en: "Pfft. A café can't hug you. Rest sometimes.", ru: 'Пфф. Кофейня не обнимет. Отдыхай иногда.' }, { en: '«Yet» — good. I will ask again next week.', ru: '«Пока» — это хорошо. Спрошу через неделю.' }], 1),
+    Q('Giuseppe always said: the secret is patience. Agree?', 'Джузеппе говорил: весь секрет в терпении. Согласна?',
+      [{ en: 'Patience — and good beans', ru: 'В терпении — и в хорошем зерне' }, { en: "I'm always in a hurry", ru: 'Я вечно тороплюсь' }],
+      [{ en: "Ha! He'd have liked you.", ru: 'Ха! Ты бы ему понравилась.' }, { en: 'Then slow down, cara. The coffee will wait.', ru: 'Так притормози, cara. Кофе подождёт.' }], 0),
+  ],
+  gina: [
+    Q('Be honest — bangs or no bangs?', 'Только честно — чёлку или не надо?',
+      [{ en: 'Bangs. Be bold', ru: 'Чёлку. Смелее' }, { en: 'Keep it as it is', ru: 'Оставь как есть' }],
+      [{ en: 'Yes! Tomorrow I cut them.', ru: 'Да! Завтра стригу.' }, { en: 'Safe choice. You sound like my mother.', ru: 'Осторожно. Ты прямо как моя мама.' }], 0),
+    Q('Someone says your foam is too thick. Want to know who?', 'Кто-то говорит, что у тебя слишком густая пена. Сказать кто?',
+      [{ en: 'No, let them talk', ru: 'Нет, пусть болтают' }, { en: 'Who?!', ru: 'Кто?!' }],
+      [{ en: "Classy. That's why you're my favorite.", ru: 'Стильно. Поэтому ты мой любимчик.' }, { en: 'Ha, never. Gossip has rules.', ru: 'Ха, ни за что. У сплетен свои правила.' }], 0),
+  ],
+  sal: [
+    Q('Do you think we are alone in the universe?', 'Как думаешь, мы одни во Вселенной?',
+      [{ en: "Not tonight — you're here", ru: 'Не сегодня — вы же здесь' }, { en: 'Probably yes', ru: 'Наверное, да' }],
+      [{ en: '…That was surprisingly kind.', ru: '…Неожиданно тепло сказано.' }, { en: 'Statistically unlikely. But fine.', ru: 'Статистически маловероятно. Но ладно.' }], 0),
+    Q('My students fell asleep in my lecture. Was it me?', 'Студенты уснули на моей лекции. Это из-за меня?',
+      [{ en: 'It was the lack of coffee', ru: 'Это им кофе не хватило' }, { en: 'Maybe a little you', ru: 'Может, немножко из-за вас' }],
+      [{ en: "Yes. That's the official version now.", ru: 'Да. Это теперь официальная версия.' }, { en: 'Hm. Honesty. I respect it. Mostly.', ru: 'Хм. Честно. Уважаю. Почти.' }], 0),
+  ],
+  marco: [
+    Q('Rain or sun — which is better for riding?', 'Дождь или солнце — в чём лучше кататься?',
+      [{ en: 'Rain — you fly through puddles', ru: 'Дождь — летишь по лужам' }, { en: 'Sun, obviously', ru: 'Солнце, конечно' }],
+      [{ en: 'Exactly! Nobody gets it but you.', ru: 'Вот! Никто, кроме тебя, не понимает.' }, { en: 'Pff, sun is for tourists.', ru: 'Пфф, солнце — для туристов.' }], 0),
+    Q('Should I enter the Brooklyn race again?', 'Снова записаться на гонку в Бруклине?',
+      [{ en: 'Go for the win', ru: 'Иди за победой' }, { en: 'Take a break this year', ru: 'Отдохни в этом году' }],
+      [{ en: 'That is exactly what I needed to hear!', ru: 'Именно это мне и нужно было услышать!' }, { en: 'Maybe… my knees agree with you.', ru: 'Может быть… колени с тобой согласны.' }], 0),
+  ],
+  sofia: [
+    Q('My heroine must choose: stay in the city or leave. What would you do?', 'Героиня должна выбрать: остаться в городе или уехать. А ты бы как?',
+      [{ en: 'Stay — the city needs her', ru: 'Остаться — она нужна городу' }, { en: 'Leave, and come back changed', ru: 'Уехать и вернуться другой' }],
+      [{ en: 'Hm, safe… but true.', ru: 'Хм, надёжно… но правда.' }, { en: "Oh. That's the ending. Thank you!", ru: 'Ох. Это и есть финал. Спасибо!' }], 1),
+    Q('Do you ever read the stories in your customers?', 'Ты читаешь истории своих гостей?',
+      [{ en: 'Every face is a story', ru: 'Каждое лицо — история' }, { en: 'I just read the orders', ru: 'Я читаю только заказы' }],
+      [{ en: "I'm stealing that line.", ru: 'Эту фразу я украду.' }, { en: 'Ha! Fair enough, barista.', ru: 'Ха! Справедливо, бариста.' }], 0),
+  ],
+  leo: [
+    Q('Should a song end loud or quiet?', 'Песня должна заканчиваться громко или тихо?',
+      [{ en: 'Quiet, like the last cup', ru: 'Тихо, как последняя чашка' }, { en: 'Loud, with a big finish', ru: 'Громко, с большим финалом' }],
+      [{ en: "…Yeah. That's the one.", ru: '…Да. Вот оно.' }, { en: 'Loud, huh? Maybe for the festival.', ru: 'Громко, значит? Может, для фестиваля.' }], 0),
+    Q('Name my next tune. Go.', 'Придумай название моей новой мелодии. Ну?',
+      [{ en: '«Rain on Fifth»', ru: '«Дождь на Пятой»' }, { en: '«Song No. 7»', ru: '«Песня № 7»' }],
+      [{ en: "Oh, that's beautiful. It's yours now.", ru: 'Ох, как красиво. Теперь она твоя.' }, { en: 'Hm. Very… numbered.', ru: 'Хм. Очень… пронумеровано.' }], 0),
+  ],
+};
+
 const Talk = (() => {
   const el = document.getElementById('talk');
   const who = el.querySelector('.who');
@@ -82,14 +143,21 @@ const Talk = (() => {
   let cur = null, queue = [];
   const lines = (set) => set[LANG] || set.en;
 
+  const choices = document.createElement('div');
+  choices.className = 'choices';
+  el.appendChild(choices);
+  let asked = 0; // вопросов за смену
+
   function push(name, text, regular) {
     if (Shift.tutorial) return;
     // реплики не копятся: максимум одна в очереди, свежая вытесняет старую
     queue = [{ name, text, regular }];
     if (!cur) next();
+    else if (cur.ask) return; // вопрос не перебиваем
   }
-  function next() {
-    cur = queue.shift() || null;
+  function next(item) {
+    cur = item || queue.shift() || null;
+    choices.innerHTML = '';
     if (!cur) { el.classList.add('hidden'); return; }
     cur.shown = 0; cur.hold = 0;
     who.textContent = cur.name;
@@ -111,7 +179,47 @@ const Talk = (() => {
       return;
     }
     cur.hold += dt;
+    if (cur.ask) {
+      // вопрос ждёт ответа: кнопки появляются, когда текст допечатан; молчание — тоже ответ
+      if (!choices.firstChild) choices.innerHTML = cur.ask.qd.a.map((a, i) => `<button class="choice" data-choice="${i}">${L(a)}</button>`).join('');
+      if (cur.hold > 9 || cur.ask.cu.state === 'leave') answer(-1);
+      return;
+    }
     if (cur.hold > 2.4 + cur.text.length * 0.025 || (queue.length && cur.hold > 0.9)) next();
+  }
+  const L = (o) => o[LANG] || o.en;
+
+  function answer(i) {
+    if (!cur || !cur.ask) return;
+    const { cu, qd, idx } = cur.ask;
+    const st = regState(cu.reg);
+    if (i >= 0) st.asked = [...(st.asked || []), idx]; // без ответа вопрос прозвучит в другой раз
+    const name = cur.name;
+    if (i === qd.good) {
+      cu.bonusHeart = 1; cu.joyT = 1.2;
+      Art.burst(cu.dx, cu.hy - cu.r, 'heart', 3);
+      Sound.play('story');
+    } else Sound.play('tap');
+    next(i >= 0 ? { name, text: L(qd.r[i]), regular: true } : null);
+  }
+  choices.addEventListener('pointerdown', (e) => {
+    const b = e.target.closest('[data-choice]');
+    if (!b) return;
+    e.preventDefault(); e.stopPropagation();
+    answer(+b.dataset.choice);
+  });
+
+  // Постоянный гость, с которым уже знакомы, иногда спрашивает что-то — до двух вопросов за смену
+  function tryAsk(cu) {
+    if (!cu.reg || !ASK[cu.reg] || S.day < 3 || asked >= 2 || regState(cu.reg).visits === 0 || Math.random() > 0.5) return false;
+    if (cur && cur.ask) return false;
+    const done = regState(cu.reg).asked || [];
+    const idx = ASK[cu.reg].findIndex((_, k) => !done.includes(k));
+    if (idx < 0) return false;
+    asked++;
+    queue = [];
+    next({ name: nameOf(cu), text: L(ASK[cu.reg][idx].q), regular: true, ask: { cu, qd: ASK[cu.reg][idx], idx } });
+    return true;
   }
   function nameOf(cu) { return cu.reg ? T(REGULAR[cu.reg].name) : cu.kind ? T(SPECIAL[cu.kind].name) : t('guestName'); }
 
@@ -121,6 +229,7 @@ const Talk = (() => {
     greet(cu) {
       let pool;
       if (cu.kind) { push(nameOf(cu), pick(lines(TALK.special[cu.kind])), true); return; }
+      if (tryAsk(cu)) return;
       if (cu.reg) pool = lines(TALK.greet[cu.reg]);
       else if (Math.random() < 0.5 && TALK.sprite[cu.look && cu.look.sprite]) pool = lines(TALK.sprite[cu.look.sprite]);
       else pool = lines(TALK.night);
@@ -129,6 +238,6 @@ const Talk = (() => {
     thanks(cu) { if (cu.kind === 'critic') return; if (cu.reg || cu.kind || Math.random() < 0.35) push(nameOf(cu), pick(lines(TALK.thanks)), !!cu.reg); },
     upset(cu) { push(nameOf(cu), pick(lines(TALK.upset)), !!cu.reg); },
     nico(drink) { push(t('nicoName'), pick((TALK.nico[LANG] || TALK.nico.en)(drink)), true); },
-    clear() { queue = []; cur = null; el.classList.add('hidden'); },
+    clear() { queue = []; cur = null; asked = 0; choices.innerHTML = ''; el.classList.add('hidden'); },
   };
 })();
