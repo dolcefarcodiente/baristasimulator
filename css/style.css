@@ -336,6 +336,9 @@ svg { image-rendering: pixelated; }
 .pips i { width: 14px; height: 6px; background: var(--night-3); }
 .pips i.on { background: var(--terra); }
 .buy { flex: none; min-width: 82px; font-size: 15px; padding: 8px 10px; }
+.mastery { flex: none; display: flex; flex-direction: column; align-items: center; min-width: 70px; }
+.mastery b { color: var(--gold); font-size: 16px; letter-spacing: 1px; }
+.mastery small { color: var(--muted); font-size: 12px; }
 .maxed { flex: none; font-weight: 700; color: var(--sage); font-size: 13px; padding: 0 6px; }
 
 /* гости */

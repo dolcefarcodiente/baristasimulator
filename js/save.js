@@ -123,6 +123,12 @@ const Stats = {
   helperRate: () => upValue('helper'),
 };
 
+// Мастерство: за 10, 50 и 100 поданных чашек напитка — звезда, каждая +5% к его цене
+const MASTERY = [10, 50, 100];
+const masteryOf = (id) => MASTERY.filter((m) => (S.stats.drinks[id] || 0) >= m).length;
+const drinkPrice = (id) => RECIPE[id].price * Stats.priceMult() * (1 + 0.05 * masteryOf(id));
+const starsText = (n) => '★'.repeat(n) + '☆'.repeat(MASTERY.length - n);
+
 // Ингредиенты, которые нужны открытым рецептам
 function availableIngredients() {
   const set = new Set();

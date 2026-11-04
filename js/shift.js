@@ -257,7 +257,8 @@ const Shift = {
     this.maxCombo = Math.max(this.maxCombo, this.combo);
     S.stats.bestCombo = Math.max(S.stats.bestCombo, this.combo);
     const memory = cu.hidden && !cu.revealed;
-    const price = rec.price * Stats.priceMult();
+    const price = drinkPrice(rid);
+    const mBefore = masteryOf(rid);
     const f = clamp(cu.pat / cu.patMax, 0, 1);
     const tip = price * (0.15 + 0.45 * f) * Stats.tipMult() * ({ perfect: 1.6, great: 1.25, good: 1 }[q]);
     const cm = comboMult(this.combo);
@@ -265,6 +266,7 @@ const Shift = {
     this.earned += pay;
     S.coins += pay;
     S.stats.drinks[rid] = (S.stats.drinks[rid] || 0) + 1;
+    if (masteryOf(rid) > mBefore) setTimeout(() => { UI.toast(t('masteryUp', T(rec.name), starsText(masteryOf(rid))), 'gold'); Sound.play('story'); }, 600);
     if (q === 'perfect') { this.perfects++; S.stats.perfect = (S.stats.perfect || 0) + 1; }
 
     const x = cu.dx, y = cu.hy;

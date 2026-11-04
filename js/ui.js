@@ -238,7 +238,7 @@ const UI = (() => {
     for (const d of DECOR) if (!hasDecor(d.id) && S.coins >= d.cost) list.push({ cost: d.cost, html: decorCard(d, 'summary') });
     for (const r of RECIPES) if (!S.recipes.includes(r.id) && S.coins >= r.cost) list.push({ cost: r.cost, html: `<div class="card can">
       <div class="card-ico recipe-ico">${r.ings.map((i) => iconSvg(i)).join('')}</div>
-      <div class="card-body"><b>${T(r.name)}</b><small>${t('price', coin(Math.round(r.price * Stats.priceMult())))}</small></div>
+      <div class="card-body"><b>${T(r.name)}</b><small>${t('price', coin(Math.round(drinkPrice(r.id))))}</small></div>
       <button class="btn buy green" data-act="buy-rec" data-id="${r.id}" data-from="summary">${coin(r.cost)}</button></div>` });
     for (const u of UPGRADES) if (!upMaxed(u.id) && S.coins >= upCost(u.id)) list.push({ cost: upCost(u.id), html: `<div class="card can">
       <div class="card-ico">${iconSvg(u.icon)}</div>
@@ -276,11 +276,13 @@ const UI = (() => {
         const owned = S.recipes.includes(r.id);
         const afford = !owned && S.coins >= r.cost;
         const fan = REGULARS.find((g) => g.fav === r.id);
-        return `<div class="card${afford ? ' can' : ''}${owned ? ' owned' : ''}">
+        // открытый напиток — звёзды мастерства и сколько чашек до следующей
+        const m = masteryOf(r.id), n = S.stats.drinks[r.id] || 0;
+        return `<div class="card${afford ? ' can' : ''}">
           <div class="card-ico recipe-ico">${r.ings.map((i) => iconSvg(i)).join('')}</div>
           <div class="card-body"><b>${T(r.name)}</b>
-            <small>${r.ings.map((i) => T(INGREDIENTS[i].name).toLowerCase()).join(' + ')}<br>${t('price', coin(Math.round(r.price * Stats.priceMult())))}${fan ? ` · ${t('loves', T(fan.name))}` : ''}</small></div>
-          ${owned ? `<span class="maxed">${t('onMenu')}</span>` : `<button class="btn buy${afford ? ' green' : ''}" data-act="buy-rec" data-id="${r.id}" ${afford ? '' : 'disabled'}>${coin(r.cost)}</button>`}
+            <small>${r.ings.map((i) => T(INGREDIENTS[i].name).toLowerCase()).join(' + ')}<br>${t('price', coin(Math.round(drinkPrice(r.id))))}${fan ? ` · ${t('loves', T(fan.name))}` : ''}</small></div>
+          ${owned ? `<span class="mastery"><b>${starsText(m)}</b><small>${m < MASTERY.length ? `${n}/${MASTERY[m]}` : t('master')}</small></span>` : `<button class="btn buy${afford ? ' green' : ''}" data-act="buy-rec" data-id="${r.id}" ${afford ? '' : 'disabled'}>${coin(r.cost)}</button>`}
         </div>`;
       }).join('');
     }
@@ -291,6 +293,7 @@ const UI = (() => {
         <button class="tab ${shopTab === 'decor' ? 'on' : ''}" data-act="tab" data-tab="decor">${t('decorTab')}</button>
         <button class="tab ${shopTab === 'biz' ? 'on' : ''}" data-act="tab" data-tab="biz">${t('growth')}</button>
       </div>
+      ${shopTab === 'rec' ? `<p class="loc-note">${t('masteryHint')}</p>` : ''}
       <div class="cards">${cards}</div>`, 'sheet tall', !keepScroll);
     if (keepScroll) el.panel.scrollTop = scroll;
   }

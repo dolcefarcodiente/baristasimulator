@@ -119,7 +119,7 @@ const Art = (() => {
       const step = tall ? lineH * 2 : lineH;
       const y = b.y + pad + fs * 1.8 + i * step;
       if (y + step > b.y + b.h - pad * 0.5) return;
-      const price = String(Math.round(RECIPE[id].price * Stats.priceMult()));
+      const price = String(Math.round(drinkPrice(id)));
       const name = T(RECIPE[id].name);
       let nsz = fsz;
       const room = tall ? b.w - pad * 2 : b.w - pad * 2 - fsz * 2.2;
