@@ -11,7 +11,8 @@ const Bar = (() => {
   let W = 0, H = 0, DPR = 1, PX = 2, time = 0;
   const FONT = '"Pixelify Sans", ui-monospace, monospace';
   const born = new WeakMap(); // слой → момент добавления (рост слоя для мгновенных ингредиентов)
-  let pulses = [];            // короткие анимации: чайник, помпа, лёд, сливки, джелато, корица
+  let pulses = [];
+  let perfects = [];          // всплывающее «Идеально!» над чашкой            // короткие анимации: чайник, помпа, лёд, сливки, джелато, корица
   const INK = '#3b2a22';
   const STEEL = '#cfd8dd', STEEL_D = '#8f9ca3';
   const hover = window.matchMedia && window.matchMedia('(hover: hover)').matches;
@@ -129,7 +130,8 @@ const Bar = (() => {
     });
     // латте-арт: молоко, налитое поверх эспрессо
     const top = tops[tops.length - 1];
-    if (top && top.ready && top.ing === INGREDIENTS.milk && tops.length > 1 && INGREDIENTS[cup.layers[cup.layers.length - 2].ing].machine === 'espresso') {
+    // латте-арт рисуется, только если молоко налито идеально
+    if (top && top.ready && top.ing === INGREDIENTS.milk && cup.layers[cup.layers.length - 1].perfect && tops.length > 1 && INGREDIENTS[cup.layers[cup.layers.length - 2].ing].machine === 'espresso') {
       latteArt(cx + cw / 2, top.y + 1, cw * 0.22);
     }
     // тень внутри чашки
@@ -147,7 +149,7 @@ const Bar = (() => {
     const rec = recipeFor(Shift.cupItems(cup));
     let label = '', col = '#e9d8b8';
     if (!cup.layers.length) label = Shift.cups.length > 1 && sel ? t('selected') : '';
-    else if (!Shift.cupReady(cup)) label = t('brewing');
+    else if (!Shift.cupReady(cup)) { drawTimer(s, cup); return; }
     else if (rec && (S.recipes.includes(rec.id) || rec.seasonal)) { label = T(rec.name) + ' ✓'; col = '#9fe6b0'; }
     else label = t('custom');
     const c = mctx;
@@ -161,6 +163,27 @@ const Bar = (() => {
       c.fillText(CUP_KEYS[i] || '', s.x0 + s.sw - 6, 12);
     }
   }
+  // Пока машина работает — полоска с золотой зоной в конце. В зоне она мигает: пора тапнуть чашку.
+  function drawTimer(s, cup) {
+    const jobs = cup.layers.filter((l) => l.job).map((l) => l.job);
+    if (!jobs.length) return;
+    const j = jobs.reduce((a, b) => (a.t / a.dur > b.t / b.dur ? a : b));
+    const c = mctx, w = Math.min(90, s.sw * 0.7), x = Math.round(s.x0 + (s.sw - w) / 2), y = H - 11, h = 6;
+    const k = clamp(j.t / j.dur, 0, 1), gz = perfectWindow(j) / j.dur;
+    const done = cup.layers.some((l) => l.job && l.perfect);
+    const hot = inPerfectWindow(j) && !done;
+    c.fillStyle = '#1e1420'; c.fillRect(x - 2, y - 2, w + 4, h + 4);
+    c.fillStyle = '#4a3a30'; c.fillRect(x, y, w, h);
+    c.fillStyle = 'rgba(242,196,106,.45)'; c.fillRect(x + w * (1 - gz), y, w * gz, h);
+    c.fillStyle = done ? '#ffd76a' : hot ? (Math.sin(time * 30) > 0 ? '#ffd76a' : '#fff3c4') : '#e9d8b8';
+    c.fillRect(x, y, Math.round(w * k), h);
+    if (hot) {
+      c.fillStyle = '#ffd76a'; c.font = `700 12px ${FONT}`; c.textAlign = 'center'; c.textBaseline = 'alphabetic';
+      c.fillText(t('tapNow'), s.x0 + s.sw / 2, 14);
+    }
+  }
+  function perfect(i) { perfects.push({ cup: i, t: 0 }); }
+
   // Выбранная чашка: пиксельные уголки вокруг ячейки
   function drawSelection(s) {
     const c = mctx, u = 3, l = 10, x0 = s.x0 + 3, y0 = 3, x1 = s.x0 + s.sw - 3, y1 = H - 3;
@@ -428,9 +451,21 @@ const Bar = (() => {
     mctx.setTransform(DPR, 0, 0, DPR, 0, 0);
     if (n > 1) drawSelection(slot(Shift.sel));
     for (let i = 0; i < n; i++) drawLabel(i, i === Shift.sel);
+    // «Идеально!» поднимается над чашкой
+    for (let i = perfects.length - 1; i >= 0; i--) {
+      const p = perfects[i];
+      p.t += dt;
+      if (p.t > 1 || p.cup >= n) { perfects.splice(i, 1); continue; }
+      const s = slot(p.cup);
+      mctx.globalAlpha = 1 - p.t;
+      mctx.font = `700 15px ${FONT}`; mctx.textAlign = 'center'; mctx.textBaseline = 'middle';
+      mctx.lineWidth = 4; mctx.strokeStyle = '#1e1420'; mctx.strokeText(t('perfect'), s.x0 + s.sw / 2, 26 - p.t * 14);
+      mctx.fillStyle = '#ffd76a'; mctx.fillText(t('perfect'), s.x0 + s.sw / 2, 26 - p.t * 14);
+      mctx.globalAlpha = 1;
+    }
   }
 
-  function reset() { pulses = []; }
+  function reset() { pulses = []; perfects = []; }
 
-  return { init, resize, render, touch, reset };
+  return { init, resize, render, touch, reset, perfect };
 })();

@@ -368,6 +368,7 @@ const UI = (() => {
         </div>
         ${r.bonus ? `<div class="bonus-line">${t('starBonus', coin(r.bonus))}</div>` : ''}
         ${r.branches ? `<div class="bonus-line">${t('branchesLine', coin(r.branches))}</div>` : ''}
+        ${r.perfects ? `<div class="event-line">${t('perfectLine', r.perfects)}</div>` : ''}
         ${(r.events || []).map((e) => `<div class="event-line">★ ${e}</div>`).join('')}
         ${stories ? `<h3 class="eyebrow">${t('newStories')}</h3>${stories}` : ''}
         <div id="offers" class="offers">${offersHtml()}</div>

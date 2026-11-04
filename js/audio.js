@@ -90,6 +90,7 @@ const Sound = (() => {
     meow() { tone(700, 0.35, { type: 'triangle', vol: 0.09, slide: 1050, lp: 2500 }); tone(1000, 0.25, { type: 'triangle', vol: 0.07, slide: 600, when: 0.25, lp: 2500 }); },
     story() { [0, 7, 12].forEach((n, i) => tone(midi(79 + n), 0.6, { vol: 0.08, when: i * 0.12 })); },
     open() { [0, 4, 7].forEach((n, i) => tone(midi(72 + n), 0.5, { type: 'triangle', vol: 0.09, when: i * 0.09 })); sfx.door(); },
+    perfect() { [0, 7, 12, 19].forEach((n, i) => tone(midi(76 + n), 0.18, { type: 'triangle', vol: 0.09, when: i * 0.04 })); },
     // «голос» печатающегося текста в диалоге — тихий короткий щелчок
     blip() { tone(midi(rand(72, 76) | 0), 0.04, { type: 'square', vol: 0.025, lp: 2200 }); },
     // далёкий раскат грома: низкий шум, медленно гаснущий

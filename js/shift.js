@@ -1,5 +1,9 @@
 // Логика смены: гости, заказы, оборудование, чашки, оплата и комбо.
 
+// «Золотое окно» в конце работы машины: тапни чашку в этот момент — слой выйдет идеальным
+const perfectWindow = (j) => Math.max(0.5, j.dur * 0.22);
+const inPerfectWindow = (j) => j.t >= j.dur - perfectWindow(j);
+
 const Shift = {
   active: false,
   paused: false,
@@ -22,7 +26,7 @@ const Shift = {
     Object.assign(this, {
       active: true, paused: false, t: 0, len: Stats.shiftLen(), closing: false, endT: 0,
       customers: [], sel: 0, jobs: { espresso: [], frother: [], filter: [] },
-      combo: 0, maxCombo: 0, earned: 0, served: 0, missed: 0, wrongs: 0, stories: [],
+      combo: 0, maxCombo: 0, earned: 0, served: 0, missed: 0, wrongs: 0, stories: [], perfects: 0,
       nextSpawn: 1.2, cat: null, pointer: null,
     });
     this.cups = Array.from({ length: Stats.cups() }, () => ({ layers: [] }));
@@ -136,6 +140,14 @@ const Shift = {
 
   selectCup(i) {
     if (!this.active || i < 0 || i >= this.cups.length) return;
+    // попал в золотое окно — шот/молоко/фильтр получаются идеальными
+    const hits = this.cups[i].layers.filter((l) => l.job && !l.perfect && inPerfectWindow(l.job));
+    if (hits.length && !this.paused) {
+      hits.forEach((l) => { l.perfect = true; });
+      Bar.perfect(i);
+      Sound.play('perfect');
+      vibrate(12);
+    }
     this.sel = i;
     Sound.play('tap');
     UI.renderCups();
@@ -217,6 +229,11 @@ const Shift = {
     const rid = cu.orders[oi];
     const rec = RECIPE[rid];
     cu.orders.splice(oi, 1);
+    // качество: сколько слоёв из-под машин вышли идеальными
+    const mach = this.cups[ci].layers.filter((l) => INGREDIENTS[l.ing].machine);
+    const perf = mach.filter((l) => l.perfect).length;
+    const q = mach.length && perf === mach.length ? 'perfect' : perf > 0 ? 'great' : 'good';
+    if (!cu.q || q === 'good' || (q === 'great' && cu.q === 'perfect')) cu.q = q; // худшее из заказа
     this.cups[ci].layers = [];
     UI.renderCup(ci);
     this.combo++;
@@ -225,17 +242,19 @@ const Shift = {
     const memory = cu.hidden && !cu.revealed;
     const price = rec.price * Stats.priceMult();
     const f = clamp(cu.pat / cu.patMax, 0, 1);
-    const tip = price * (0.15 + 0.45 * f) * Stats.tipMult();
+    const tip = price * (0.15 + 0.45 * f) * Stats.tipMult() * ({ perfect: 1.6, great: 1.25, good: 1 }[q]);
     const cm = comboMult(this.combo);
     const pay = Math.round((price + tip * cm * (memory ? 2 : 1)) * cu.payMult);
     this.earned += pay;
     S.coins += pay;
     S.stats.drinks[rid] = (S.stats.drinks[rid] || 0) + 1;
+    if (q === 'perfect') { this.perfects++; S.stats.perfect = (S.stats.perfect || 0) + 1; }
 
     const x = cu.dx, y = cu.hy;
     Art.floatText(x, y - cu.r * 2.2, '+' + pay, '#f2c46a', 22);
     if (memory) Art.floatText(x, y - cu.r * 3.4, t('remembered'), '#e07a5f', 15);
     else if (f > 0.75) Art.floatText(x, y - cu.r * 3.4, t('speedy'), '#7fc28a', 14);
+    if (q !== 'good') Art.floatText(x, y - cu.r * 4.5, t(q), q === 'perfect' ? '#ffd76a' : '#9fd3ff', q === 'perfect' ? 20 : 16);
     const tgt = UI.coinTarget();
     const n = Math.min(6, 1 + Math.floor(pay / 8));
     for (let i = 0; i < n; i++) {
@@ -283,8 +302,12 @@ const Shift = {
   specialDone(cu, ok) {
     if (!cu.kind) return;
     if (cu.kind === 'critic') {
-      if (ok) S.buzz = 1;
-      setTimeout(() => UI.toast(t(ok ? 'criticGood' : 'criticBad'), ok ? 'gold' : ''), 900);
+      // критику мало просто кофе: нужен хотя бы один идеальный слой
+      const verdict = !ok ? 'Bad' : cu.q === 'good' ? 'Meh' : 'Good';
+      if (verdict === 'Good') S.buzz = 1;
+      setTimeout(() => UI.toast(t('critic' + verdict), verdict === 'Good' ? 'gold' : ''), 900);
+      Events.log(t(verdict === 'Meh' ? 'ev_critic_meh' : `ev_critic_${ok ? 'ok' : 'fail'}`));
+      return;
     }
     Events.log(t(`ev_${cu.kind}_${ok ? 'ok' : 'fail'}`));
   },
@@ -375,6 +398,7 @@ const Shift = {
       for (let i = jobs.length - 1; i >= 0; i--) {
         const j = jobs[i];
         j.t += dt;
+        if (!S.tips.perfect && !this.tutorial && inPerfectWindow(j)) { S.tips.perfect = true; UI.toast(t('perfectTip'), 'long'); }
         if (j.t < j.dur) continue;
         jobs.splice(i, 1);
         const layer = this.cups[j.cup].layers.find((l) => l.job === j);
@@ -497,7 +521,7 @@ const Shift = {
       branches,
       day: S.day, earned: this.earned, target, stars, bonus, record,
       served: this.served, maxCombo: this.maxCombo, missed: this.missed, stories: this.stories.slice(),
-      events: Events.night ? Events.night.log.slice() : [],
+      events: Events.night ? Events.night.log.slice() : [], perfects: this.perfects,
     };
     S.day++;
     Events.clear();

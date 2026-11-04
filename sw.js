@@ -1,5 +1,5 @@
 // Service worker: кладёт игру в кэш, чтобы она работала без интернета.
-const CACHE = 'salem-v15';
+const CACHE = 'salem-v16';
 const FILES = [
   './', 'index.html', 'css/style.css', 'manifest.webmanifest',
   'js/i18n.js', 'js/sprites.js', 'js/data.js', 'js/icons.js', 'js/save.js', 'js/audio.js', 'js/progress.js', 'js/art.js', 'js/events.js', 'js/talk.js', 'js/shift.js', 'js/bar.js', 'js/ui.js', 'js/main.js',
