@@ -28,6 +28,7 @@ function defaultSave() {
     lastSeen: Date.now(),
     settings: { music: true, sfx: true, lang: 'en', langChosen: false },
     tips: {},
+    story: { done: [], flags: {}, aff: {}, tutDone: false }, // режим «История»: пройденные главы, выборы, симпатии
   };
 }
 

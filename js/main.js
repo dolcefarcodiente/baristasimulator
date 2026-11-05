@@ -50,15 +50,15 @@
     last = now;
     Shift.update(dt);
     Art.updateFx(dt);
-    const inShift = Shift.active, inBrew = Brew.active;
-    if (inBrew) Brew.update(dt);
+    const inShift = Shift.active, inStory = Story.active;
+    if (inStory) Story.update(dt);
     Art.render({
-      sky: inShift ? Shift.t / Shift.len : inBrew ? Brew.sky() : menuSky(),
-      customers: inShift ? Shift.customers : inBrew ? Brew.customers : [],
-      cap: inBrew ? 1 : Stats.capacity(),
+      sky: inShift ? Shift.t / Shift.len : inStory ? 0.97 : menuSky(),
+      customers: inShift ? Shift.customers : inStory ? Story.customers : [],
+      cap: inStory ? 1 : Stats.capacity(),
       cat: inShift ? Shift.cat : null,
       pointer: inShift ? Shift.pointer : null,
-      shift: inShift || inBrew,
+      shift: inShift || inStory,
       busy: inShift ? { espresso: Shift.jobs.espresso.length, frother: Shift.jobs.frother.length } : {},
     });
     if (inShift) Bar.render(dt);

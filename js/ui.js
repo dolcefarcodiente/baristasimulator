@@ -24,8 +24,8 @@ const UI = (() => {
     el.panel.addEventListener('click', onAction);
     el.card.addEventListener('click', onAction);
     Bar.init();
-    Brew.init();
-    $('#qhud').addEventListener('click', onAction);
+    Story.init();
+    $('#shud').addEventListener('click', onAction);
     el.ings.addEventListener('pointerdown', (e) => {
       const b = e.target.closest('[data-ing]');
       if (b) { e.preventDefault(); Shift.addIngredient(b.dataset.ing); }
@@ -39,12 +39,13 @@ const UI = (() => {
 
   function setMode(mode) {
     el.app.classList.toggle('in-shift', mode === 'shift');
-    el.app.classList.toggle('in-brew', mode === 'brew');
+    el.app.classList.toggle('in-story', mode.startsWith('story'));
+    el.app.classList.toggle('in-sbrew', mode === 'story-brew');
     el.hud.classList.toggle('hidden', mode !== 'shift');
     el.station.classList.toggle('hidden', mode !== 'shift');
-    $('#brew').classList.toggle('hidden', mode !== 'brew');
-    $('#qhud').classList.toggle('hidden', mode !== 'brew');
-    if (mode !== 'brew') $('#qtalk').classList.add('hidden');
+    $('#sbrew').classList.toggle('hidden', mode !== 'story-brew');
+    $('#sdock').classList.toggle('hidden', mode !== 'story');
+    $('#shud').classList.toggle('hidden', !mode.startsWith('story'));
     if (mode === 'shift') Bar.resize();
   }
 
@@ -191,7 +192,7 @@ const UI = (() => {
         </div>
         ${locPicker()}
         <button class="btn primary big" data-act="start">${t('open')}</button>
-        <button class="btn big quiet" data-act="quiet"><span>☾ ${t('quietBtn')}</span><small>${t('quietSub')}</small></button>
+        ${storyButton()}
         <p class="note">${t('goal', coin(dayTarget(S.day)))}</p>
         ${goalHtml}
         <div class="tiles">
@@ -489,54 +490,37 @@ const UI = (() => {
       <button class="btn small ghost" data-act="quit">${t('endShift')}</button>`);
   }
 
-  // ---------- тихая ночь ----------
-  function startQuiet() {
+  // ---------- история ----------
+  function storyButton() {
+    const id = Story.nextId(), ch = id && STORY_CH[id];
+    const sub = ch ? t('storyNew', T(ch.num), T(ch.title)) : t('storyDone');
+    return `<button class="btn big story-btn" data-act="story"><span>☾ ${t('storyBtn')}</span><small>${sub}</small></button>`;
+  }
+  function startStory(id) {
     Sound.init();
     closePanel();
-    setMode('brew');
-    Brew.start();
-    updateBrewHud();
-    $('#q-book').textContent = t('qRecipes');
-    $('#q-end').textContent = t('qEnd');
-    banner(t('quietBanner'));
-    Sound.play('open');
-    if (!S.tips.quiet) { S.tips.quiet = true; setTimeout(() => toast(t('quietTip'), 'long'), 1800); }
+    closeModal();
+    setMode('story');
+    $('#shud-title').textContent = `${T(STORY_CH[id].num)} · ${T(STORY_CH[id].title)}`;
+    Story.start(id);
   }
-  function updateBrewHud() {
-    const p = Brew.progress();
-    if (!p) return;
-    $('#q-coins').innerHTML = coin(p.earned);
-    $('#q-guest').textContent = t('qGuest', Math.min(p.i, p.n), p.n);
+  // Следующей главы ещё нет — предлагаем переиграть пролог
+  function storyPick() {
+    const id = Story.nextId();
+    if (id && STORY_CH[id]) { startStory(id); return; }
+    Sound.play('ui');
+    openModal(`<div class="pop-ico">☾</div><h2>${t('storySoonTitle')}</h2><p>${t('storySoon')}</p>
+      <button class="btn primary big" data-act="story-replay">${t('storyReplay')}</button>
+      <button class="btn small ghost" data-act="close-modal">${t('back')}</button>`);
   }
-  function endBrew(result) {
+  function endStory(id) {
     setMode('menu');
-    showSummary(result);
-  }
-  // Книга рецептов: как собрать каждый напиток из меню руками
-  function showRecipeBook() {
-    const step = (ing, ings) => {
-      switch (ing) {
-        case 'espresso': return t('rb_espresso');
-        case 'ristretto': return t('rb_ristretto');
-        case 'lungo': return t('rb_lungo');
-        case 'milk': return ings.includes('ice') ? t('rb_coldMilk') : ings.includes('foam') ? t('rb_foamMilk') : t('rb_milk');
-        case 'foam': return ings.includes('milk') ? null : t('rb_foamOnly');
-        case 'water': return t('rb_water');
-        case 'filter': return t('rb_filter');
-        default: return T(INGREDIENTS[ing].name);
-      }
-    };
-    const cards = S.recipes.map((id) => {
-      const r = RECIPE[id], ings = r.ings;
-      const counts = {};
-      ings.forEach((i) => { counts[i] = (counts[i] || 0) + 1; });
-      const steps = Object.keys(counts).map((i) => { const s = step(i, ings); return s && (counts[i] > 1 ? `${s} ×${counts[i]}` : s); }).filter(Boolean);
-      const cupName = CUP_OF[id] ? T(CUPS[CUP_OF[id]].name) : '';
-      return `<div class="card rb"><div class="card-ico recipe-ico">${ings.map((i) => iconSvg(i)).join('')}</div>
-        <div class="card-body"><b>${T(r.name)}</b><small>${cupName ? `${cupName} · ` : ''}${steps.join(' → ')}</small></div></div>`;
-    }).join('');
-    openPanel(`<div class="sheet-head"><button class="btn small" data-act="qclose">${t('back')}</button><h2>${t('qRecipes')}</h2><span></span></div>
-      <p class="loc-note">${t('rb_intro')}</p><div class="cards">${cards}</div>`, 'sheet tall');
+    showMenu();
+    const next = STORY_CH[id].next;
+    if (next && !STORY_CH[next]) {
+      openModal(`<div class="pop-ico">☾</div><h2>${t('storyEnd')}</h2><p>${t('storyEndBody')}</p>
+        <button class="btn primary big" data-act="close-modal">${t('storyOk')}</button>`);
+    }
   }
 
   // ---------- действия ----------
@@ -565,10 +549,16 @@ const UI = (() => {
       case 'shop': Sound.play('ui'); showShop(); return;
       case 'guests': Sound.play('ui'); showGuests(); return;
       case 'reviews': Sound.play('ui'); showReviews(); return;
-      case 'quiet': startQuiet(); return;
-      case 'qbook': Sound.play('ui'); showRecipeBook(); return;
-      case 'qclose': closePanel(); return;
-      case 'qend': Brew.quit(); return;
+      case 'story': storyPick(); return;
+      case 'story-replay': startStory('prologue'); return;
+      case 'close-modal': Sound.play('ui'); closeModal(); return;
+      case 'story-quit':
+        Sound.play('ui');
+        openModal(`<h2>${t('storyQuit')}</h2><p>${t('storyQuitBody')}</p>
+          <button class="btn primary big" data-act="close-modal">${t('storyStay')}</button>
+          <button class="btn small ghost" data-act="story-quit-yes">${t('storyQuitYes')}</button>`);
+        return;
+      case 'story-quit-yes': closeModal(); Story.quit(); setMode('menu'); showMenu(); return;
       case 'franchise':
         if (!canFranchise()) return;
         Sound.play('ui');
@@ -672,7 +662,7 @@ const UI = (() => {
   }
 
   return {
-    init, setMode, updateBrewHud, endBrew, buildStation, renderCup, renderCups, tick, updateHUD, bumpCoins, pressIng, shakeIng, coinTarget,
+    init, setMode, endStory, openModal, buildStation, renderCup, renderCups, tick, updateHUD, bumpCoins, pressIng, shakeIng, coinTarget,
     hint, toast, banner, showMenu, showShop, showGuests, showQuests, showSummary, queuePopups, pause, startShift,
     get modalOpen() { return modalOpen; },
     get overlayOpen() { return !el.overlay.classList.contains('hidden'); },
