@@ -502,6 +502,9 @@ const UI = (() => {
     closeModal();
     setMode('story');
     $('#shud-title').textContent = `${T(STORY_CH[id].num)} · ${T(STORY_CH[id].title)}`;
+    const mb = $('#shud-music');
+    mb.innerHTML = iconSvg('ui_music');
+    mb.classList.toggle('off', !S.settings.music);
     Story.start(id);
   }
   // Следующей главы ещё нет — предлагаем переиграть пролог

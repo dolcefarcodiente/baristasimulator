@@ -489,6 +489,9 @@ svg { image-rendering: pixelated; }
 #shud.hidden { display: none; }
 #shud-title { font-size: 13px; color: var(--cream-2); max-width: 75%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 #shud .hud-btn { color: var(--dark-text); font-size: 14px; min-width: 34px; justify-content: center; }
+.shud-btns { display: flex; gap: 8px; }
+#shud-music svg { width: 16px; height: 16px; }
+#shud-music.off { opacity: .45; }
 
 /* иллюстрация на всю сцену: улица под дождём */
 #scg { position: absolute; inset: 0; z-index: 3; background: #120c16 center / cover no-repeat; image-rendering: pixelated; transition: opacity .6s steps(6); pointer-events: none; }
