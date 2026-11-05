@@ -3,7 +3,7 @@
 // задаёт сценарий, свободная игра не затрагивается. Сценарий — в js/story/*.js, как писать — .claude/skills/salem-story/SKILL.md.
 
 const STORY_CH = {};
-const STORY_ORDER = ['prologue', 'ch1', 'ch2', 'ch3', 'ch4'];
+const STORY_ORDER = ['prologue', 'ch1', 'ch2', 'ch3', 'ch4', 'ch5', 'ch6', 'ch7', 'ch8'];
 const CAST = {
   eli: { en: 'Eli', ru: 'Илай' },
   junie: { en: 'Junie', ru: 'Джуни' },
@@ -222,7 +222,8 @@ const Story = (() => {
       `<small class="s-tap">${t('tapOn')}</small>`;
     Sound.play(out ? 'tap' : 'coin');
   }
-  function hidePhone() { run.phone = []; run.phoneFrom = null; $('#sphone').classList.add('hidden'); }
+  // с кем переписка, помним и после выбора: ответ Илая уходит тому же собеседнику
+  function hidePhone() { run.phone = []; $('#sphone').classList.add('hidden'); }
 
   function card(html) {
     run.wait = 'card';

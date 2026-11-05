@@ -503,6 +503,10 @@ svg { image-rendering: pixelated; }
 #scg.off { opacity: 0; }
 #scg[data-cg="outside"] { background-image: url(../img/cg-outside-wide.png); }
 @media (orientation: portrait) { #scg[data-cg="outside"] { background-image: url(../img/cg-outside-tall.png); } }
+/* крыше нужны и комета сверху, и парапет снизу: высокая картинка — только на по-настоящему узком экране */
+#scg[data-cg="roof"] { background-image: url(../img/cg-roof-wide.png); background-position: 35% center; }
+@media (max-aspect-ratio: 2/3) { #scg[data-cg="roof"] { background-image: url(../img/cg-roof-tall.png); background-position: center 30%; } }
+#scg[data-cg="roof"] .rain { display: none; } /* в ночь кометы небо чистое */
 #scg .rain { position: absolute; inset: 0; opacity: .5;
   background: repeating-linear-gradient(104deg, transparent 0 22px, rgba(200, 220, 255, .28) 22px 24px, transparent 24px 61px),
               repeating-linear-gradient(98deg, transparent 0 37px, rgba(200, 220, 255, .18) 37px 39px, transparent 39px 83px);
