@@ -25,7 +25,7 @@ function walk(id, list, trail) {
     if (n.nar) check(at, n.nar);
     if (n.note) check(at, n.note);
     if (n.choice) n.choice.forEach((o, k) => { check(`${at}/выбор ${k + 1}`, o); walk(id, o.then || [], `${trail}#${i}.${k}`); });
-    if (n.brew) check(`${at}/заказ`, n.brew.order);
+    if (n.brew && n.brew.order) check(`${at}/заказ`, n.brew.order);
     for (const key of ['ok', 'wrong', 'then', 'else']) if (Array.isArray(n[key])) walk(id, n[key], `${trail}#${i}.${key}`);
     if (n.also) for (const [k, l] of Object.entries(n.also)) walk(id, l, `${trail}#${i}.${k}`);
     if (n.diary) n.diary.forEach((l, k) => check(`${at}/дневник ${k + 1}`, l));

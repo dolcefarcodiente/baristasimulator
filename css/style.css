@@ -552,6 +552,7 @@ svg { image-rendering: pixelated; }
 .s-diary small { display: block; color: var(--terra-d); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; line-height: 20px; }
 .s-diary h3 { margin: 0; font-size: 18px; }
 .s-diary p { margin: 0; }
+.s-diary { max-height: calc(100% - 70px); overflow-y: auto; }
 
 /* название главы */
 #stitle { position: absolute; inset: 0; z-index: 8; background: #120c16; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; cursor: pointer; transition: opacity .5s steps(5); text-align: center; padding: 20px; }

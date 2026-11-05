@@ -59,8 +59,10 @@ const Story = (() => {
   // Смена закончилась: закрытие с Розой по звёздам и дневник, потом обычный итог
   function afterShift(result) {
     if (!night || night.ch.nodes) return false;
+    // before — общее начало, good/ok/bad — по звёздам, after — общее продолжение (может быть целой сценой)
     const c = night.ch.close || {};
-    const list = [...(result.stars >= 3 ? c.good : result.stars === 2 ? c.ok : c.bad) || [], ...(night.ch.diary ? [{ diary: night.ch.diary }] : [])];
+    const byStars = (result.stars >= 3 ? c.good : result.stars === 2 ? c.ok : c.bad) || [];
+    const list = [...(c.before || []), ...byStars, ...(c.after || []), ...(night.ch.diary ? [{ diary: night.ch.diary }] : [])];
     scene(list, { layout: 'story', sky: 1, onDone: () => { done(); UI.showSummary(result); } });
     return true;
   }
@@ -82,6 +84,7 @@ const Story = (() => {
     run = { stack: [{ list, i: 0 }], opts, wait: null, line: null, phone: [], cu: run && opts.layout === 'story' ? run.cu : null };
     hideAll();
     Talk.clear();
+    $('#banner').className = ''; // «Последние заказы!» и прочее от смены не висят поверх сцены
     UI.setMode(opts.layout);
     // иллюстрация в начале главы появляется сразу, под названием
     while (list[run.stack[0].i] && list[run.stack[0].i].cg !== undefined) setCg(list[run.stack[0].i++].cg);

@@ -55,7 +55,7 @@ STORY_CH.ch2 = {
     intro: [/* nodes */],                 // when they reach the counter; the shift freezes, then resumes
     ok: [/* nodes */], wrong: [/* nodes */], also: { latte: [/* nodes */] },   // after serving
   },
-  close: { good: [], ok: [], bad: [] },   // after the shift, by stars: 3 / 2 / 0–1
+  close: { before: [], good: [], ok: [], bad: [], after: [] },   // after the shift: before, then by stars 3 / 2 / 0–1, then after (a whole scene can live here, brew included)
   diary: [{ en, ru }, { if: 'flag', en, ru }],
 };
 ```
