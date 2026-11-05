@@ -2,7 +2,7 @@
   "name": "salem-coffee",
   "version": "1.0.0",
   "private": true,
-  "description": "Sälem — the café on the corner. Cozy coffee shop game.",
+  "description": "Bella Notte Café — a cozy coffee story.",
   "scripts": {
     "build": "node scripts/build-www.js",
     "ios": "npm run build && npx cap sync ios && npx cap open ios"

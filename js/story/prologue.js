@@ -14,7 +14,9 @@ STORY_CH.prologue = {
     { phone: 'junie', en: 'SO?? are you famous yet', ru: 'НУ ЧТО?? ты уже звезда бродвея' },
     { phone: 'junie', en: 'mom wants to know if you’re eating. i said yes. are you', ru: 'мама спрашивает ешь ли ты. я сказала да. ты ешь' },
     { who: 'think', en: 'I am. I had a pretzel yesterday. A whole one.', ru: 'Ем. Вчера съел крендель. Целый.' },
-    { nar: { en: 'The only lit window on the street. A sheet of paper is taped to the glass.', ru: 'Единственное светлое окно на всей улице. К стеклу приклеен листок.' } },
+    { nar: { en: 'The only lit window on the street. Faded gold letters over the door: BELLA NOTTE.', ru: 'Единственное светлое окно на улице. Над дверью облезлое золото: BELLA NOTTE.' } },
+    { who: 'think', en: 'Bella Notte. “Beautiful night.” Tonight that’s debatable.', ru: 'Bella Notte. «Прекрасная ночь». Сегодня — спорно.' },
+    { nar: { en: 'A sheet of paper is taped to the glass.', ru: 'К стеклу приклеен листок.' } },
     { note: { en: 'CERCASI BARISTA\nNight shift.\nAsk for Rosa.\nDon’t call. Come in.', ru: 'CERCASI BARISTA\nНочная смена.\nСпросить Розу.\nНе звонить — зайти.' } },
     { who: 'think', en: '“Don’t call. Come in.” Sounds like a threat.', ru: '«Не звонить — зайти». Звучит как угроза.' },
     { who: 'think', en: 'Back in Maple Falls, only the sheriff wrote notes like that.', ru: 'В Мейпл-Фоллс такие записки писал только шериф.' },
@@ -92,12 +94,13 @@ STORY_CH.prologue = {
     { photo: 'opening', caption: { en: 'Opening day · 1979', ru: 'Открытие · 1979' } },
     { who: 'think', en: 'That’s Rosa. Same look, like you already owe her money.', ru: 'Это Роза. Тот же взгляд — будто ты ей уже должен.' },
     { who: 'think', en: 'The one with the mustache must be Giuseppe.', ru: 'С усами — наверное, Джузеппе.' },
-    { who: 'think', en: 'So who’s the third guy? With the… is that a guitar?', ru: 'А третий кто? С этой… гитарой?' },
+    { who: 'think', en: 'And the third guy? With a mandolin.', ru: 'А третий кто? С мандолиной.' },
+    { who: 'think', en: 'Who brings a mandolin to an opening?', ru: 'Кто приходит на открытие с мандолиной?' },
     { who: 'rosa', off: true, en: 'Nobody touches the photo, ragazzo.', ru: 'Фото не трогают, ragazzo.' },
     { who: 'think', en: 'I wasn’t touching it. She didn’t even turn around.', ru: 'Я и не трогал. Она даже не обернулась.' },
     { choice: [
-      { en: 'Why is it called “Sälem”? That’s not Italian.', ru: 'А почему «Sälem»? Это же не по-итальянски.', set: 'askedName', then: [
-        { who: 'rosa', off: true, en: 'Everyone asks.', ru: 'Все спрашивают.' },
+      { en: '“Bella Notte” — isn’t that from the Disney movie?', ru: '«Bella Notte» — это же из мультика?', set: 'askedName', then: [
+        { who: 'rosa', off: true, en: 'Everyone thinks so.', ru: 'Все так думают.' },
         { nar: { en: 'She switches off the lamp over the counter.', ru: 'Она гасит лампу над стойкой.' } },
         { who: 'rosa', off: true, en: 'Not tonight.', ru: 'Не сегодня.' },
       ] },

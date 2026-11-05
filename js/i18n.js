@@ -18,12 +18,12 @@ function pl(n, ru1, ru2, ru5, en1, enN) {
   return plural(n, ru1, ru2, ru5);
 }
 
-// Голос Sälem: бариста из маленькой кофейни на углу. Тепло, коротко, с кофейными словечками,
+// Голос Bella Notte: бариста из маленькой кофейни на углу. Тепло, коротко, с кофейными словечками,
 // но кнопки всегда говорят, что произойдёт. Пол игрока и гостей не угадываем.
 const STR = {
   ru: {
-    title: 'Sälem — кофейня на углу',
-    brand: 'Sälem',
+    title: 'Bella Notte Café — уютная кофейня',
+    brand: 'Bella Notte',
     tagline: 'кофейня на углу · до двух ночи',
     day: (n) => `Ночь ${n}`,
     dayEyebrow: (n) => `НОЧЬ ${n}`,
@@ -140,8 +140,8 @@ const STR = {
     backBody: 'Загляни завтра — подарок будет больше',
   },
   en: {
-    title: 'Sälem — the café on the corner',
-    brand: 'Sälem',
+    title: 'Bella Notte Café — Cozy Coffee Story',
+    brand: 'Bella Notte',
     tagline: 'the café on the corner · open till 2 am',
     day: (n) => `Night ${n}`,
     dayEyebrow: (n) => `NIGHT ${n}`,

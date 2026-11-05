@@ -1,9 +1,9 @@
 ---
 name: salem-story
-description: Voice guide and script format for the Sälem story mode (Eli, Nonna Rosa, Sofia, the regulars). Use before writing or editing any story chapter, dialogue line, choice or diary entry in js/story/ or docs/story-bible.md.
+description: Voice guide and script format for the Bella Notte Café story (Eli, Nonna Rosa, Sofia, the regulars). Use before writing or editing any story chapter, dialogue line, choice or diary entry in js/story/ or docs/story-bible.md.
 ---
 
-# Writing Sälem story chapters
+# Writing Bella Notte Café story chapters
 
 The canon, the cast and the mystery live in `docs/story-bible.md`. Read it first. This file covers how lines should sound and how a chapter is written down in code.
 
@@ -32,7 +32,7 @@ The test for every line: if it could be given to another character unchanged, re
 - Humor comes from character, not from jokes for their own sake. Warmth beats cleverness.
 - RU and EN are two originals. Translate meaning and rhythm, not words. A pun that dies in one language gets replaced there.
 - RU: «ёлочки» for quotes, an em dash (—) for pauses. EN: curly quotes “ ” and the same em dash.
-- The café is Italian-American. The Kazakh thread appears only through Askar's story ("Сәлем" as the greeting), never as menu items.
+- The café is Italian-American: menu, slang and music all come from there. The mystery is Enzo and the song «Bella Notte».
 
 ## Scene shape
 

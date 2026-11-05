@@ -15,7 +15,7 @@
   Art.resize();
   // Пиксельный шрифт для холста: как только загрузится — перерисовываем меню на доске
   if (document.fonts && document.fonts.load) {
-    Promise.all(['500 16px "Pixelify Sans"', '700 16px "Pixelify Sans"'].map((f) => document.fonts.load(f, 'Sälem АБВ'))).then(() => Art.invalidate()).catch(() => {});
+    Promise.all(['500 16px "Pixelify Sans"', '700 16px "Pixelify Sans"'].map((f) => document.fonts.load(f, 'Bella Notte АБВ'))).then(() => Art.invalidate()).catch(() => {});
   }
   // Насколько сцену нужно опустить под статус-бар: меряем env(safe-area-inset-top) через пробный элемент.
   // В приложении отступ становится известен не сразу, поэтому меряем ещё раз чуть позже и при повороте.
