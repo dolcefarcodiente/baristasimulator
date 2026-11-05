@@ -1,9 +1,11 @@
 /* Bella Notte Café — ночная кофейня в пиксель-арте: тёмные панели, рамки со срезанными углами, жёсткие тени, пиксельный шрифт. */
 
-/* Русские буквы — из Tiny5: в Pixelify строчная кириллица путается с латиницей («д» как «a», «в» как «e») */
-@font-face { font-family: 'Pixelify Sans'; font-style: normal; font-weight: 400 700; font-display: swap; size-adjust: 112%; src: url('../fonts/tiny5-cyrillic.woff2') format('woff2'); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
-@font-face { font-family: 'Pixelify Sans'; font-style: normal; font-weight: 400 700; font-display: swap; src: url('../fonts/pixelify-latin-ext.woff2') format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
-@font-face { font-family: 'Pixelify Sans'; font-style: normal; font-weight: 400 700; font-display: swap; src: url('../fonts/pixelify-latin.woff2') format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+/* Press Start 2P — один пиксельный шрифт для английского и русского. Он широкий, поэтому уменьшен до 75% прямо в файлах (scripts/scale-font.py):
+   прежние размеры в CSS дают ту же плотность текста. Жирного начертания нет: шрифт объявлен для всех весов, чтобы браузер не «утолщал» буквы. */
+@font-face { font-family: 'Press Start 2P'; font-style: normal; font-weight: 100 900; font-display: swap; src: url('../fonts/pressstart-cyrillic-ext.woff2') format('woff2'); unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F; }
+@font-face { font-family: 'Press Start 2P'; font-style: normal; font-weight: 100 900; font-display: swap; src: url('../fonts/pressstart-cyrillic.woff2') format('woff2'); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: 'Press Start 2P'; font-style: normal; font-weight: 100 900; font-display: swap; src: url('../fonts/pressstart-latin-ext.woff2') format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: 'Press Start 2P'; font-style: normal; font-weight: 100 900; font-display: swap; src: url('../fonts/pressstart-latin.woff2') format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
 
 :root {
   --ink: #1e1420;        /* контуры и рамки */
@@ -24,7 +26,7 @@
   --plum: #7a3a5a;
   --wood: #5a3a2a;
   --wood-d: #3a2418;
-  --font: "Pixelify Sans", ui-monospace, "SF Mono", Menlo, monospace;
+  --font: "Press Start 2P", ui-monospace, "SF Mono", Menlo, monospace;
   --p: 3px; /* размер «пикселя» рамок */
   /* рамка со срезанными углами: четыре тени вместо border */
   --frame: 0 calc(-1 * var(--p)) 0 0 var(--ink), 0 var(--p) 0 0 var(--ink), calc(-1 * var(--p)) 0 0 0 var(--ink), var(--p) 0 0 0 var(--ink);
@@ -37,7 +39,7 @@
 html, body {
   margin: 0; height: 100%; overflow: hidden;
   background: #120c16;
-  color: var(--text); font-family: var(--font); -webkit-font-smoothing: none; font-smooth: never;
+  color: var(--text); font-family: var(--font); -webkit-font-smoothing: none; font-smooth: never; font-synthesis: none; line-height: 1.5;
   user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
   touch-action: manipulation; overscroll-behavior: none;
 }
@@ -234,7 +236,7 @@ svg { image-rendering: pixelated; }
 #panel.tall { height: 92%; }
 
 .btn {
-  font-weight: 700; font-size: 16px; cursor: pointer; margin: 3px;
+  font-weight: 700; font-size: 16px; line-height: 1.35; cursor: pointer; margin: 3px;
   background: var(--cream); color: var(--dark-text);
   padding: 10px 16px;
   display: inline-flex; align-items: center; justify-content: center; gap: 5px;
@@ -271,7 +273,7 @@ svg { image-rendering: pixelated; }
 }
 
 /* меню: вывеска кофейни, касса, заметка мелом */
-.eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); margin: 0; }
+.eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0; }
 .menu { display: flex; flex-direction: column; gap: 16px; }
 .menu-sheet { padding-top: 34px !important; }
 .menu-sheet::before {
@@ -283,12 +285,13 @@ svg { image-rendering: pixelated; }
 }
 .brand { display: flex; flex-direction: column; align-items: center; text-align: center; }
 .logo {
-  margin: 4px 0 0; font-weight: 700; font-size: 52px; line-height: 1.05; letter-spacing: .02em; color: var(--gold);
+  margin: 4px 0 0; font-weight: 700; font-size: clamp(26px, 9vw, 44px); line-height: 1.2; letter-spacing: 0; white-space: nowrap; color: var(--gold);
   text-shadow: 3px 0 0 var(--ink), -3px 0 0 var(--ink), 0 3px 0 var(--ink), 0 -3px 0 var(--ink), 3px 3px 0 var(--ink), -3px 3px 0 var(--ink), 3px -3px 0 var(--ink), -3px -3px 0 var(--ink), 0 8px 0 var(--terra-d), 0 0 24px rgba(242, 196, 106, .45);
   animation: neon 4s steps(1) infinite;
 }
 .tagline { margin: 6px 0 0; font-size: 15px; font-weight: 500; color: var(--muted); }
-.stats { display: flex; justify-content: center; gap: 12px; }
+.stats { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+.stats .stat { white-space: nowrap; font-size: 13px; }
 .stat {
   display: inline-flex; align-items: center; gap: 5px; padding: 4px 11px; margin: 3px;
   background: var(--night-2); font-weight: 700; font-size: 15px; font-variant-numeric: tabular-nums;
@@ -320,11 +323,12 @@ svg { image-rendering: pixelated; }
 .tile { position: relative; flex-direction: column; gap: 5px; font-size: 14px; padding: 12px 4px 10px; }
 .tile-ico { width: 38px; height: 38px; }
 .menu-foot { display: flex; align-items: center; gap: 8px; padding-top: 2px; }
-.menu-foot .muted { margin-left: auto; font-weight: 500; font-size: 13px; text-align: right; }
+.menu-foot .muted { margin-left: auto; font-weight: 500; font-size: 11px; line-height: 1.6; text-align: right; }
 
 /* листы */
 .sheet-head { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
-.sheet-head h2 { margin: 0; flex: 1; font-size: 24px; font-weight: 700; text-align: center; color: var(--cream); }
+.sheet-head .btn { white-space: nowrap; }
+.sheet-head h2 { margin: 0; flex: 1; font-size: 22px; font-weight: 700; text-align: center; color: var(--cream); }
 .tabs { display: flex; gap: 4px; background: var(--ink); padding: 4px; margin-bottom: 14px; }
 .tab { flex: 1; border: none; background: transparent; padding: 8px; font-weight: 700; font-size: 15px; cursor: pointer; color: var(--muted); }
 .tab.on { background: var(--cream); color: var(--dark-text); }
@@ -342,8 +346,8 @@ svg { image-rendering: pixelated; }
 .recipe-ico { display: flex; flex-wrap: wrap; width: 56px; justify-content: center; }
 .recipe-ico svg { width: 26px; height: 26px; }
 .card-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-.card-body b { font-size: 16px; font-weight: 700; color: var(--cream); }
-.card-body small { color: var(--muted); font-weight: 400; font-size: 13px; line-height: 1.3; }
+.card-body b { font-size: 15px; font-weight: 700; line-height: 1.35; color: var(--cream); }
+.card-body small { color: var(--muted); font-weight: 400; font-size: 13px; line-height: 1.45; }
 .card-body .next { color: var(--sage); font-weight: 600; }
 .pips { display: flex; gap: 3px; }
 .pips i { width: 14px; height: 6px; background: var(--night-3); }
@@ -518,7 +522,7 @@ svg { image-rendering: pixelated; }
 #sbox.k-nar { background: rgba(20, 13, 22, .82); box-shadow: var(--frame), var(--drop); text-align: center; padding-top: 12px; }
 #sbox.k-nar .say { color: #d9c29a; font-size: 14.5px; }
 #sbox .choices { gap: 6px; margin-top: 8px; }
-#sbox .choice { display: flex; gap: 8px; align-items: baseline; flex-basis: 100%; font-size: 14.5px; padding: 8px 11px; margin: 2px 3px; }
+#sbox .choice { display: flex; gap: 8px; align-items: baseline; flex-basis: 100%; font-size: 14.5px; line-height: 1.5; padding: 8px 11px; margin: 2px 3px; }
 #sbox .choice::before { content: none; }
 #sbox .choice i { font-style: normal; color: var(--terra); font-weight: 700; }
 

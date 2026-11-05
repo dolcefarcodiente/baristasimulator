@@ -9,7 +9,7 @@ const Bar = (() => {
   const lctx = lo.getContext('2d');
   let ctx = lctx;
   let W = 0, H = 0, DPR = 1, PX = 2, time = 0;
-  const FONT = '"Pixelify Sans", ui-monospace, monospace';
+  const FONT = '"Press Start 2P", ui-monospace, monospace';
   const born = new WeakMap(); // слой → момент добавления (рост слоя для мгновенных ингредиентов)
   let pulses = [];
   let perfects = [];          // всплывающее «Идеально!» над чашкой            // короткие анимации: чайник, помпа, лёд, сливки, джелато, корица
@@ -155,11 +155,11 @@ const Bar = (() => {
     const c = mctx;
     c.fillStyle = col; c.textAlign = 'center'; c.textBaseline = 'alphabetic';
     let fs = 12;
-    c.font = `600 ${fs}px ${FONT}`;
-    while (fs > 8 && c.measureText(label).width > s.sw - 8) { fs -= 0.5; c.font = `600 ${fs}px ${FONT}`; }
+    c.font = `${fs}px ${FONT}`;
+    while (fs > 8 && c.measureText(label).width > s.sw - 8) { fs -= 0.5; c.font = `${fs}px ${FONT}`; }
     c.fillText(label, s.x0 + s.sw / 2, H - 3);
     if (hover && Shift.cups.length > 1) {
-      c.fillStyle = 'rgba(255,245,230,.45)'; c.font = `700 10px ${FONT}`; c.textAlign = 'right';
+      c.fillStyle = 'rgba(255,245,230,.45)'; c.font = `10px ${FONT}`; c.textAlign = 'right';
       c.fillText(CUP_KEYS[i] || '', s.x0 + s.sw - 6, 12);
     }
   }
@@ -178,7 +178,7 @@ const Bar = (() => {
     c.fillStyle = done ? '#ffd76a' : hot ? (Math.sin(time * 30) > 0 ? '#ffd76a' : '#fff3c4') : '#e9d8b8';
     c.fillRect(x, y, Math.round(w * k), h);
     if (hot) {
-      c.fillStyle = '#ffd76a'; c.font = `700 12px ${FONT}`; c.textAlign = 'center'; c.textBaseline = 'alphabetic';
+      c.fillStyle = '#ffd76a'; c.font = `12px ${FONT}`; c.textAlign = 'center'; c.textBaseline = 'alphabetic';
       c.fillText(t('tapNow'), s.x0 + s.sw / 2, 14);
     }
   }
@@ -458,7 +458,7 @@ const Bar = (() => {
       if (p.t > 1 || p.cup >= n) { perfects.splice(i, 1); continue; }
       const s = slot(p.cup);
       mctx.globalAlpha = 1 - p.t;
-      mctx.font = `700 15px ${FONT}`; mctx.textAlign = 'center'; mctx.textBaseline = 'middle';
+      mctx.font = `15px ${FONT}`; mctx.textAlign = 'center'; mctx.textBaseline = 'middle';
       mctx.lineWidth = 4; mctx.strokeStyle = '#1e1420'; mctx.strokeText(t('perfect'), s.x0 + s.sw / 2, 26 - p.t * 14);
       mctx.fillStyle = '#ffd76a'; mctx.fillText(t('perfect'), s.x0 + s.sw / 2, 26 - p.t * 14);
       mctx.globalAlpha = 1;

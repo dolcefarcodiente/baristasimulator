@@ -15,7 +15,7 @@ const Art = (() => {
   const texts = [];
   const flyers = [];
   const L = {}; // раскладка
-  const FONT = '"Pixelify Sans", ui-monospace, monospace';
+  const FONT = '"Press Start 2P", ui-monospace, monospace';
   const INK = '#1e1420';
 
   // ---------- помощники ----------
@@ -106,7 +106,7 @@ const Art = (() => {
     const chalk = '#ece3d0';
     g.fillStyle = chalk; g.textAlign = 'center'; g.textBaseline = 'top';
     const fs = Math.round(clamp(b.w / 7, 11, 22));
-    g.font = `700 ${fs}px ${FONT}`;
+    g.font = `${fs}px ${FONT}`;
     g.fillText(LANG === 'en' ? 'MENU' : 'МЕНЮ', b.x + b.w / 2, b.y + pad);
     const u = Math.max(1, Math.round(LP));
     for (let x = b.x + b.w * 0.28; x < b.x + b.w * 0.72; x += u * 3) g.fillRect(snap(x, u), b.y + pad + fs * 1.2, u * 2, u);
@@ -120,12 +120,13 @@ const Art = (() => {
       const y = b.y + pad + fs * 1.8 + i * step;
       if (y + step > b.y + b.h - pad * 0.5) return;
       const price = String(Math.round(drinkPrice(id)));
-      const name = T(RECIPE[id].name);
+      const name = (id === season ? '★ ' : '') + T(RECIPE[id].name);
+      g.font = `${fsz}px ${FONT}`;
+      const room = tall ? b.w - pad * 2 : b.w - pad * 2 - g.measureText('$' + price).width - fsz * 0.6;
       let nsz = fsz;
-      const room = tall ? b.w - pad * 2 : b.w - pad * 2 - fsz * 2.2;
-      while (nsz > 8 && (g.font = `500 ${nsz}px ${FONT}`, g.measureText(name).width > room)) nsz -= 1;
-      g.fillStyle = id === season ? '#ffb070' : chalk; g.textAlign = 'left'; g.fillText((id === season ? '★ ' : '') + name, b.x + pad, y);
-      g.font = `700 ${fsz}px ${FONT}`; g.fillStyle = '#f2c46a'; g.textAlign = 'right';
+      while (nsz > 6 && (g.font = `${nsz}px ${FONT}`, g.measureText(name).width > room)) nsz -= 0.5;
+      g.fillStyle = id === season ? '#ffb070' : chalk; g.textAlign = 'left'; g.fillText(name, b.x + pad, y);
+      g.font = `${fsz}px ${FONT}`; g.fillStyle = '#f2c46a'; g.textAlign = 'right';
       g.fillText('$' + price, b.x + b.w - pad, tall ? y + lineH * 0.85 : y);
     });
   }
@@ -338,8 +339,8 @@ const Art = (() => {
   // ---------- облачко заказа ----------
   function fitText(c, text, maxW, size, weight = 600) {
     let s = size;
-    c.font = `${weight} ${s}px ${FONT}`;
-    while (s > 8 && c.measureText(text).width > maxW) { s -= 0.5; c.font = `${weight} ${s}px ${FONT}`; }
+    c.font = `${s}px ${FONT}`;
+    while (s > 8 && c.measureText(text).width > maxW) { s -= 0.5; c.font = `${s}px ${FONT}`; }
     return s;
   }
 
@@ -386,7 +387,7 @@ const Art = (() => {
       const iy = y + nameS + 4;
       if (hidden) {
         pbox(c, bx + bw / 2 - icon / 2, iy, icon, icon, u * 2, '#f2c46a', INK);
-        c.fillStyle = INK; c.font = `700 ${icon * 0.8}px ${FONT}`;
+        c.fillStyle = INK; c.font = `${icon * 0.8}px ${FONT}`;
         c.textBaseline = 'middle'; c.fillText('?', bx + bw / 2, iy + icon / 2 + 1); c.textBaseline = 'top';
       } else {
         const n = rec.ings.length, gap = 2;
@@ -410,7 +411,7 @@ const Art = (() => {
     // имя постоянного гостя — табличка сверху
     if (cu.reg || cu.kind) {
       const label = cu.reg ? `${T(REGULAR[cu.reg].name)} ♥${regState(cu.reg).hearts}` : (cu.kind === 'critic' ? '★ ' : '') + T(SPECIAL[cu.kind].name);
-      c.font = `700 ${nameS - 1}px ${FONT}`;
+      c.font = `${nameS - 1}px ${FONT}`;
       const lw = Math.min(bw + 10, c.measureText(label).width + 16);
       const lx = clamp(cu.dx - lw / 2, 4, W - lw - 4), ly = by - nameS - 10;
       pbox(c, lx, ly, lw, nameS + 8, u * 2, cu.kind === 'critic' ? '#8a6a1a' : cu.kind ? '#2f5a6a' : '#7a3a5a', INK);
@@ -599,7 +600,7 @@ const Art = (() => {
     for (const t of texts) {
       c.globalAlpha = clamp(t.life * 2, 0, 1);
       const pop = t.life > 1 ? 1.25 : 1; // короткий «прыжок» без плавности
-      c.font = `700 ${Math.round(t.size * pop)}px ${FONT}`;
+      c.font = `${Math.round(t.size * pop)}px ${FONT}`;
       c.lineWidth = 4; c.strokeStyle = INK; c.strokeText(t.text, t.x, t.y);
       c.fillStyle = t.color === '#3b2a22' ? '#fbf1dc' : t.color; c.fillText(t.text, t.x, t.y);
     }
