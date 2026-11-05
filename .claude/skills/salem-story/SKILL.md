@@ -49,6 +49,7 @@ Every night is a chapter. A normal chapter has four parts:
 ```js
 STORY_CH.ch2 = {
   num: { en, ru }, title: { en, ru },
+  bar: { recipes: ['espresso', 'americano', 'latte'], day: 1 },   // the chapter's own menu and difficulty (day drives spawn rate and patience); the player's free-play save is never used
   road: [/* nodes */],                    // before the shift: way to work, texts, a word with Rosa
   beat: {                                 // story guest in the middle of the shift
     by: 'tony', want: 'doppio', at: 0.3,  // who, which recipe id, when (share of the shift)

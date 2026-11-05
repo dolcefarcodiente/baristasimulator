@@ -4,6 +4,8 @@
 STORY_CH.prologue = {
   num: { en: 'Prologue', ru: 'Пролог' },
   title: { en: 'The Sign in the Window', ru: 'Табличка в окне' },
+  // бар в главе: напитки и сложность смены задаёт сценарий, а не свободная игра
+  bar: { recipes: ['espresso', 'americano', 'latte'], day: 1 },
   next: 'ch1',
   nodes: [
     { cg: 'outside' },

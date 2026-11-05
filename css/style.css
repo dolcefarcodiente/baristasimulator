@@ -487,8 +487,8 @@ svg { image-rendering: pixelated; }
 
 
 /* ---------- история ---------- */
-.btn.open-btn { flex-direction: column; gap: 4px; }
-.btn.open-btn small { font-size: 12.5px; font-weight: 500; color: #fff3e0; opacity: .9; }
+.btn.story-btn { flex-direction: column; gap: 6px; background: var(--night-2); color: var(--cream); font-size: 17px; padding: 12px 10px; }
+.btn.story-btn small { font-size: 12px; font-weight: 500; color: var(--gold); line-height: 1.5; }
 
 #shud { position: absolute; left: 12px; right: 12px; top: calc(12px + var(--top)); display: flex; gap: 10px; align-items: center; justify-content: space-between; z-index: 7; }
 #shud.hidden { display: none; }

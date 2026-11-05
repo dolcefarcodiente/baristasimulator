@@ -1,5 +1,6 @@
-// История: каждая ночь — глава. Дорога до смены, сюжетный гость посреди смены (смена замирает на сцену),
-// закрытие с Розой и дневник после. Сценарий — в js/story/*.js, как писать — .claude/skills/salem-story/SKILL.md.
+// История — отдельный режим: каждая ночь — глава. Дорога до смены, сюжетный гость посреди смены (смена замирает
+// на сцену), закрытие с Розой и дневник после. Глава играется в «песочнице» (enterSandbox): напитки и сложность
+// задаёт сценарий, свободная игра не затрагивается. Сценарий — в js/story/*.js, как писать — .claude/skills/salem-story/SKILL.md.
 
 const STORY_CH = {};
 const STORY_ORDER = ['prologue', 'ch1'];
@@ -24,8 +25,10 @@ const Story = (() => {
     // переигрываешь главу — выборы считаются с того, что было до неё
     const from = (st.snap && st.snap[id]) || { flags: st.flags, aff: st.aff };
     night = { id, ch, from, flags: { ...from.flags }, aff: { ...from.aff }, served: null };
+    enterSandbox(ch.bar);
+    Art.resize(); Art.invalidate();
     const list = ch.nodes || ch.road || [];
-    scene(list, { layout: 'story', title: true, sky: ch.nodes ? 0.97 : 0.02, onDone: ch.nodes ? done : () => UI.startShift({ beat: ch.beat }) });
+    scene(list, { layout: 'story', title: true, sky: ch.nodes ? 0.97 : 0.02, onDone: ch.nodes ? done : () => UI.startShift({ beat: ch.beat, story: true }) });
   }
 
   // Сюжетный гость дошёл до стойки: короткая завязка, потом смена идёт дальше, пока ему не подадут
@@ -63,7 +66,8 @@ const Story = (() => {
     const c = night.ch.close || {};
     const byStars = (result.stars >= 3 ? c.good : result.stars === 2 ? c.ok : c.bad) || [];
     const list = [...(c.before || []), ...byStars, ...(c.after || []), ...(night.ch.diary ? [{ diary: night.ch.diary }] : [])];
-    scene(list, { layout: 'story', sky: 1, onDone: () => { done(); UI.showSummary(result); } });
+    const ch = night.ch;
+    scene(list, { layout: 'story', sky: 1, onDone: () => { done(); UI.showSummary({ ...result, chapter: ch }); } });
     return true;
   }
 
@@ -75,6 +79,8 @@ const Story = (() => {
     if (!st.done.includes(night.id)) st.done.push(night.id);
     const id = night.id;
     night = null;
+    leaveSandbox();
+    Art.resize(); Art.invalidate();
     persist();
     if (STORY_CH[id].nodes) { UI.setMode('menu'); UI.showMenu(); }
   }
@@ -264,9 +270,11 @@ const Story = (() => {
   // Выйти посреди главы: прогресс ночи не сохраняется
   function quit() {
     if (run) clearTimeout(run.titleT);
-    if (Shift.active && Shift.solo) Shift.endSolo();
+    if (Shift.active) Shift.endSolo();
     run = null; night = null;
     hideAll();
+    leaveSandbox();
+    Art.resize(); Art.invalidate();
   }
 
   // ---------- кадр ----------

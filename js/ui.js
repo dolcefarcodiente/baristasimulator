@@ -158,7 +158,7 @@ const UI = (() => {
     for (const r of RECIPES) if (!S.recipes.includes(r.id)) opts.push({ name: T(r.name), cost: r.cost });
     for (const u of UPGRADES) if (!upMaxed(u.id)) opts.push({ name: T(u.name), cost: upCost(u.id) });
     for (const d of DECOR) if (!hasDecor(d.id)) opts.push({ name: T(d.name), cost: d.cost });
-    if (bizOpen() && BUSINESS[S.biz]) opts.push({ name: T(BUSINESS[S.biz].name), cost: BUSINESS[S.biz].cost });
+    if (BUSINESS[S.biz]) opts.push({ name: T(BUSINESS[S.biz].name), cost: BUSINESS[S.biz].cost });
     opts.sort((a, b) => a.cost - b.cost);
     return opts[0] || null;
   }
@@ -181,7 +181,7 @@ const UI = (() => {
     openPanel(`
       <div class="menu">
         <div class="brand">
-          <span class="eyebrow">${t('dayEyebrow', S.day)}</span>
+          <span class="eyebrow">${t('dayEyebrow', S.day)}${S.franchise ? ` · ${t('franchiseLvl', S.franchise)}` : ''}</span>
           <h1 class="logo">${t('brand')}</h1>
           <p class="tagline">${t('tagline')}</p>
         </div>
@@ -249,10 +249,20 @@ const UI = (() => {
       ${owned ? `<span class="maxed">✓</span>` : `<button class="btn buy${afford ? ' green' : ''}" data-act="buy-decor" data-id="${d.id}" data-from="${from}" ${afford ? '' : 'disabled'}>${coin(d.cost)}</button>`}
     </div>`;
   }
+  // Последний шаг развития — продать франшизу и начать снова, сильнее
+  function franchiseCard() {
+    const ready = canFranchise();
+    const next = Math.round(FRANCHISE_BONUS * (S.franchise + 1) * 100);
+    return `<div class="card franchise${ready ? ' can' : ''}">
+      <div class="card-ico">${iconSvg('logo')}</div>
+      <div class="card-body"><b>${t('franchiseName')}</b><small>${t('franchiseDesc', next)}</small></div>
+      <button class="btn buy${ready ? ' green' : ''}" data-act="franchise" ${ready ? '' : 'disabled'}>${ready ? t('franchiseGo') : '🔒'}</button>
+    </div>`;
+  }
   // Что можно купить прямо сейчас — показывается в итогах смены, чтобы не ходить в магазин
   function offersHtml() {
     const list = [];
-    const nb = bizOpen() && BUSINESS[S.biz];
+    const nb = BUSINESS[S.biz];
     if (nb && S.coins >= nb.cost) list.push({ cost: nb.cost, html: bizCard(nb, S.biz, 'summary') });
     for (const d of DECOR) if (!hasDecor(d.id) && S.coins >= d.cost) list.push({ cost: d.cost, html: decorCard(d, 'summary') });
     for (const r of RECIPES) if (!S.recipes.includes(r.id) && S.coins >= r.cost) list.push({ cost: r.cost, html: `<div class="card can">
@@ -271,7 +281,6 @@ const UI = (() => {
   }
 
   function showShop(keepScroll) {
-    if (shopTab === 'biz' && !bizOpen()) shopTab = 'up';
     const scroll = el.panel.scrollTop;
     let cards = '';
     if (shopTab === 'up') {
@@ -290,7 +299,7 @@ const UI = (() => {
     } else if (shopTab === 'decor') {
       cards = DECOR.map((d) => decorCard(d)).join('');
     } else if (shopTab === 'biz') {
-      cards = BUSINESS.map((b, i) => bizCard(b, i)).join('');
+      cards = BUSINESS.map((b, i) => bizCard(b, i)).join('') + franchiseCard();
     } else {
       cards = RECIPES.map((r) => {
         const owned = S.recipes.includes(r.id);
@@ -311,7 +320,7 @@ const UI = (() => {
         <button class="tab ${shopTab === 'up' ? 'on' : ''}" data-act="tab" data-tab="up">${t('equipment')}</button>
         <button class="tab ${shopTab === 'rec' ? 'on' : ''}" data-act="tab" data-tab="rec">${t('recipes')}</button>
         <button class="tab ${shopTab === 'decor' ? 'on' : ''}" data-act="tab" data-tab="decor">${t('decorTab')}</button>
-        ${bizOpen() ? `<button class="tab ${shopTab === 'biz' ? 'on' : ''}" data-act="tab" data-tab="biz">${t('growth')}</button>` : ''}
+        <button class="tab ${shopTab === 'biz' ? 'on' : ''}" data-act="tab" data-tab="biz">${t('growth')}</button>
       </div>
       ${shopTab === 'rec' ? `<p class="loc-note">${t('masteryHint')}</p>` : ''}
       <div class="cards">${cards}</div>`, 'sheet tall', !keepScroll);
@@ -393,7 +402,7 @@ const UI = (() => {
     }).join('');
     openPanel(`
       <div class="summary">
-        <span class="eyebrow">${t('dayEyebrow', r.day)}${atHome() ? '' : ' · ' + T(curLoc().name)}</span>
+        <span class="eyebrow">${r.chapter ? `${T(r.chapter.num)} · ${T(r.chapter.title)}` : t('dayEyebrow', r.day) + (atHome() ? '' : ' · ' + T(curLoc().name))}</span>
         <h2>${t('shiftOver')}</h2>
         <div class="stars">${[0, 1, 2].map((i) => `<span class="star" data-star="${i}">★</span>`).join('')}</div>
         <div class="earn"><span class="coin"></span><span id="earn-num">0</span></div>
@@ -404,13 +413,13 @@ const UI = (() => {
           <div><b>${r.maxCombo}</b><span>${t('bestCombo')}</span></div>
           <div><b>${r.missed}</b><span>${t('leftNoCoffee')}</span></div>
         </div>
-        ${r.bonus ? `<div class="bonus-line">${t('starBonus', coin(r.bonus))}</div>` : ''}
-        ${r.branches ? `<div class="bonus-line">${t('branchesLine', coin(r.branches))}</div>` : ''}
-        ${r.rating1 ? `<div class="event-line">${t('ratingLine', r.rating0.toFixed(1), r.rating1.toFixed(1))}</div>` : ''}
+        ${r.bonus && !r.chapter ? `<div class="bonus-line">${t('starBonus', coin(r.bonus))}</div>` : ''}
+        ${r.branches && !r.chapter ? `<div class="bonus-line">${t('branchesLine', coin(r.branches))}</div>` : ''}
+        ${r.rating1 && !r.chapter ? `<div class="event-line">${t('ratingLine', r.rating0.toFixed(1), r.rating1.toFixed(1))}</div>` : ''}
         ${r.perfects ? `<div class="event-line">${t('perfectLine', r.perfects)}</div>` : ''}
         ${(r.events || []).map((e) => `<div class="event-line">★ ${e}</div>`).join('')}
         ${stories ? `<h3 class="eyebrow">${t('newStories')}</h3>${stories}` : ''}
-        <div id="offers" class="offers">${offersHtml()}</div>
+        ${r.chapter ? '' : `<div id="offers" class="offers">${offersHtml()}</div>`}
         <button class="btn primary big" data-act="menu">${t('next')}</button>
       </div>`, 'sheet summary-sheet tall');
     el.panel.querySelectorAll('canvas[data-guest]').forEach((c) => Art.drawPortrait(c, c.dataset.guest));
@@ -481,14 +490,23 @@ const UI = (() => {
   }
 
   // ---------- история ----------
-  // Одна кнопка: если этой ночью глава — её название под кнопкой
+  // Две кнопки: свободная игра и история (под ней — какая глава следующая)
   function openButton() {
     const id = Story.nextId(), ch = id && STORY_CH[id];
-    return `<button class="btn primary big open-btn" data-act="start"><span>${t('open')}</span>${ch ? `<small>${T(ch.num)} · ${T(ch.title)}</small>` : ''}</button>`;
+    return `<button class="btn primary big" data-act="start">${t('open')}</button>
+      <button class="btn big story-btn" data-act="story"><span>☾ ${t('storyBtn')}</span><small>${ch ? `${T(ch.num)} · ${T(ch.title)}` : t('storySoonShort')}</small></button>`;
   }
-  function openNight() {
+  // Новой главы нет — можно переиграть пройденные
+  function storyPick() {
     const id = Story.nextId();
-    if (!id) { startShift(); return; }
+    if (id) { openStory(id); return; }
+    Sound.play('ui');
+    const done = STORY_ORDER.filter((c) => S.story.done.includes(c) && STORY_CH[c]);
+    openModal(`<div class="pop-ico">☾</div><h2>${t('storySoonTitle')}</h2><p>${t('storySoon')}</p>
+      ${done.map((c) => `<button class="btn small" data-act="story-replay" data-id="${c}">${T(STORY_CH[c].num)} · ${T(STORY_CH[c].title)}</button>`).join('')}
+      <button class="btn small ghost" data-act="close-modal">${t('back')}</button>`);
+  }
+  function openStory(id) {
     Sound.init();
     closePanel();
     closeModal();
@@ -520,7 +538,9 @@ const UI = (() => {
     Sound.init();
     const act = b.dataset.act;
     switch (act) {
-      case 'start': openNight(); return;
+      case 'start': startShift(); return;
+      case 'story': storyPick(); return;
+      case 'story-replay': openStory(b.dataset.id); return;
       case 'menu': Sound.play('ui'); showMenu(); return;
       case 'shop': Sound.play('ui'); showShop(); return;
       case 'guests': Sound.play('ui'); showGuests(); return;
@@ -533,6 +553,24 @@ const UI = (() => {
           <button class="btn small ghost" data-act="story-quit-yes">${t('storyQuitYes')}</button>`);
         return;
       case 'story-quit-yes': closeModal(); Story.quit(); setMode('menu'); showMenu(); return;
+      case 'franchise':
+        if (!canFranchise()) return;
+        Sound.play('ui');
+        openModal(`<div class="pop-ico">${iconSvg('logo')}</div><h2>${t('franchiseName')}</h2>
+          <p>${t('franchiseConfirm', Math.round(FRANCHISE_BONUS * (S.franchise + 1) * 100))}</p>
+          <button class="btn primary big" data-act="franchise-yes">${t('franchiseGo')}</button>
+          <button class="btn small ghost" data-act="franchise-no">${t('notYet')}</button>`);
+        return;
+      case 'franchise-no': closeModal(); return;
+      case 'franchise-yes': {
+        closeModal();
+        sellFranchise();
+        Art.resize(); Art.invalidate();
+        Sound.play('buy'); Art.burst(Art.W / 2, Art.H * 0.3, 'confetti', 50);
+        showMenu();
+        queuePopups([{ icon: 'logo', title: t('franchiseDoneTitle', S.franchise), body: t('franchiseDone', Math.round((Stats.franchiseMult() - 1) * 100)), coins: 0, note: '' }]);
+        return;
+      }
       case 'quests': Sound.play('ui'); showQuests(); return;
       case 'tab': shopTab = b.dataset.tab; Sound.play('tap'); showShop(); return;
       case 'buy-up': {
@@ -596,7 +634,11 @@ const UI = (() => {
         return;
       case 'popup-ok': Sound.play('coin'); closeModal(); if (!el.overlay.classList.contains('hidden')) refreshMenu(); return;
       case 'resume': Shift.paused = false; Sound.play('ui'); closeModal(); return;
-      case 'quit': closeModal(); Story.quit(); Shift.quit(); return;
+      case 'quit':
+        closeModal();
+        // из главы — без итогов: свободная игра не должна ничего получить от песочницы
+        if (Story.inNight) { Story.quit(); setMode('menu'); showMenu(); } else Shift.quit();
+        return;
     }
   }
 

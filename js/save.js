@@ -63,12 +63,40 @@ function migrate() {
 }
 
 function persist() {
-  S.lastSeen = Date.now();
-  Storage.set(SAVE_KEY, JSON.stringify(S));
+  const save = MAIN || S;
+  save.lastSeen = Date.now();
+  Storage.set(SAVE_KEY, JSON.stringify(save));
 }
 
-// Филиалы и развитие открываются после финала истории: до тех пор кафе одно — на углу
-const bizOpen = () => (S.story.done || []).includes('finale');
+// История играется в «песочнице»: на время главы S — отдельное сохранение с набором напитков
+// и сложностью из сценария, а свободная игра ждёт в MAIN нетронутой и пишется на диск как раньше.
+let MAIN = null;
+function enterSandbox(cfg = {}) {
+  if (MAIN) leaveSandbox();
+  MAIN = S;
+  const sb = defaultSave();
+  Object.assign(sb, { day: cfg.day || 1, recipes: cfg.recipes || ['espresso', 'americano', 'latte'], upgrades: cfg.upgrades || {} });
+  // настройки, подсказки и сама история — общие с основным сохранением
+  sb.settings = MAIN.settings; sb.tips = MAIN.tips; sb.story = MAIN.story;
+  S = sb;
+}
+function leaveSandbox() {
+  if (!MAIN) return;
+  S = MAIN;
+  MAIN = null;
+}
+const inSandbox = () => !!MAIN;
+
+// Франшиза: продаём сеть Bella Notte и начинаем снова с одного угла. Деньги, оборудование, меню, филиалы
+// и номер ночи сбрасываются; остаются гости и их истории, уют, мастерство, достижения, настройки и прогресс истории.
+const FRANCHISE_BONUS = 0.25;
+const canFranchise = () => S.biz >= BUSINESS.length;
+function sellFranchise() {
+  const keep = { regulars: S.regulars, decor: S.decor, stats: S.stats, ach: S.ach, settings: S.settings, tips: S.tips, streak: S.streak, quests: S.quests, story: S.story };
+  const lvl = S.franchise + 1;
+  S = deepMerge(defaultSave(), { ...keep, franchise: lvl, lastSeen: Date.now() });
+  persist();
+}
 
 function resetSave() {
   S = defaultSave();
@@ -124,8 +152,7 @@ const Stats = {
   tipMult: () => upValue('tipjar') * (1 + perk('tips') + decor('tips')) * locMod('tips'),
   priceMult: () => (1 + upValue('pastry') + perk('price') + decor('price') + BUSINESS.slice(0, S.biz).reduce((a, b) => a + b.price, 0)) * locMod('price'),
   bizIncome: () => Math.round(BUSINESS.slice(0, S.biz).reduce((a, b) => a + b.income, 0) * Stats.franchiseMult()),
-  // франшизу больше не продают, но тем, кто успел, бонус остаётся
-  franchiseMult: () => 1 + 0.25 * S.franchise,
+  franchiseMult: () => 1 + FRANCHISE_BONUS * S.franchise,
   spawnMult: () => (1 + upValue('sign') + perk('spawn') + decor('spawn')) * locMod('spawn') * Rating.mult(),
   shiftLen: () => SHIFT_BASE + perk('shift'),
   helperRate: () => upValue('helper'),
@@ -158,7 +185,7 @@ function regularEligible(r) {
 function canAffordSomething() {
   for (const u of UPGRADES) if (!upMaxed(u.id) && S.coins >= upCost(u.id)) return true;
   for (const r of RECIPES) if (!S.recipes.includes(r.id) && S.coins >= r.cost) return true;
-  if (bizOpen() && BUSINESS[S.biz] && S.coins >= BUSINESS[S.biz].cost) return true;
+  if (BUSINESS[S.biz] && S.coins >= BUSINESS[S.biz].cost) return true;
   for (const d of DECOR) if (!hasDecor(d.id) && S.coins >= d.cost) return true;
   return false;
 }

@@ -3,6 +3,8 @@
 STORY_CH.ch1 = {
   num: { en: 'Chapter 1', ru: 'Глава 1' },
   title: { en: 'First Shift', ru: 'Первая смена' },
+  // первая смена: три простых напитка, мало гостей и места у стойки (как в первую ночь свободной игры)
+  bar: { recipes: ['espresso', 'americano', 'latte'], day: 1 },
 
   road: [
     { cg: 'outside' },

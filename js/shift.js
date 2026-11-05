@@ -43,14 +43,16 @@ const Shift = {
       this.customers = [this.storyGuest(this.solo.cu, this.solo.want, 0)];
       return;
     }
-    if (!this.tutorial) Events.roll(this.len);
+    // в истории никаких случайных событий и постоянных гостей — только сюжетный гость
+    this.story = !!opts.story;
+    if (!this.tutorial && !this.story) Events.roll(this.len);
     this.rating0 = Rating.value();
     // нанятый бариста Нико сам варит простые напитки (до двух ингредиентов), раз в NICO_CD секунд
     this.nico = S.biz >= 1 && !this.tutorial ? { t: 12, cd: NICO_CD } : null;
     Art.invalidate(); // доска с меню: сезонный напиток
     this.tutorial = !S.tips.basics;
     // Постоянные гости на эту смену: новые приходят обязательно, знакомые — с шансом.
-    this.regPlan = REGULARS.filter((r) => atHome() && regularEligible(r) && !(this.beat && this.beat.by === r.id))
+    this.regPlan = REGULARS.filter((r) => atHome() && regularEligible(r) && !this.story)
       .filter((r) => regState(r.id).visits === 0 || Math.random() < 0.55)
       .map((r) => ({ id: r.id, time: rand(0.08, 0.8) * this.len, done: false }));
     this.catTime = !atHome() ? Infinity : hasDecor('catbed') ? rand(10, this.len * 0.5) : S.day >= 2 && Math.random() < 0.6 ? rand(25, this.len - 30) : Infinity;
