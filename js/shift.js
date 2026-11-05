@@ -50,7 +50,7 @@ const Shift = {
     // нанятый бариста Нико сам варит простые напитки (до двух ингредиентов), раз в NICO_CD секунд
     this.nico = S.biz >= 1 && !this.tutorial ? { t: 12, cd: NICO_CD } : null;
     Art.invalidate(); // доска с меню: сезонный напиток
-    this.tutorial = !S.tips.basics;
+    this.tutorial = !S.tips.basics && !this.story; // в главах обучения нет: пролог уже научил
     // Постоянные гости на эту смену: новые приходят обязательно, знакомые — с шансом.
     this.regPlan = REGULARS.filter((r) => atHome() && regularEligible(r) && !this.story)
       .filter((r) => regState(r.id).visits === 0 || Math.random() < 0.55)

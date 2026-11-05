@@ -3,10 +3,13 @@
 // задаёт сценарий, свободная игра не затрагивается. Сценарий — в js/story/*.js, как писать — .claude/skills/salem-story/SKILL.md.
 
 const STORY_CH = {};
-const STORY_ORDER = ['prologue', 'ch1'];
+const STORY_ORDER = ['prologue', 'ch1', 'ch2', 'ch3', 'ch4'];
 const CAST = {
   eli: { en: 'Eli', ru: 'Илай' },
   junie: { en: 'Junie', ru: 'Джуни' },
+  mom: { en: 'Mom', ru: 'Мама' },
+  kyle: { en: 'Kyle', ru: 'Кайл' },
+  nico: { en: 'Nico', ru: 'Нико' },
 };
 
 const Story = (() => {
@@ -28,7 +31,14 @@ const Story = (() => {
     enterSandbox(ch.bar);
     Art.resize(); Art.invalidate();
     const list = ch.nodes || ch.road || [];
-    scene(list, { layout: 'story', title: true, sky: ch.nodes ? 0.97 : 0.02, onDone: ch.nodes ? done : () => UI.startShift({ beat: ch.beat, story: true }) });
+    scene(list, { layout: 'story', title: true, sky: ch.nodes ? 0.97 : 0.02, onDone: ch.nodes ? done : () => openShift(ch) });
+  }
+
+  // Смена главы; новый напиток, которому Роза научила в дороге, — подсказкой с составом
+  function openShift(ch) {
+    UI.startShift({ beat: ch.beat, story: true });
+    const r = ch.bar && ch.bar.teach && RECIPE[ch.bar.teach];
+    if (r) setTimeout(() => UI.toast(r.ings.length > 1 ? t('teachDrink', T(r.name), r.ings.map((i) => T(INGREDIENTS[i].name).toLowerCase()).join(' + ')) : t('newRecipe', T(r.name)), 'long'), 1600);
   }
 
   // Сюжетный гость дошёл до стойки: короткая завязка, потом смена идёт дальше, пока ему не подадут
