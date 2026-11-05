@@ -51,11 +51,11 @@
     Shift.update(dt);
     Art.updateFx(dt);
     const inShift = Shift.active, inStory = Story.active;
-    if (inStory) Story.update(dt);
+    Story.update(dt);
     Art.render({
-      sky: inShift ? Shift.t / Shift.len : inStory ? 0.97 : menuSky(),
-      customers: inShift ? Shift.customers : inStory ? Story.customers : [],
-      cap: inStory ? 1 : Stats.capacity(),
+      sky: inShift ? (Shift.solo ? Story.sky : Shift.t / Shift.len) : inStory ? Story.sky : menuSky(),
+      customers: inShift ? Shift.customers : Story.customers,
+      cap: inShift ? Shift.cap : 1,
       cat: inShift ? Shift.cat : null,
       pointer: inShift ? Shift.pointer : null,
       shift: inShift || inStory,

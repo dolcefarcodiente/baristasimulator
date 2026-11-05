@@ -31,6 +31,15 @@ function walk(id, list, trail) {
     if (n.diary) n.diary.forEach((l, k) => check(`${at}/дневник ${k + 1}`, l));
   });
 }
-for (const [id, ch] of Object.entries(ctx.STORY_CH)) { check(`${id}/название`, ch.title); walk(id, ch.nodes, ''); }
+for (const [id, ch] of Object.entries(ctx.STORY_CH)) {
+  check(`${id}/название`, ch.title);
+  if (ch.nodes) walk(id, ch.nodes, '');
+  if (ch.road) walk(id, ch.road, '/дорога');
+  const b = ch.beat || {};
+  for (const k of ['intro', 'ok', 'wrong']) if (b[k]) walk(id, b[k], `/гость.${k}`);
+  for (const [k, l] of Object.entries(b.also || {})) walk(id, l, `/гость.${k}`);
+  for (const [k, l] of Object.entries(ch.close || {})) walk(id, l, `/закрытие.${k}`);
+  if (ch.diary) walk(id, [{ diary: ch.diary }], '');
+}
 console.log(bad ? `\n${bad} замечаний` : 'Сценарий в порядке');
 process.exit(bad ? 1 : 0);

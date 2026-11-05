@@ -44,28 +44,47 @@ Every guest scene goes: **hook → order → brew → reaction (right / wrong dr
 
 ## Script format (`js/story/*.js`)
 
-A chapter is a list of nodes run top to bottom. Each node is one of these:
+Every night is a chapter. A normal chapter has four parts:
+
+```js
+STORY_CH.ch2 = {
+  num: { en, ru }, title: { en, ru },
+  road: [/* nodes */],                    // before the shift: way to work, texts, a word with Rosa
+  beat: {                                 // story guest in the middle of the shift
+    by: 'tony', want: 'doppio', at: 0.3,  // who, which recipe id, when (share of the shift)
+    intro: [/* nodes */],                 // when they reach the counter; the shift freezes, then resumes
+    ok: [/* nodes */], wrong: [/* nodes */], also: { latte: [/* nodes */] },   // after serving
+  },
+  close: { good: [], ok: [], bad: [] },   // after the shift, by stars: 3 / 2 / 0–1
+  diary: [{ en, ru }, { if: 'flag', en, ru }],
+};
+```
+
+The prologue is the exception: it is a single scene in `nodes`, and its `brew` node opens the real bar as the tutorial.
+The story guest waits forever and accepts any drink. Serving the right one raises the flag `beatOk`.
+
+Nodes inside any of those lists:
 
 ```js
 { nar: { en, ru } }                       // stage direction, small and centered
 { who: 'rosa', en, ru }                   // spoken line; who = a cast id or 'eli'; off: true = speaks off-screen
-{ who: 'think', en, ru }                  // Eli's thought, italic, no name plate
-{ phone: 'junie', en, ru }                // text message on the phone
+{ who: 'think', en, ru }                  // Eli's thought, lilac, no name plate
+{ phone: 'junie', en, ru }                // text message; phone: 'eli' is his reply
 { note: { en, ru } }                      // a paper note or sign, shown as a card
-{ cg: 'outside' } / { cg: null }          // full-scene illustration on/off (img/cg-*.png)
+{ cg: 'outside' } / { cg: null }          // full-scene illustration on/off (img/cg-*-wide/tall.png)
 { photo: 'opening', caption: { en, ru } } // the framed old photo card (img/cg-photo-*.png)
-{ enter: 'rosa' } / { leave: true }       // who stands at the counter
+{ enter: 'rosa' } / { leave: true }       // who stands at the counter (road and close scenes)
 { sfx: 'door' }                           // any Sound.play id
-{ choice: [{ en, ru, set: 'flag', aff: { rosa: 1 }, then: [/* nodes */] }, …] }
-{ brew: { by: 'rosa', want: 'espresso', order: { en, ru } }, ok: [/* nodes */], wrong: [/* nodes */], also: { cappuccino: [/* nodes */] } }
 { set: 'flag' }                           // raise a flag without a choice
+{ choice: [{ en, ru, set: 'flag', aff: { rosa: 1 }, then: [/* nodes */] }, …] }
 { if: 'flag', then: [/* nodes */], else: [/* nodes */] }   // '!flag' means "not set"
-{ diary: [{ en, ru }, { if: 'flag', en, ru }] }            // closing diary page; ends the chapter
+{ brew: { by: 'rosa', want: 'espresso', tutorial: true }, ok: [], wrong: [] }   // prologue only
 ```
 
-Drinks for `want` come from `STORY_DRINKS` in `js/story.js`: three steps, base + top-up + extra. In wrong-drink lines `{drink}` becomes the name of what Eli actually served.
+In wrong-drink lines `{drink}` becomes the name of what Eli actually served.
 
-A new chapter is a new file `js/story/<id>.js` (`STORY_CH.<id> = { num, title, next, nodes }`), added to `STORY_ORDER` in `js/story.js`, to `index.html` after `js/story.js`, and to `FILES` in `sw.js`. New illustrations follow the art pipeline in memory (`cg-*.png`, wide + tall versions for full-scene ones).
+A new chapter goes in a new file `js/story/<id>.js`. Add its id to `STORY_ORDER` in `js/story.js`, its script tag to `index.html` after `js/story.js`, and its path to `FILES` in `sw.js`.
+New illustrations follow the art pipeline in memory.
 
 After writing, check every line's length with:
 

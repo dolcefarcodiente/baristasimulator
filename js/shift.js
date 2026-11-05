@@ -23,16 +23,26 @@ const Shift = {
   cat: null, catTime: Infinity,
   tutorial: false, pointer: null,
   uid: 0,
+  solo: null, beat: null, cap: 1,
 
-  start() {
+  // opts.solo — один сюжетный гость без таймера (обучение в прологе);
+  // opts.beat — сюжетный гость посреди обычной смены: { by, want, at }
+  start(opts = {}) {
     Object.assign(this, {
       active: true, paused: false, t: 0, len: Stats.shiftLen(), closing: false, endT: 0,
       customers: [], sel: 0, jobs: { espresso: [], frother: [], filter: [] },
       combo: 0, maxCombo: 0, earned: 0, served: 0, missed: 0, wrongs: 0, stories: [], perfects: 0,
       nextSpawn: 1.2, cat: null, pointer: null,
+      solo: opts.solo || null, beat: opts.beat ? { at: 0.35, ...opts.beat, spawned: false } : null,
     });
+    this.cap = this.solo ? 1 : Stats.capacity();
     this.cups = Array.from({ length: Stats.cups() }, () => ({ layers: [] }));
     Talk.clear();
+    if (this.solo) {
+      this.tutorial = false; this.nico = null; this.regPlan = []; this.catTime = Infinity;
+      this.customers = [this.storyGuest(this.solo.cu, this.solo.want, 0)];
+      return;
+    }
     if (!this.tutorial) Events.roll(this.len);
     this.rating0 = Rating.value();
     // нанятый бариста Нико сам варит простые напитки (до двух ингредиентов), раз в NICO_CD секунд
@@ -40,7 +50,7 @@ const Shift = {
     Art.invalidate(); // доска с меню: сезонный напиток
     this.tutorial = !S.tips.basics;
     // Постоянные гости на эту смену: новые приходят обязательно, знакомые — с шансом.
-    this.regPlan = REGULARS.filter((r) => atHome() && regularEligible(r))
+    this.regPlan = REGULARS.filter((r) => atHome() && regularEligible(r) && !(this.beat && this.beat.by === r.id))
       .filter((r) => regState(r.id).visits === 0 || Math.random() < 0.55)
       .map((r) => ({ id: r.id, time: rand(0.08, 0.8) * this.len, done: false }));
     this.catTime = !atHome() ? Infinity : hasDecor('catbed') ? rand(10, this.len * 0.5) : S.day >= 2 && Math.random() < 0.6 ? rand(25, this.len - 30) : Infinity;
@@ -53,7 +63,7 @@ const Shift = {
 
   // ---------- гости ----------
   freeSlot() {
-    const cap = Stats.capacity();
+    const cap = this.cap;
     const used = new Set(this.customers.filter((c) => c.state !== 'leave').map((c) => c.slot));
     const free = [];
     for (let i = 0; i < cap; i++) if (!used.has(i)) free.push(i);
@@ -107,6 +117,50 @@ const Shift = {
     });
     Sound.play('door');
     return true;
+  },
+
+  // Сюжетный гость ждёт сколько угодно и принимает любой напиток — дальше решает сцена
+  storyGuest(cu, want, slot) {
+    return Object.assign(cu, {
+      id: ++this.uid, slot, orders: [want], firstOrder: want, kind: null, payMult: 1, hidden: false, revealed: false,
+      pat: 1, patMax: 1, frozen: true, story: true, bubbleT: 0, jumpT: 0, shakeT: 0, wiggleT: 0, joyT: 0, happy: false, q: null,
+      state: cu.state === 'sit' ? 'wait' : 'enter',
+    });
+  },
+  spawnStory(regId, want) {
+    const slot = this.freeSlot();
+    if (slot < 0) return false;
+    this.customers.push(this.storyGuest({ x: -60, tx: 0, look: REGULAR[regId].look, reg: regId, phase: rand(0, 6) }, want, slot));
+    Sound.play('door');
+    return true;
+  },
+  // Подали сюжетному гостю: смена замирает, дальше — сцена
+  serveStory(cu) {
+    const ready = (i) => this.cupReady(this.cups[i]);
+    const ci = ready(this.sel) ? this.sel : this.cups.findIndex((_, i) => ready(i));
+    if (ci < 0) {
+      cu.wiggleT = 1; Sound.play('busy');
+      UI.toast(t(this.cups[this.sel].layers.length ? 'stillBrewing' : 'makeFirst'));
+      return;
+    }
+    const items = this.cupItems(this.cups[ci]);
+    const rid = Object.keys(RECIPE).find((id) => sameSet(RECIPE[id].ings, items)) || null;
+    const ok = rid === cu.orders[0];
+    if (ok) this.success(cu, ci, 0);
+    else { this.cups[ci].layers = []; UI.renderCup(ci); cu.shakeT = 1; Sound.play('wrong'); }
+    this.paused = true;
+    this.pointer = null;
+    UI.hint(null);
+    Story.served(cu, rid, ok);
+  },
+  beatDone(cu) {
+    if (cu && cu.state !== 'leave') this.leave(cu, true);
+    this.paused = false;
+  },
+  endSolo() {
+    this.active = false; this.paused = false; this.solo = null; this.pointer = null;
+    this.customers = []; this.jobs = { espresso: [], frother: [], filter: [] };
+    UI.hint(null);
   },
 
   leave(cu, happy) {
@@ -205,6 +259,7 @@ const Shift = {
   },
 
   serveTo(cu) {
+    if (cu.story) { this.serveStory(cu); return; }
     const match = (cup) => cu.orders.findIndex((rid) => sameSet(RECIPE[rid].ings, this.cupItems(cup)));
     const sel = this.cups[this.sel];
     let ci = -1, oi = -1;
@@ -294,15 +349,17 @@ const Shift = {
 
     const done = cu.orders.length === 0;
     if (done) {
-      this.leave(cu, true);
-      Rating.add(cu, true);
-      Talk.thanks(cu);
-      this.specialDone(cu, true);
+      if (!cu.story) {
+        this.leave(cu, true);
+        Rating.add(cu, true);
+        Talk.thanks(cu);
+        this.specialDone(cu, true);
+      }
       cu.jumpT = 1;
       for (let i = 0; i < 4; i++) Art.burst(x, y - cu.r, 'heart', 1);
       this.served++;
       S.stats.served++;
-      if (cu.reg) this.regularServed(cu, memory);
+      if (cu.reg && !cu.story) this.regularServed(cu, memory);
     } else {
       cu.joyT = 0.8;
       cu.pat = Math.min(cu.patMax, cu.pat + cu.patMax * 0.2);
@@ -392,12 +449,15 @@ const Shift = {
   // ---------- кадр ----------
   update(dt) {
     if (!this.active || this.paused) return;
-    const cap = Stats.capacity();
+    const cap = this.cap;
     const W = Art.W;
 
-    if (!this.tutorial && !this.closing) {
+    if (!this.tutorial && !this.closing && !this.solo) {
       this.t += dt;
       for (const p of this.regPlan) if (!p.done && this.t >= p.time && this.spawn(p.id)) p.done = true;
+      // сюжетный гость — когда в очереди немного народу (или уже пора в любом случае)
+      const b = this.beat, waiting = this.customers.filter((c) => c.state !== 'leave').length;
+      if (b && !b.spawned && this.t >= b.at * this.len && (waiting <= 2 || this.t >= (b.at + 0.2) * this.len)) b.spawned = this.spawnStory(b.by, b.want);
       const ev = Events.night;
       for (const k of ['critic', 'tourists']) if (ev && ev[k] && !ev[k].done && this.t >= ev[k].time && this.spawn(null, null, k)) ev[k].done = true;
       this.nextSpawn -= dt;
@@ -448,7 +508,11 @@ const Shift = {
       cu.shakeT = Math.max(0, cu.shakeT - dt * 2);
       cu.wiggleT = Math.max(0, cu.wiggleT - dt * 3);
       cu.joyT = Math.max(0, cu.joyT - dt);
-      if (cu.state === 'enter' && Math.abs(d) < 1) { cu.state = 'wait'; cu.bubbleT = 0.001; Talk.greet(cu); }
+      if (cu.state === 'enter' && Math.abs(d) < 1) {
+        cu.state = 'wait'; cu.bubbleT = 0.001;
+        if (cu.story) Story.arrived(cu); else Talk.greet(cu);
+        if (this.paused) return;
+      }
       if (cu.state === 'wait') {
         cu.bubbleT += dt;
         if (!cu.frozen) cu.pat -= dt * (this.closing ? 1.6 : 1);
@@ -488,8 +552,12 @@ const Shift = {
       }
     }
 
-    // обучение
-    if (this.tutorial) this.tutorialHint();
+    // обучение; под конец смены — напоминание про сюжетного гостя
+    if (this.tutorial || this.solo) this.tutorialHint();
+    else if (this.closing) {
+      const sg = this.customers.find((c) => c.story && c.state === 'wait');
+      if (sg) UI.hint(t('beatWait', T(REGULAR[sg.reg].name)));
+    }
 
     // полуночник стучится, когда уже закрываемся
     const ev = Events.night;
@@ -504,19 +572,20 @@ const Shift = {
   tutorialHint() {
     const cu = this.customers.find((c) => c.state === 'wait');
     this.pointer = null;
-    if (!cu) { UI.hint(t('tutWait')); return; }
+    if (!cu) { UI.hint(this.solo ? null : t('tutWait')); return; }
     const cup = this.cups[this.sel];
-    const need = [...RECIPE.latte.ings];
+    const want = cu.orders[0] || 'latte', dn = T(RECIPE[want].name), solo = !!this.solo;
+    const need = [...RECIPE[want].ings];
     let extra = false;
     for (const i of this.cupItems(cup)) {
       const k = need.indexOf(i);
       if (k < 0) { extra = true; break; }
       need.splice(k, 1);
     }
-    if (extra) UI.hint(t('tutOops'), '#btn-trash');
-    else if (need.length) UI.hint(t('tutAdd', T(INGREDIENTS[need[0]].name)), `[data-ing="${need[0]}"]`);
+    if (extra) UI.hint(solo ? t('tutOopsX', dn) : t('tutOops'), '#btn-trash');
+    else if (need.length) UI.hint(solo ? t('tutAddX', dn, T(INGREDIENTS[need[0]].name)) : t('tutAdd', T(INGREDIENTS[need[0]].name)), `[data-ing="${need[0]}"]`);
     else if (!this.cupReady(cup)) UI.hint(t('tutBrewing'));
-    else { UI.hint(t('tutServe')); this.pointer = cu; }
+    else { UI.hint(solo ? t('tutServeX', T(REGULAR[cu.reg].name)) : t('tutServe')); this.pointer = cu; }
   },
 
   quit() {
@@ -557,6 +626,6 @@ const Shift = {
     Events.clear();
     Art.invalidate();
     persist();
-    UI.showSummary(result);
+    if (!Story.afterShift(result)) UI.showSummary(result);
   },
 };
